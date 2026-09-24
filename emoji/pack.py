@@ -19,9 +19,9 @@ ORDER = """
 01-pill-x
 44-cross-amen 146-cross-xtc 144-cross-pendant 28-tribal-cross 136-flash 50-soldout-tee 134-louverse-tank 47-flipclock 49-board-dropnow
 131-tile-x 132-tile-t 133-tile-c 121-xtc 112-box-drop 109-bills 52-psp 53-bag-xtc 29-drip-xtc 20-split-pill 16-heart-pill 148-broken-heart
-33-kao-xx 149-opium
-87-cross 90-sparkles 84-fire 111-siren
-10-club-key 21-teddy-skull 26-tribal-heart 04-tramp-stamp 22-kiss-less3
+33-kao-xx
+150-xtc-turn 84-fire 111-siren
+10-club-key 151-skull-x 21-teddy-skull 26-tribal-heart 04-tramp-stamp 22-kiss-less3
 03-sigil-x 43-scorpion-sigil 27-tribal-eye 17-winged-x 18-spike-collar 19-thorn-star 41-patch-x 147-raven 25-mask-glyphs
 """.split()
 # not in v3 (reasons: REVIEW-v3.md)
@@ -34,7 +34,7 @@ CUT_V3 = """
 74-dizzy 76-sleep 77-grimace 78-clown 79-moai 80-salute 81-angel 82-nausea 100-huff 101-raised-brow 103-yawn
 104-drool 105-nerd 106-woozy 107-hug 108-yum 34-kao-squeeze 35-kao-happy 36-kao-cry 37-kao-meh
 38-kao-tear 39-kao-wink 40-kao-shock 42-kao-tongue
-02-acid-xx 139-xx 140-laugh 141-cry 142-cool 143-melt 114-headphones 14-barbed-heart 15-dagger-heart 13-dagger-cross 32-swallow 51-latex-heart 145-iron-cross 138-seal 56-sob
+02-acid-xx 139-xx 140-laugh 141-cry 142-cool 143-melt 114-headphones 14-barbed-heart 15-dagger-heart 13-dagger-cross 32-swallow 51-latex-heart 145-iron-cross 138-seal 56-sob 87-cross 90-sparkles 149-opium
 54-laugh 57-plead 58-heart-eyes 59-kiss 60-rage 61-swear 68-cool 72-skull 73-melt 75-mind-blown 83-eyes 102-zipper-mouth
 91-zap 92-question 93-exclaim 110-popper 126-thumbs-up 128-victory 129-rock 130-wave
 85-hundred 86-check 88-heart 89-broken-heart 113-cocktail
@@ -120,22 +120,22 @@ def make_zip(kind, sheets_dir=None):
     return out
 
 
-V3_MD = """## Было → стало (v2 → v3.4)
+V3_MD = """## Было → стало (v2 → v3.5)
 
 **Претензии клиента к v2:** много рожиц («0_0»), нет единого свэга, кринж, нужно «экспенсив» и инновационно.
 **Правки после v3.0:** только наши знаки (логотип 1:1), лица не kaomoji, ремни/штаны/чужие тексты убрать, тату-капсулу и мишку вернуть, рожиц гораздо меньше, X_X.
 
 | | v2 | v3.1 |
 |---|---|---|
-| эмодзи в паке | 117 | 42 |
-| лиц | 55 (kaomoji) | 2 (X_X логотипными X, опиумная морда по референсу) |
+| эмодзи в паке | 117 | 41 |
+| лиц | 55 (kaomoji) | 1 (X_X логотипными X) |
 | из них «0_0» | 9 | 0 |
 | логотип | шрифт Michroma «под лого», пропорции разные в каждом месте | трассировка брендового файла 1:1 (`fonts/xtc-logo.svg`, `xtc/logo.py`); одна пропорция 2.2:1 (как принт лонгслива) и одна жирность во всех 25 местах |
 | тексты на табло | LOL/OMG/WTF/OK/NO/YES/GM/GN/XOXO/SOON/NEW/PAY ME | только X·T·C (плитки-пазл, 121) и DROP NOW |
 | порог шкалы | Σ≥29, брендовость ≥3 | каждый критерий ≥4, плавность/луп = 5, Σ≥31, свэг-тест STYLE.md |
 | средняя Σ | 30.6 | 31.8 |
 
-**Состав v3.4:** 22 бренд-предмета (+ кресты: логотип-крест в плашке, готическая подвеска; разбитое сердце с лого) (таблетка, крест, печать, вспышка, лонгслив SOLD OUT, louverse tank, таймер, DROP NOW, плитки X·T·C, XTC-плитки, коробка, купюры, PSP, сумка, XTC-подтёки, латекс-сердце, таблетка-магнит, сердце-таблетка) · 2 лица (X_X, T_T) · 4 реакции с логотипом (X-штамп, хром-X, X-пламя, мигалка-X) · 15 тату v1 (ключ, мишка с костями, трайбл-сердца, сигилы, звезда, пластырь, ворон, маска).
+**Состав v3.4:** 22 бренд-предмета (+ кресты: логотип-крест в плашке, готическая подвеска; разбитое сердце с лого) (таблетка, крест, печать, вспышка, лонгслив SOLD OUT, louverse tank, таймер, DROP NOW, плитки X·T·C, XTC-плитки, коробка, купюры, PSP, сумка, XTC-подтёки, латекс-сердце, таблетка-магнит, сердце-таблетка) · 2 лица (X_X, T_T) · 3 реакции с логотипом (X→T→C, X-пламя, мигалка-X) · 16 тату (ключ, брендовый череп, мишка с костями, трайбл-сердца, сигилы, звезда, пластырь, ворон, маска).
 
 **Новые вау (v3.0 + v3.1):**
 
@@ -146,7 +146,8 @@ V3_MD = """## Было → стало (v2 → v3.4)
 | 136 flash | негатив на 3 кадра: карточка с крест-лого инвертируется (чёрное ↔ дырка), «проявляется» с пережогом 106% |
 | 138 seal | клише давит сургуч (slam 112/86), поднимается — оттиск X·XTC·C дыркой, к концу лупа заплывает |
 | 52 psp | понг внутри экрана-дырки: чёрные ракетки и шарик на цвете фона, кнопки жмутся в такт, game over = XTC |
-| 87 / 90 | логотипный X как штамп с бликом и как хромовая вещь с ✦-вырезами |
+| 150 | одна буква лого на оси: X → T → C подменой на ребре (M6), торец, просадка оси |
+| 151 | череп с глазницами-X: челюсть decel/slam, вспышка глазниц на клацке |
 | 144 / 146 | кресты: готическая подвеска-маятник с разворотом (X на обороте), плашка с логотипом-крестом насквозь |
 | 148 | разбитое сердце: логотип-X рвётся по трещине, латекс капает из разлома |
 | 147 | ворон: тяжёлые взмахи (slam вниз / decel вверх), дальнее крыло с лагом |

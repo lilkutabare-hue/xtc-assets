@@ -260,3 +260,95 @@ def opium(c):
         part(c, f"eye{i}", blade_eye(x, ey, d), face, (x - d * 60, ey - 10), s=es)
     ms = seq([100, 100], [(98, None, None), (101, [118, 100], "snap"), (112, [100, 100], "io")], op=OP)
     part(c, "mouth", geo.brush([(cx - 36, my), (cx + 36, my)], 34, taper=(0.9, 0.9), smooth=False), face, (cx, my), s=ms)
+
+
+# ================================================================ 150 ❌ one letter: X → T → C
+
+
+@emoji("150-xtc-turn", "❌", "x, xtc, лого, буква, поворот", "x, xtc, logo, letter, turn",
+       "логотипная буква на оси: тяжёлый полуоборот с торцом — на ребре подменяется на следующую: X → T → C → X, после каждого поворота покой",
+       op=150, series="drop")
+def xtc_turn(c):
+    from xtc.lot import fit
+    OP = 150
+    cx, cy = 256, 256
+    W, H = 400, 200
+    letters = [logo.letter(ch, cx, cy, W, H) for ch in "XTC"]
+    # angle: three half-turns with rests; scaleX = |cos|, the design swaps on the edge (M6 hold-swap)
+    segs = [(10, 40, 0, 180), (58, 88, 180, 360), (106, 136, 360, 540)]
+    ease = (0.4, 0.0, 0.16, 1.0)
+    from xtc.motion import spin_angle
+    th = spin_angle([(a, b, d0, d1, ease) for a, b, d0, d1 in segs])
+    keys = [0, OP]
+    for a, b, d0, d1 in segs:
+        keys += [a, b]
+        # the edge-on crossing (90° into the half turn): find it by bisection
+        lo, hi = a, b
+        for _ in range(50):
+            m = (lo + hi) / 2
+            if th(m) < d0 + 90:
+                lo = m
+            else:
+                hi = m
+        keys.append(round((lo + hi) / 2, 2))
+    keys = sorted(set(keys))
+    sx = fit(lambda t: 100 * abs(math.cos(math.radians(th(t)))), keys)
+    st = Track([sx.k[0][1], 100], sx.k[0][0])
+    for i in range(1, len(sx.k)):
+        st.to(sx.k[i][0], [sx.k[i][1], 100], sx.k[i - 1][2])
+    body = rig(c, "body", (cx, cy + H / 2))
+    # edge band (thickness) near edge-on
+    band = geo.rect(cx - 16, cy - H / 2 + 8, cx + 16, cy + H / 2 - 8)
+    bs = fit(lambda t: 100 * max(0.0, 1 - abs(math.cos(math.radians(th(t)))) / 0.35), keys)
+    bt = Track([bs.k[0][1], 100], bs.k[0][0])
+    for i in range(1, len(bs.k)):
+        bt.to(bs.k[i][0], [bs.k[i][1], 100], bs.k[i - 1][2])
+    c.layer("band", [geo.shape(band, nm="band")], parent=body, p=(cx, cy), a=(cx, cy), s=bt)
+    # three designs, each visible for its 180° window (hold keys on opacity)
+    edges = [k for k in keys if k not in (0, OP) and all(abs(k - v) > 0.01 for seg in segs for v in seg[:2])]
+    for i, g in enumerate(letters):
+        o = Track(100 if i == 0 else 0, 0)
+        for j, t in enumerate(edges):
+            nxt = (j + 1) % 3
+            o.k[-1][2] = "hold"
+            o.k.append([t, 100 if nxt == i else 0, None])
+        o.loop(OP, "lin")
+        c.layer(f"L{i}", [geo.shape(g, nm=f"L{i}")], parent=body, p=(cx, cy), a=(cx, cy), s=st, o=o)
+    # weight: the axis dips a touch on every rest
+    ys = Track(float(cy + H / 2), 0)
+    for a, b, *_ in segs:
+        ys.hold(b).to(b + 4, cy + H / 2 + 6.0, "o").to(b + 12, float(cy + H / 2), "io")
+    ys.loop(OP)
+    body.p = Split(cx, ys)
+
+
+# ================================================================ 151 💀 brand skull
+
+
+@emoji("151-skull-x", "💀", "череп, x_x, умер, готика, xtc, мрак", "skull, x_x, dead, gothic, xtc, dark",
+       "брендовый череп: глазницы — логотипные X, челюсть медленно отвисает и клацает (slam), X-глазницы вспыхивают шире на клацке, голова тяжело кренится и возвращается",
+       op=150, series="v1")
+def skull_x(c):
+    OP = 150
+    cx = 256
+    cran = geo.U(geo.disc(cx, 196, 168, 32), geo.rrect(cx - 128, 220, cx + 128, 350, 44))
+    cran = geo.U(cran, geo.rrect(cx - 92, 330, cx + 92, 372, 20))                   # upper teeth row
+    cran = cran.difference(geo.poly([(cx, 262), (cx - 22, 306), (cx + 22, 306)]).buffer(6))   # nose
+    for k in range(4):
+        tx = cx - 54 + k * 36
+        cran = cran.difference(geo.rrect(tx - 9, 342, tx + 9, 372, 6))
+    eye = lambda x: brand_x(x, 214, 118, 62)
+    head = rig(c, "head", (cx, 300), r=seq(0, [(70, None, None), (96, -7, "io"), (120, 0, "io")], op=OP))
+    hl = part(c, "cranium", cran, head, (cx, 300))
+    for i, x in enumerate((cx - 70, cx + 70)):
+        es = seq([100, 100], [(44, None, None), (46, [116, 116], "snap"), (56, [100, 100], "io")], op=OP)
+        geo.hole(hl, eye(x), nm=f"eye{i}", p=(x, 214), a=(x, 214), s=es)
+    jaw = geo.rrect(cx - 104, 384, cx + 104, 452, 30)
+    for k in range(4):
+        tx = cx - 54 + k * 36
+        jaw = jaw.difference(geo.rrect(tx - 9, 384, tx + 9, 410, 6))
+    jy = seq(384.0, [(16, None, None), (38, 428.0, "decel"), (45, 384.0, "slam"), (46, 384.0, "lin")], op=OP)
+    js = seq([100, 100], [(45, None, None), (46, [106, 92], "lin"), (54, [98, 102], "io"), (62, [100, 100], "io")], op=OP)
+    part(c, "jaw", jaw, head, (cx, 384), p=Split(cx, jy), s=js)
+    hs = seq([100, 100], [(45, None, None), (46, [103, 97], "lin"), (54, [99, 101], "io"), (62, [100, 100], "io")], op=OP)
+    head.s = hs

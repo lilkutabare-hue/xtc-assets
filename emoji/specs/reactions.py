@@ -349,58 +349,6 @@ def check(c):
     geo.hole(lay, spark_g(gx, gy, 42, 0.3), nm="glare", p=(gx, gy), a=(gx, gy), s=gs, r=gr)
 
 
-# ================================================================ 87 ❌
-
-
-@emoji("87-cross", "❌", "нет, отказ, мимо, неверно, крест, стоп", "no, nope, wrong, denied, cross, rejected",
-       "X из двух ремней с люверсами отрывается как штамп (под ним бледный оттиск), бьёт с разворота — 1 кадр 107/93, брызги-подтёки в стороны, по люверсам бежит эхо",
-       op=120, series=SERIES)
-def cross(c):
-    OP = 120
-    sw, half = 100, 170
-    holes_d = (118, 196)
-
-    def strap(sgn):
-        return geo.line([(256 - half, 256 - sgn * half), (256 + half, 256 + sgn * half)], sw, "round")
-
-    def holes(sgn):
-        out = []
-        for d in holes_d:
-            for side in (-1, 1):
-                out.append((256 + side * d / math.sqrt(2), 256 + side * sgn * d / math.sqrt(2)))
-        return out
-    # the paler imprint left on the "paper" while the stamp is lifted
-    imp = U(strap(1), strap(-1)).difference(U(*[geo.disc(x, y, 19, 10) for sg in (1, -1) for x, y in holes(sg)]))
-    io = Track(0, 0).hold(12).to(22, 34, "io").to(27, 34, "lin")
-    io.k[-1][2] = "hold"
-    io.k.append([28, 0, None])
-    io.loop(OP, "lin")
-    part(c, "imprint", imp, None, (256, 256), o=io)
-    root_s = seq([100, 100], [(10, None, None), (24, [84, 84], "io3"), (28, [107, 93], "slam"), (29, [107, 93], "lin"),
-                              (34, [96, 104], "io"), (40, [101.5, 98.5], "io"), (47, [100, 100], "io")])
-    breathe(root_s, 70, 120, [100, 100], 0.7, 25)
-    root_s.loop(OP)
-    root_r = seq(0, [(10, None, None), (24, -16, "io3"), (28, 3, "slam"), (34, -1.5, "io"), (41, 0, "io")], op=OP)
-    px = seq(256.0, [(29, None, None)])
-    M.shake(px, 29, 43, 6, 256.0, step=2, decay=0.78)
-    px.loop(OP)
-    root = rig(c, "stamp", (256, 256), p=Split(px, 256), s=root_s, r=root_r)
-    for j, sgn in enumerate((1, -1)):      # j=0 '\' below, j=1 '/' on top
-        lay = part(c, f"strap{j}", strap(sgn), root, (256, 256))
-        for q, (hx, hy) in enumerate(holes(sgn)):
-            t0 = 60 + (q // 2) * 6 + j * 2
-            hs = seq([100, 100], [(t0, None, None), (t0 + 5, [150, 150], "o"), (t0 + 12, [90, 90], "io"),
-                                  (t0 + 18, [100, 100], "io")], op=OP)
-            geo.hole(lay, geo.disc(hx, hy, 19, 10), nm=f"e{q}", p=(hx, hy), a=(hx, hy), s=hs)
-    for k, (x0, y0, x1, y1) in enumerate([(256, 150, 256, 40), (366, 256, 474, 262), (256, 362, 250, 470),
-                                          (146, 256, 38, 248), (330, 176, 400, 88), (182, 336, 112, 420)]):
-        ang = math.degrees(math.atan2(y1 - y0, x1 - x0)) - 90
-        r = 20 if k < 4 else 15
-        g = geo.rot(geo.drop(x0, y0, r, r * 2.6), ang, (x0, y0))
-        M.particle(c, f"ink{k}", g, 28 + (k % 3), 22, (x0, y0), (x1, y1), None, anchor=(x0, y0), rot=(0, 0),
-                   fall="o5", xease="o5", pop=0.12, fade=0.4)
-
-
 # ================================================================ 88 ❤️
 
 
@@ -493,29 +441,6 @@ def broken(c):
         tri = geo.poly([(x0 - sz, y0 + sz * 0.7), (x0 + sz * 0.9, y0 + sz * 0.4), (x0 - sz * 0.1, y0 - sz)])
         M.particle(c, f"shard{k}", tri, t0, 26, (x0, y0), (x1, y1), ap, anchor=(x0, y0), rot=(0, rt),
                    pop=0.15, fade=0.35)
-
-
-# ================================================================ 90 ✨
-
-
-@emoji("90-sparkles", "✨", "блеск, искры, красота, вау, магия, глянец, хром", "sparkles, shine, magic, glam, wow, chrome",
-       "хромовый люверс делает тяжёлый оборот ребром: на выходе лицом по кольцу пробегают три ✦-блика по очереди (кромка ловит свет), досадка, потом второй короткий оборот-«подмиг»",
-       op=150, series=SERIES)
-def sparkles(c):
-    OP = 150
-    cx, cy = 256, 262
-    ring = geo.ring(cx, cy, 196, 96, 32)
-    ss = seq([100, 100], [(8, None, None), (18, [94, 106], "io"), (26, [100, 100], "o"), (74, None, None), (78, [104, 97], "o"),
-                          (86, [99, 101], "io"), (94, [100, 100], "io")], op=OP)
-    body = rig(c, "body", (cx, cy + 196), s=ss)
-    segs = [(18, 74, 0, 360, (0.35, 0.0, 0.14, 1.0)), (110, 136, 360, 720, (0.4, 0.0, 0.2, 1.0))]
-    root, th, fr, bk = M.spin3d(c, "eyelet", ring, ring, cx, cy, segs, thick=46, lip=30, parent=body)
-    # chrome: the glare streak crosses the ring as it lands face-on, three ✦ cut through the rim in turn
-    sp = []
-    for k, (ang, t0, r) in enumerate(((-60, 72, 54), (30, 80, 40), (150, 88, 34), (-60, 136, 44))):
-        a = math.radians(ang)
-        sp.append((cx + 146 * math.cos(a), cy + 146 * math.sin(a), r, t0, 26 if k < 3 else 12))
-    M.glare_sweep(c, fr, cx, cy, 68, 26, travel=330, angle=-35, parent=root, sparks=sp, length=560, w1=34, w2=14, gap=14)
 
 
 # ================================================================ 91 ⚡

@@ -116,7 +116,9 @@ def hole_path(layer, path, nm="hole", **t):
 
 
 def brand_x(x, y, w, h, bold=9):
-    return geo.text("X", geo.font("Michroma-Regular.ttf"), x, y, h, bold=bold, width=w)
+    """the logo X (1:1 letterform), see specs.drop.brand_x."""
+    from specs.drop import brand_x as _bx
+    return _bx(x, y, w, h, bold)
 
 
 def drip_shape(x, y0, y1, w=44, bulb=None):
@@ -716,7 +718,6 @@ def teddy(c):
     nose = geo.heart(256, 300, 58)
     nose = affinity.scale(nose, 1, -1, origin=(256, 300))          # upside-down heart nose
     mouth = U(geo.line([(256, 318), (256, 346)], 14), geo.line([(222, 348), (256, 346), (290, 348)], 14))
-    eyes = U(*[U(geo.line([(x - 30, 196), (x + 30, 250)], 28), geo.line([(x - 30, 250), (x + 30, 196)], 28)) for x in (190, 322)])
     face_paths = geo.paths(head) + geo.paths(muzzle) + geo.paths(nose) + geo.paths(mouth)
     # rhythm (beat = 30f): nod, nod, headbang (accent), hold
     r = seq(0, [(2, None, None), (6, 3, "o"), (18, 0, "io"), (32, None, None), (36, -3, "o"), (48, 0, "io"),
@@ -749,7 +750,7 @@ def teddy(c):
     # X eyes (cut-outs) squeeze flat on the accent
     es = seq([100, 100], [(62, None, None), (65, [118, 26], "o"), (74, [104, 70], "io"), (80, [100, 100], "io")], op=OP)
     for k, x in enumerate((190, 322)):
-        ex = U(geo.line([(x - 30, 196), (x + 30, 250)], 28), geo.line([(x - 30, 250), (x + 30, 196)], 28))
+        ex = brand_x(x, 223, 78, 50, bold=12)                     # logo X eyes
         face.shapes[0]["it"].insert(0, lot.group(geo.paths(ex), nm=f"eye{k}", p=(x, 223), a=(x, 223), s=es))
 
 

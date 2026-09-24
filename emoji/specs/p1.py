@@ -865,7 +865,7 @@ def cocktail(c):
 
 
 @emoji("114-headphones", "🎧", "музыка, слушаю, трек, бас, качает, в наушниках", "music, listening, track, bass, vibing, headphones",
-       "наушники качает бас: на каждую долю чашки с X пружинят наружу, оголовье подскакивает, из чашек бьют звуковые дуги; подводка — дрожь, и на дропе большой удар: всё сжимается и выстреливает, ✦",
+       "наушники с чашками-X (логотип): на каждую долю чашки пружинят наружу, оголовье подскакивает; подводка — дрожь, и на дропе большой удар, по оголовью бежит блик",
        op=132, series=SERIES)
 def headphones(c):
     OP = 132
@@ -902,9 +902,9 @@ def headphones(c):
     # cups: shell with the logo X cut out + cushion, eyelet hinge; pump outward on each beat
     for sd, sg in (("L", -1), ("R", 1)):
         x0 = cx + sg * cw
-        shell = geo.rrect(x0 - 44, by + 4, x0 + 44, 418, 40).difference(brand_x(x0, cy + 4, 56, 70, bold=10))
-        cush = geo.rrect(min(x0 - sg * 48, x0 - sg * 78), by + 18, max(x0 - sg * 48, x0 - sg * 78), 404, 14)
-        cup = U(shell, cush, geo.eyelet(x0, by - 4, 22, 9))
+        shell = brand_x(x0, cy + 6, 112, 150, bold=14)
+        cush = geo.rrect(min(x0 - sg * 40, x0 - sg * 66), by + 40, max(x0 - sg * 40, x0 - sg * 66), 396, 12)
+        cup = U(shell, cush, geo.rrect(x0 - 14, by - 6, x0 + 14, by + 40, 8))
         cxs = Track(float(x0), 0)
         cs = Track([100, 100], 0)
         for t, k in beats:

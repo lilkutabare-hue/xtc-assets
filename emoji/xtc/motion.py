@@ -275,3 +275,88 @@ def glare_sweep(comp, target, cx, cy, t0, dur=24, travel=280, angle=-35, parent=
         rr = Track(-25, 0).hold(tp).to(tp + life, 20, "os").loop(comp.op, "lin")
         shapes.append(geo.shape(geo.spark(x, y, r), nm=f"spark{i}", p=(x, y), a=(x, y), s=s, r=rr))
     return comp.matte(target, "glare", shapes, parent=parent, p=(0, 0), a=(0, 0))
+
+
+def wave(base, amp, per, op, phase=0.0):
+    """smooth periodic base + amp*sin(2pi t/per + phase) over [0, op] (op a multiple of per):
+    keys at the extrema, Hermite-fitted curves."""
+    ts = {0.0, float(op)}
+    k = -2
+    while True:
+        t = ((math.pi / 2 + k * math.pi - phase) / (2 * math.pi)) * per
+        if t > op:
+            break
+        if 0.3 < t < op - 0.3:
+            ts.add(round(t, 3))
+        k += 1
+    fn = lambda t: base + amp * math.sin(2 * math.pi * t / per + phase)
+    return fit(fn, sorted(ts))
+
+
+def flip_tile(comp, nm, parent, x, y, w, h, glyphs, times, dur=12, gap=10, r=22, bounce=10):
+    """Split-flap tile without overlapping layers (black-on-black would eat the glyph holes).
+    glyphs: shapely glyph shapes (holes) centred on the tile, or None for blank; state k shows glyphs[k].
+    times[k] = start of the flip from state k to state k+1 (len(times) == len(glyphs) - 1), or one
+    more time to flip from the last state back to glyphs[0] (cyclic loop).
+    Physics faked by scale: old top half falls to the hinge while the new top grows from the top edge
+    (squashed, reads as foreshortening), then the flap's back (new bottom) drops from the hinge while
+    the old bottom shrinks to the bottom edge; the flap bounces `bounce`% off the stop."""
+    hh = h / 2 - gap / 2
+    top = geo.rrect(x - w / 2, y - h / 2, x + w / 2, y - gap / 2, r)
+    bot = geo.rrect(x - w / 2, y + gap / 2, x + w / 2, y + h / 2, r)
+    n = len(glyphs)
+    cyclic = len(times) == n
+    half = dur / 2
+    states = list(range(n)) + ([0] if cyclic else [])
+    layers = []
+    for k in range(n):
+        g = glyphs[k]
+        T_ = top if g is None else top.difference(g)
+        B_ = bot if g is None else bot.difference(g)
+        t_in = times[k - 1] if k > 0 else (times[-1] if cyclic else None)
+        t_out = times[k] if k < len(times) else None
+        visible0 = (k == 0)
+        # --- top half: grows from the top edge on flip-in, falls to the hinge on flip-out
+        ts = Track([100, 100 if visible0 else 0], 0)
+        ty = Track(y, 0) if visible0 else Track(y - hh, 0)
+        events = []
+        if t_out is not None:
+            events.append(("out", t_out))
+        if t_in is not None and not (k == 0 and not cyclic):
+            events.append(("in", t_in))
+        for kind, t in sorted(events, key=lambda e: e[1]):
+            if kind == "out":
+                ts.hold(t).to(t + half, [100, 0], "i")
+                ty.hold(t)
+                if abs(ty.v - y) > 0.01:
+                    ty.to(t + 0.01, y, "hold")
+            else:
+                ts.hold(t).to(t + half, [100, 100], "i")
+                ty.hold(t)
+                if abs(ty.v - (y - hh)) > 0.01:
+                    ty.k[-1][2] = "hold"
+                    ty.k.append([t + 0.01, y - hh, None])
+                ty.to(t + half, y, "i")
+        ts.hold(comp.op)
+        ty.hold(comp.op)
+        lt = comp.layer(f"{nm}-t{k}", [geo.shape(T_, nm="t")], parent=parent, p=Split(x, ty), a=(x, y), s=ts)
+        # --- bottom half: drops from the hinge on flip-in (with bounce), shrinks to the bottom edge on flip-out
+        bs = Track([100, 100 if visible0 else 0], 0)
+        by = Track(y, 0)
+        for kind, t in sorted(events, key=lambda e: e[1]):
+            t2 = t + half
+            if kind == "in":
+                bs.hold(t2)
+                by.hold(t2)
+                if abs(by.v - y) > 0.01:
+                    by.k[-1][2] = "hold"
+                    by.k.append([t2 + 0.01, y, None])
+                bs.to(t2 + half, [100, 100], "o").to(t2 + half + 3, [100, 100 - bounce], "io").to(t2 + half + 7, [100, 100], "io")
+            else:
+                bs.hold(t2).to(t2 + half, [100, 0], "o").to(t2 + half + 3, [100, bounce], "io").to(t2 + half + 7, [100, 0], "io")
+                by.hold(t2).to(t2 + half, y + hh, "o").to(t2 + half + 3, y + hh * (1 - bounce / 100), "io").to(t2 + half + 7, y + hh, "io")
+        bs.hold(comp.op)
+        by.hold(comp.op)
+        lb = comp.layer(f"{nm}-b{k}", [geo.shape(B_, nm="b")], parent=parent, p=Split(x, by), a=(x, y), s=bs)
+        layers += [lt, lb]
+    return layers

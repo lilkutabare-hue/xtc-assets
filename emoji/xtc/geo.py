@@ -439,6 +439,14 @@ def hole(layer, g, nm="hole", **t):
     return layer
 
 
+def stroked(pts, w, nm="line", e=100, s=0, cap=2, **t):
+    """open polyline drawn with a round-capped stroke; e/s may be Tracks (trim path: draw-on)."""
+    items = [lot.sh(lot.pathdata(pts, closed=False), nm), lot.stroke(w, cap=cap, join=2)]
+    if not (e == 100 and s == 0):
+        items.append(lot.trim(s, e))
+    return lot.group(items, nm=nm, **t)
+
+
 def shape(g, o=100, nm="g", tol=0.45, **t):
     """shapely -> a filled Lottie group."""
     return lot.group(paths(g, tol) + [lot.fill(o)], nm=nm, **t)

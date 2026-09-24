@@ -469,7 +469,7 @@ def hug(c):
 
 
 @emoji("108-yum", "😋", "вкусно, ням, облизываюсь, мм, объедение", "yum, yummy, delicious, tasty, lick",
-       "^▽^ облизывается: язык выползает из уголка и обводит губу дугой туда и обратно, «чпок» — прячется, щёки вспыхивают ✦ по очереди, морда жмурится и покачивается",
+       "^▽^ с высунутым языком облизывается: язык дворником обводит губу дугой туда и обратно, «чпок» — встаёт на место, пирсинг-люверс на кончике ловит ✦; морда жмурится и покачивается",
        op=120, series=SERIES)
 def yum(c):
     OP = 120
@@ -477,7 +477,8 @@ def yum(c):
     s = seq([100, 100], [(54, None, None), (57, [106, 94], "o"), (64, [98, 102], "io"), (72, [100, 100], "io")])
     breathe(s, 96, 120, [100, 100], 0.8, 12)
     s.loop(OP)
-    face = rig(c, s=s, r=r)
+    zoom = null(c, "zoom", (CX, CY), s=(108, 108))
+    face = rig(c, s=s, r=r, parent=zoom)
     for i, x in enumerate((CX - 108, CX + 108)):
         es = seq([100, 100], [(54, None, None), (57, [110, 60], "o"), (66, [104, 80], "io"), (90, None, None),
                               (98, [100, 100], "io")], op=OP)
@@ -487,14 +488,18 @@ def yum(c):
     # centre): up over the right corner, across the upper lip, down the left corner and back, "pop"
     mc = (CX, 330)
     tongue = U(geo.rect(CX - 40, mc[1] + 34, CX + 40, mc[1] + 94), geo.disc(CX, mc[1] + 94, 40, 16))
-    tongue = tongue.difference(geo.line([(CX, mc[1] + 52), (CX, mc[1] + 98)], 10))
+    tongue = tongue.difference(geo.line([(CX, mc[1] + 46), (CX, mc[1] + 66)], 10))
+    # the piercing: an eyelet ring through the tip - glints when the lick lands
+    tongue = U(tongue, geo.eyelet(CX, mc[1] + 146, 22, 10))
     tr = seq(-38, [(12, None, None), (18, -30, "io"), (34, -176, "io"), (44, -300, "io"), (52, -250, "io"),
                    (58, -38, (0.3, 0.0, 0.2, 1.0))], op=OP)
     ts = seq([100, 100], [(12, None, None), (18, [104, 90], "io"), (34, [100, 110], "io"), (44, [100, 104], "io"),
                           (58, [100, 100], "io"), (60, [112, 86], "o"), (66, [100, 100], "io")], op=OP)
     part(c, "tongue", tongue, face, mc, s=ts, r=tr)
-    M.twinkle(c, "tw1", CX - 170, 280, 34, 58, 20, parent=face)
-    M.twinkle(c, "tw2", CX + 170, 280, 34, 66, 20, parent=face)
+    a = math.radians(-38)
+    stud = (mc[0] - 146 * math.sin(a), mc[1] + 146 * math.cos(a))
+    M.twinkle(c, "tw1", stud[0] + 46, stud[1] - 26, 34, 59, 22, parent=face)
+    M.twinkle(c, "tw2", CX - 170, 280, 32, 66, 20, parent=face)
 
 
 # ================================================================ 109 💸

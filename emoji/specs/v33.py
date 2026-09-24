@@ -1,6 +1,7 @@
 """v3.7: the XTCRECORDS pack (client's older emoji set) rebuilt in the adaptive mono language:
 lips, 100%% XTC, star ring, star, star snowflake, clef, ¥€$."""
 import math
+import os
 
 from xtc import geo, logo, motion as M
 from xtc.lot import Split, Track
@@ -9,6 +10,12 @@ from specs.drop import brand_font
 from specs.reactions import seq, breathe, rig, part
 
 SER = "records"
+REC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "v1", "rec")
+
+
+def rec(name):
+    """the client's original XTCRECORDS artwork, traced 1:1 from the 512px sources (v1/rec/*.svg)."""
+    return geo.svg(os.path.join(REC, name + ".svg"))
 
 
 def star_outline(x, y, ro, w=None, n=5, rot=-90, ri=None):
@@ -44,17 +51,16 @@ def lips(cx=256, cy=270, w=380, h=210, stroke=34):
        op=150, series=SER)
 def lips_e(c):
     OP = 150
-    g, outer = lips()
-    s = seq([100, 100], [(20, None, None), (36, [84, 108], "io"), (44, [110, 94], "snap"), (54, [97, 102], "io"), (64, [100, 100], "io")])
+    g = rec("lips")
+    b_ = g.bounds
+    cx, cy = (b_[0] + b_[2]) / 2, (b_[1] + b_[3]) / 2
+    # the kiss: gather (narrow + tall), smack with recoil, long rest with a breath; slight tilt
+    s = seq([100, 100], [(20, None, None), (36, [88, 106], "io"), (44, [108, 95], "snap"), (54, [98, 101], "io"), (64, [100, 100], "io")])
     breathe(s, 80, 150, [100, 100], 0.6, 35)
     s.loop(OP)
-    r = seq(0, [(20, None, None), (44, -6, "io"), (90, 0, "io")], op=OP)
-    root = rig(c, "lips", (256, 270), s=s, r=r)
-    part(c, "lips", g, root, (256, 270))
-    st = star_outline(392, 128, 62, 20)
-    ss = seq([0, 0], [(42, None, None), (48, [112, 112], "snap"), (56, [100, 100], "io"), (104, None, None), (118, [0, 0], "i")], op=OP, loop_ease="lin")
-    sr = seq(-30, [(42, None, None), (118, 40, "os")], op=OP, loop_ease="lin")
-    part(c, "star", st, root, (392, 128), s=ss, r=sr)
+    r = seq(0, [(20, None, None), (44, -5, "io"), (90, 0, "io")], op=OP)
+    root = rig(c, "lips", (cx, cy), s=s, r=r)
+    part(c, "lips", g, root, (cx, cy))
 
 
 # ================================================================ 154 💯 100%% XTC
@@ -65,22 +71,32 @@ def lips_e(c):
        op=150, series=SER)
 def hundred_xtc(c):
     OP = 150
-    top_y, bot_y = 190, 330
-    word = logo.word("XTC", 256, bot_y, 96, 440)
-    hs = seq([100, 100], [(40, None, None), (43, [103, 97], "o"), (52, [100, 100], "io"), (74, None, None), (77, [102, 98], "o"), (86, [100, 100], "io")], op=OP)
-    root = rig(c, "badge", (256, 380), s=hs)
-    part(c, "xtc", word, root, (256, bot_y))
-    # "100" drops in and lands (slam, 1f squash)
-    one = mtext("100", 132, top_y, 104, width=190, bold=6)
-    oy = seq(float(top_y), [(8, None, None), (14, top_y - 44.0, "decel"), (24, float(top_y), "slam")], op=OP)
+    g = rec("100xtc")
+    b_ = g.bounds
+    ymid = (b_[1] + b_[3]) / 2
+    top = g.intersection(geo.rect(0, 0, 512, ymid))
+    word = g.intersection(geo.rect(0, ymid, 512, 512))
+    tb = top.bounds
+    xsplit = tb[0] + (tb[2] - tb[0]) * 0.47
+    one = top.intersection(geo.rect(0, 0, xsplit, 512))
+    pcs = top.intersection(geo.rect(xsplit, 0, 512, 512))
+    hs = seq([94, 94], [(40, None, None), (43, [97, 91], "o"), (52, [94, 94], "io"), (74, None, None), (77, [96, 92], "o"), (86, [94, 94], "io")], op=OP)
+    root = rig(c, "badge", (256, b_[3]), s=hs)
+    part(c, "xtc", word, root, (256, ymid))
+    ob = one.bounds
+    ox, oy = (ob[0] + ob[2]) / 2, ob[3]
+    oyt = seq(float(oy), [(8, None, None), (14, oy - 44.0, "decel"), (24, float(oy), "slam")], op=OP)
     os_ = seq([100, 100], [(23, None, None), (24, [110, 90], "lin"), (25, [110, 90], "lin"), (32, [97, 103], "io"), (40, [100, 100], "io")], op=OP)
-    part(c, "100", one, root, (128, top_y + 52), p=Split(128, _sh(oy, 52)), s=os_)
-    # two % signs: each turns edge-on and back (M.spin3d), one after the other
-    for k, x in enumerate((300, 416)):
-        pc = mtext("%", x, top_y, 96, width=92, bold=3)
+    part(c, "100", one, root, (ox, oy), p=Split(ox, oyt), s=os_)
+    # the two % turn edge-on one after the other (fake-3D), the pair stays one piece
+    pb = pcs.bounds
+    for k, (x0, x1) in enumerate(((pb[0], (pb[0] + pb[2]) / 2), ((pb[0] + pb[2]) / 2, pb[2]))):
+        pc = pcs.intersection(geo.rect(x0, 0, x1, 512))
+        cb = pc.bounds
+        px, py = (cb[0] + cb[2]) / 2, (cb[1] + cb[3]) / 2
         t0 = 40 + k * 34
         segs = [(t0, t0 + 28, 0, 360, (0.4, 0.0, 0.16, 1.0))]
-        M.spin3d(c, f"pc{k}", pc, pc, x, top_y, segs, thick=22, lip=14, parent=root)
+        M.spin3d(c, f"pc{k}", pc, pc, px, py, segs, thick=22, lip=12, parent=root)
 
 
 def _sh(tr, d):
@@ -97,27 +113,22 @@ def _sh(tr, d):
        op=150, series=SER)
 def star_ring(c):
     OP = 150
-    cx, cy, R = 256, 256, 196
-    word = logo.word("XTC", cx, cy, 40, 176)
-    part(c, "xtc", word, None, (cx, cy))
-    rr = seq(0, [(30, None, None), (66, 34, (0.4, 0.0, 0.16, 1.0)), (74, 29, "io"), (82, 30, "io")], op=OP)
-    ring = rig(c, "ring", (cx, cy), r=rr)
-    for k in range(12):
-        a = math.radians(-90 + 30 * k)
-        x, y = cx + R * math.cos(a), cy + R * math.sin(a)
-        out = star_outline(x, y, 40, 13)
-        full = geo.star(x, y, 40, 40 * 0.42, 5, -90)
+    g = rec("starring")
+    polys = sorted(geo._polys(g), key=lambda p: -p.area)
+    cx, cy = 256, 256
+    # the XTC mark = the polys off the ring radius (right of centre, near the middle line)
+    mark = polys[0]                     # the XTC mark is the one big poly; the 11 stars are the rest
+    stars = polys[1:]
+    mb = mark.bounds
+    part(c, "xtc", mark, None, ((mb[0] + mb[2]) / 2, (mb[1] + mb[3]) / 2))
+    rr_ = seq(0, [(30, None, None), (66, 30, (0.4, 0.0, 0.16, 1.0)), (74, 26, "io"), (82, 26.5, "io")], op=OP)
+    ring = rig(c, "ring", (cx, cy), r=rr_)
+    stars.sort(key=lambda p: math.atan2(p.centroid.y - cy, p.centroid.x - cx))
+    for k, p in enumerate(stars):
+        c_ = p.centroid
         t = 90 + k * 4
-        so = Track(100, 0)
-        fo = Track(0, 0)
-        for tr_, on in ((so, 0), (fo, 100)):
-            tr_.k[-1][2] = "hold"
-            tr_.k.append([t, on, None])
-            tr_.k[-1][2] = "hold"
-            tr_.k.append([t + 6, 100 - on, None])
-            tr_.loop(OP, "lin")
-        part(c, f"s{k}", out, ring, (x, y), o=so)
-        part(c, f"f{k}", full, ring, (x, y), o=fo)
+        ps = seq([100, 100], [(t, None, None), (t + 4, [122, 122], "snap"), (t + 12, [100, 100], "io")], op=OP)
+        part(c, f"s{k}", p, ring, (c_.x, c_.y), s=ps)
 
 
 # ================================================================ 156 ⭐ star
@@ -128,11 +139,12 @@ def star_ring(c):
        op=150, series=SER)
 def star_e(c):
     OP = 150
-    cx, cy = 256, 262
-    front = star_outline(cx, cy, 214, 42)
-    back = geo.star(cx, cy, 214, 214 * 0.42, 5, -90).difference(logo.letter("X", cx, cy + 30, 150, 74))
+    front = rec("star")
+    fb = front.bounds
+    cx, cy = (fb[0] + fb[2]) / 2, (fb[1] + fb[3]) / 2
+    back = front.difference(logo.letter("X", cx, cy + 24, 150, 74))
     ss = seq([100, 100], [(10, None, None), (20, [96, 104], "io"), (28, [100, 100], "o"), (88, None, None), (92, [104, 97], "o"), (100, [99, 101], "io"), (108, [100, 100], "io")], op=OP)
-    body = rig(c, "body", (cx, cy + 214), s=ss)
+    body = rig(c, "body", (cx, fb[3]), s=ss)
     segs = [(20, 88, 0, 360, (0.35, 0.0, 0.14, 1.0))]
     M.spin3d(c, "star", front, back, cx, cy, segs, thick=40, lip=30, parent=body)
 
@@ -145,31 +157,18 @@ def star_e(c):
        op=180, series=SER)
 def star_flake(c):
     OP = 180
+    g = rec("flake")
     cx, cy = 256, 256
-    rr = M.wave(0, 0, 180, OP) if False else seq(0, [(0, 60, "lin"), (180, 60, "lin")]) if False else None
-    ring = rig(c, "flake", (cx, cy), r=seq(0, [(180, 60, "lin")]))
-    rings = [(0, 1, 40), (80, 6, 34), (154, 6, 28), (212, 6, 22)]
-    for j, (rad, n, ro) in enumerate(rings):
-        for k in range(n):
-            a = math.radians(-90 + 360 * k / n)
-            x, y = cx + rad * math.cos(a), cy + rad * math.sin(a)
-            out = star_outline(x, y, ro, ro * 0.34)
-            full = geo.star(x, y, ro, ro * 0.42, 5, -90)
-            t = 30 + j * 18
-            so = Track(100, 0)
-            fo = Track(0, 0)
-            for tr_, on in ((so, 0), (fo, 100)):
-                tr_.k[-1][2] = "hold"
-                tr_.k.append([t, on, None])
-                tr_.k[-1][2] = "hold"
-                tr_.k.append([t + 60 - j * 4, 100 - on, None])
-                tr_.loop(OP, "lin")
-            part(c, f"o{j}{k}", out, ring, (x, y), o=so)
-            part(c, f"f{j}{k}", full, ring, (x, y), o=fo)
-    # 6 spokes joining the rings
-    spokes = geo.U(*[geo.line([(cx + 40 * math.cos(math.radians(-90 + 60 * k)), cy + 40 * math.sin(math.radians(-90 + 60 * k))),
-                               (cx + 206 * math.cos(math.radians(-90 + 60 * k)), cy + 206 * math.sin(math.radians(-90 + 60 * k)))], 12) for k in range(6)])
-    part(c, "spokes", spokes, ring, (cx, cy))
+    # the traced flake is not exactly 6-fold symmetric, so no continuous spin: a heavy rock and back
+    ring = rig(c, "flake", (cx, cy), r=seq(0, [(20, None, None), (80, 14, "io"), (150, 0, "io")], op=OP), s=(90, 90))
+    # split the flake into 3 radial bands; each band pulses in turn (wave from the centre)
+    bands = [(0, 110), (110, 190), (190, 300)]
+    for j, (r0, r1) in enumerate(bands):
+        band = g.intersection(geo.disc(cx, cy, r1, 48).difference(geo.disc(cx, cy, r0, 48)))
+        t = 30 + j * 16
+        bs = seq([100, 100], [(t, None, None), (t + 8, [110, 110], "o"), (t + 24, [100, 100], "io"), (120 + j * 16, None, None),
+                              (128 + j * 16, [108, 108], "o"), (144 + j * 16, [100, 100], "io")], op=OP)
+        part(c, f"band{j}", band, ring, (cx, cy), s=bs)
 
 
 # ================================================================ 158 🎼 clef

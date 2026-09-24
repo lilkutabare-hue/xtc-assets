@@ -352,3 +352,76 @@ def skull_x(c):
     part(c, "jaw", jaw, head, (cx, 384), p=Split(cx, jy), s=js)
     hs = seq([100, 100], [(45, None, None), (46, [103, 97], "lin"), (54, [99, 101], "io"), (62, [100, 100], "io")], op=OP)
     head.s = hs
+
+
+# ================================================================ 152 🧱 LEGO head with the branding
+
+
+def cyl_track(th, phi, R, cx, keys):
+    """a feature printed on a cylinder at angle phi: screen x = cx + R sin(th+phi), width = cos(th+phi),
+    visible while it faces the camera (cos > 0). Returns (x track, scaleX track, opacity hold track)."""
+    from xtc.lot import fit
+    from xtc.motion import crossings
+    f = lambda t: math.radians(th(t) + phi)
+    x = fit(lambda t: cx + R * math.sin(f(t)), keys)
+    # width 0 while it faces away (rlottie ignores animated group opacity); squared so the Hermite fit
+    # has a zero slope at the crossing and never dips below 0
+    sx = fit(lambda t: 100 * max(0.0, math.cos(f(t))) ** 2 / 1.0, keys)
+    st = Track([sx.k[0][1], 100], sx.k[0][0])
+    for i in range(1, len(sx.k)):
+        st.to(sx.k[i][0], [sx.k[i][1], 100], sx.k[i - 1][2])
+    o = Track(100 if math.cos(f(0)) > 0 else 0, 0)
+    for t in keys:
+        if 0 < t < keys[-1]:
+            v = 100 if math.cos(f(t + 0.05)) > 0 else 0
+            if v != o.v:
+                o.k[-1][2] = "hold"
+                o.k.append([t, v, None])
+    o.loop(keys[-1], "lin")
+    return x, st, o
+
+
+@emoji("152-lego-head", "🧱", "лего, голова, фигурка, xtc, челик, минифиг", "lego, head, minifig, xtc, figure, toy",
+       "LEGO-голова с X_X: настоящий цилиндр — при тяжёлом обороте лицо уезжает по поверхности и прячется за край, на затылке проявляется принт XTC; покой, оборот обратно, кивок",
+       op=180, series="drop")
+def lego_head(c):
+    from xtc.motion import spin_angle
+    OP = 180
+    cx, cy = 256, 276
+    R, H = 150, 300
+    head = geo.U(geo.rrect(cx - R, cy - H / 2, cx + R, cy + H / 2, 56), geo.rrect(cx - 54, cy - H / 2 - 40, cx + 54, cy - H / 2 + 10, 12),
+                 geo.rrect(cx - 60, cy + H / 2 - 10, cx + 60, cy + H / 2 + 30, 10))
+    segs = [(24, 68, 0, 180, (0.4, 0.0, 0.15, 1.0)), (108, 152, 180, 360, (0.4, 0.0, 0.15, 1.0))]
+    th = spin_angle(segs)
+    # keys: seg ends + every 90° crossing for every printed feature offset (features: -22, 0, 22, 180)
+    keys = {0, OP}
+    for a, b, d0, d1, _ in segs:
+        keys |= {a, b}
+        for phi in (-22, 0, 22, 180):
+            for target in range(-720, 1080, 90):
+                tg = target - phi
+                if min(d0, d1) < tg < max(d0, d1):
+                    lo, hi = a, b
+                    for _ in range(50):
+                        m = (lo + hi) / 2
+                        if (th(m) < tg) == (d1 > d0):
+                            lo = m
+                        else:
+                            hi = m
+                    keys.add(round((lo + hi) / 2, 2))
+    keys = sorted(keys)
+    # nod on the rests
+    hy = seq(float(cy + H / 2), [(70, None, None), (76, cy + H / 2 + 8.0, "o"), (86, float(cy + H / 2), "io"), (154, None, None), (160, cy + H / 2 + 8.0, "o"), (170, float(cy + H / 2), "io")], op=OP)
+    body = rig(c, "body", (cx, cy + H / 2), p=Split(cx, hy))
+    hl = part(c, "head", head, body, (cx, cy))
+    # printed features as holes riding on the cylinder
+    feats = [("eyeL", brand_x(cx, cy - 44, 92, 50), -24), ("eyeR", brand_x(cx, cy - 44, 92, 50), 24),
+             ("mouth", geo.brush([(cx - 40, cy + 50), (cx + 40, cy + 50)], 28, taper=(0.9, 0.9), smooth=False), 0),
+             ("print", logo.word("XTC", cx, cy + 4, 48, 262), 180)]
+    for nm, g, phi in feats:
+        b = g.bounds
+        ax = (b[0] + b[2]) / 2
+        x, st, o = cyl_track(th, phi, R * 0.62 if nm != "print" else R * 0.1, cx, keys)
+        g = geo.move(g, cx - ax, 0)
+        grp_y = (b[1] + b[3]) / 2
+        geo.hole(hl, g, nm=nm, p=Split(x, grp_y), a=(cx, grp_y), s=st)

@@ -152,27 +152,29 @@ def tribal_cross(c):
 
 
 @emoji("29-drip-xtc", "💦", "капает, течёт, мокро, xtc, сочно", "dripping, wet, drip, xtc, juicy",
-       "XTC трясётся желе волной по буквам, с нижних кромок набухают подтёки, тянутся и срываются каплями",
+       "тяжёлый лаковый XTC: по буквам проходит блик, снизу медленно растут латексные подтёки, средний тянется и срывается каплей, все медленно втягиваются",
        op=150, series="v1")
 def drip_xtc(c):
-    from specs.drop import brand_letter
-    cy = 196
-    letters = [("X", 110), ("T", 256), ("C", 402)]
-    for k, (ch, x) in enumerate(letters):
-        g = brand_letter(ch, x, cy, 118, 150, 16)
-        t0 = 10 + k * 8                                  # M16 jelly, letters offset 7-8f
-        s = Track([100, 100], 0).hold(t0).to(t0 + 10, [95, 105], "io").to(t0 + 20, [105, 95], "io").to(t0 + 30, [97, 103], "io").to(t0 + 40, [100, 100], "io").loop(150)
-        lay(c, f"L{k}", g, (x, cy + 59), s=s)
-    # drips: hang from letter bottoms, stretch down, detach and fall (stagger 2-4f per M16)
-    drips = [(78, 250, 22), (140, 252, 18), (256, 252, 24), (370, 252, 20), (440, 250, 18)]
-    for k, (x, y0, r) in enumerate(drips):
-        t0 = 40 + k * 7
-        # the hanging tongue: grows from the letter bottom
-        tongue = geo.U(geo.rect(x - r * 0.7, y0 - 10, x + r * 0.7, y0 + 40), geo.disc(x, y0 + 40, r))
-        ts = Track([100, 0], 0).hold(t0 - 20).to(t0, [100, 100], "is").to(t0 + 4, [90, 120], "io").to(t0 + 8, [100, 20], "snap").to(t0 + 30, [100, 0], "io").loop(150)
-        lay(c, f"tongue{k}", tongue, (x, y0 - 10), s=ts)
-        M.particle(c, f"drop{k}", K.tear(x, y0 + 40, r), t0 + 6, 30, (x, y0 + 40), (x, 470), None, anchor=(x, y0 + 40),
-                   pop=0.1, fade=0.15, fall="i", s_end=60)
+    from specs.drop import brand_word
+    from specs.v1a import drip_shape
+    from specs.reactions import seq
+    OP = 150
+    cy = 200
+    word = brand_word("XTC", 256, cy, 150, 470)
+    x0, y0, x1, y1 = word.bounds
+    # the wordmark is heavy lacquer: one glare sweep, no wobble
+    wl = lay(c, "word", word, (256, y1))
+    M.glare_sweep(c, wl, 256, cy, 18, 30, travel=360, length=640, w1=30, w2=12, gap=14)
+    # latex drips: grow slowly from the bottom edge (is), neck, one snaps off into a drop, all retract slowly
+    drips = [(x0 + (x1 - x0) * 0.16, 34, 30, 120), (x0 + (x1 - x0) * 0.5, 44, 44, 180), (x0 + (x1 - x0) * 0.84, 30, 58, 100)]
+    for k, (x, w, t0, L) in enumerate(drips):
+        g = drip_shape(x, y1 - 24, y1 + L, w)
+        ts = seq([100, 4], [(t0, None, None), (t0 + 46, [100, 100], "is"), (t0 + 54, [90, 108], "io"), (t0 + 60, [104, 96], "io"),
+                            (t0 + 66, [100, 100], "io"), (128, None, None), (148, [100, 4], "io3")], op=OP, loop_ease="lin")
+        lay(c, f"drip{k}", g, (x, y1 - 24), s=ts)
+        if k == 1:
+            M.particle(c, "drop", geo.drop(x, y1 + L, w * 0.42, w), t0 + 56, 30, (x, y1 + L), (x, 500 - w), None,
+                       anchor=(x, y1 + L), pop=0.15, fade=0.2, fall="i5", s_end=60)
 
 
 @emoji("30-club-banner", "🪩", "клуб, туса, вечеринка, club, рейв", "club, party, rave, night out, banner",

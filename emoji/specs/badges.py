@@ -210,7 +210,7 @@ def sold_out(c):
 
 
 @emoji("120-new", "🆕", "новинка, new, новое, свежак, дроп", "new, fresh, just dropped, latest, drop",
-       "NEW выщёлкивается на табло плитка за плиткой с перелётом, по плиткам проходит латексный блик и ✦ «новенькое»",
+       "табло OLD перещёлкивается в NEW волной, плитки подпрыгивают с перелётом и ✦ «новенькое»",
        op=150, series="p1")
 def new(c):
     cy = 262
@@ -222,12 +222,14 @@ def new(c):
     plates = []
     for j in range(n):
         x = x0 + j * (136 + gap)
-        s = Track([100, 100], 0).hold(8 + j * 5).to(14 + j * 5, [70, 70], "io").to(22 + j * 5, [106, 106], "snap").to(30 + j * 5, [96, 96], "io").to(38 + j * 5, [100, 100], "io").loop(150)
+        t0 = 100 + j * 4
+        s = Track([100, 100], 0).hold(t0 - 6).to(t0, [94, 94], "io").hold(t0 + 20).to(t0 + 26, [108, 108], "snap").to(t0 + 32, [97, 97], "io").to(t0 + 38, [100, 100], "io").loop(150)
         tn = c.null(f"tn{j}", parent=board, p=(x, cy), a=(x, cy), s=s)
-        M.flip_tile(c, f"t{j}", tn, x, cy, 136, 204, [tile_glyph("NEW"[j], x, cy, 136, 204)], [], dur=10)
+        M.flip_tile(c, f"t{j}", tn, x, cy, 136, 204, [tile_glyph("NEW"[j], x, cy, 136, 204), tile_glyph("OLD"[j], x, cy, 136, 204)],
+                    [80 + j * 4, 100 + j * 4], dur=10)
     # one glare across the whole board: needs a single target -> a flat plate behind the tiles
-    M.twinkle(c, "tw", 256 + total / 2 - 44, cy - 204 / 2 - 4, 40, 64, 26)
-    M.twinkle(c, "tw2", 256 - total / 2 + 40, cy + 204 / 2 + 2, 28, 72, 20)
+    M.twinkle(c, "tw", 256 + total / 2 - 44, cy - 204 / 2 - 4, 40, 124, 22)
+    M.twinkle(c, "tw2", 256 - total / 2 + 40, cy + 204 / 2 + 2, 28, 130, 18)
 
 
 @emoji("121-xtc", "✖️", "xtc, икстиси, бренд, xtcpay, лого", "xtc, brand, logo, xtcpay, drop",

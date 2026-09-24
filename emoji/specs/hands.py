@@ -63,6 +63,9 @@ def thumbs_down(c):
                   s=Track([100, 100], 0).hold(20).to(40, [104, 96], "is").to(46, [92, 110], "slam").to(56, [103, 98], "io").to(66, [100, 100], "io").loop(120),
                   r=Track(0, 0).hold(20).to(40, -8, "is").to(46, 6, "slam").to(56, -2, "io").to(66, 0, "io").loop(120))
     c.layer("hand", [geo.shape(g, nm="hand")], parent=body, p=(256, 256), a=(256, 256))
+    for k, pts in enumerate(([(196, 488), (160, 470), (130, 486)], [(196, 488), (236, 474), (266, 490)], [(196, 488), (190, 470)])):
+        e = Track(0, 0).hold(46).to(54, 100, "o").hold(96).to(110, 0, "i").loop(120)
+        c.layer(f"crack{k}", [geo.stroked(pts, 18, e=e)], p=(0, 0), a=(0, 0))
 
 
 @emoji("128-victory", "✌️", "мир, пис, победа, два, peace", "peace, victory, v sign, two, chill",

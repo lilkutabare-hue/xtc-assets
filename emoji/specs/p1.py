@@ -166,16 +166,16 @@ def huff(c):
 
 @emoji("101-raised-brow", "🤨", "хм, серьёзно?, подозрительно, ну-ну, сомневаюсь", "raised eyebrow, really?, suspicious, hmm, doubt",
        "¬_O: левый глаз щурится, правая бровь рывками ползёт вверх — тик, тик, ТИК, глаз-люверс под ней раздувается, морда кренится и присматривается вбок, бровь падает",
-       op=120, series=SERIES)
+       op=108, series=SERIES)
 def raised_brow(c):
-    OP = 120
+    OP = 108
     lx, rx = CX - 116, CX + 112
     r = seq(0, [(36, None, None), (42, 7, "o5"), (52, 5, "io"), (62, 8, "io"), (76, None, None), (86, 0, "io")], op=OP)
     px = seq(float(CX), [(36, None, None), (42, CX + 20.0, "o5"), (54, CX + 8.0, "io"), (66, CX + 22.0, "io"),
                          (76, None, None), (88, float(CX), "io")], op=OP)
     s = seq([100, 100], [(36, None, None), (40, [104, 97], "o"), (46, [100, 100], "io"), (84, None, None),
                          (87, [104, 96], "o"), (94, [100, 100], "io")])
-    breathe(s, 96, 120, [100, 100], 0.7, 12)
+    breathe(s, 96, 108, [100, 100], 0.7, 12)
     s.loop(OP)
     face = rig(c, p=Split(px, CY), s=s, r=r)
     # the suspicious squint (left) and the flat brow above it
@@ -206,7 +206,8 @@ def raised_brow(c):
        op=150, series=SERIES)
 def zipper(c):
     OP = 150
-    face = rig(c, s=seq([100, 100], [(88, None, None), (92, [104, 97], "o"), (96, [98, 103], "io"), (100, [104, 97], "o"),
+    zoom = null(c, "zoom", (CX, CY), s=(115, 115))      # the kit's features are small for a face with a zipper: fill 88%
+    face = rig(c, parent=zoom, s=seq([100, 100], [(88, None, None), (92, [104, 97], "o"), (96, [98, 103], "io"), (100, [104, 97], "o"),
                                        (104, [98, 103], "io"), (108, [104, 97], "o"), (114, [100, 100], "io")], op=OP))
     n, x0, dx = 8, 138, 34
     zy = 356
@@ -240,7 +241,7 @@ def zipper(c):
         es = seq([100, 100], [(50, None, None), (53, [124, 124], "snap"), (60, [100, 100], "io"), (88, None, None),
                               (92, [110, 60], "o"), (100, [104, 80], "io"), (108, [110, 60], "o"), (116, [100, 100], "io")], op=OP)
         part(c, f"eye{i}", K.dot(x, 206, 40), face, (x, 206), p=Split(ex, 206), s=es)
-    M.twinkle(c, "tw", 430, 300, 30, 52, 20)
+    M.twinkle(c, "tw", 420, 300, 30, 52, 20, parent=zoom)
 
 
 # ================================================================ 103 🥱
@@ -252,9 +253,9 @@ def _ell(x, y, rx, ry, n=32):
 
 @emoji("103-yawn", "🥱", "зевок, скучно, спать хочу, устал, ааам", "yawn, bored, sleepy, tired, meh",
        "сонные глаза жмурятся, рот-люверс медленно растягивается в огромное О, голова откидывается, из уголка глаза выжимается слеза — «ам!» — рот схлопывается в волну, веки падают",
-       op=150, series=SERIES)
+       op=140, series=SERIES)
 def yawn(c):
-    OP = 150
+    OP = 140
     my = 352
     # head: tilts back and rises through the yawn, snaps forward on the "am", droops
     r = seq(0, [(16, None, None), (54, -12, "io"), (70, -13, "io"), (74, 3, "o5"), (84, -1, "io"), (92, 0, "io")], op=OP)
@@ -262,7 +263,7 @@ def yawn(c):
     y.loop(OP)
     s = seq([100, 100], [(16, None, None), (54, [98, 104], "io"), (70, [98, 105], "io"), (74, [106, 94], "o5"),
                          (84, [99, 101], "io"), (92, [100, 100], "io")])
-    breathe(s, 100, 150, [100, 100], 0.8, 24)
+    breathe(s, 100, 140, [100, 100], 0.8, 20)
     s.loop(OP)
     face = rig(c, p=Split(CX, y), s=s, r=r)
     # eyes: sleepy dashes that squeeze shut (tilted) during the yawn, open droopy, slow blink
@@ -303,16 +304,17 @@ def drip_shape(x, y0, y1, w=36, bulb=None):
 
 @emoji("104-drool", "🤤", "слюнки, хочу, вкусняшка, мечтаю, ммм", "drool, want, yummy, craving, dreamy",
        "^ ^ мечтательно покачивается, из уголка рта набухает подтёк-слюна, тянется до низа и качается, истончается почти до обрыва — «шлюрп!» втягивается обратно, глаза распахиваются",
-       op=150, series=SERIES)
+       op=128, series=SERIES)
 def drool(c):
-    OP = 150
+    OP = 128
     r = seq(0, [(8, 4, "io"), (40, -4, "io"), (72, 4, "io"), (88, None, None), (92, -3, "o5"), (104, 0, "io")], op=OP)
     y = seq(0.0, [(88, None, None), (92, -14, "o5"), (100, 3, "io"), (108, 0, "io")], f=lambda v: CY + v)
     y.loop(OP)
     s = seq([100, 100], [(88, None, None), (92, [95, 106], "o5"), (100, [102, 98], "io"), (108, [100, 100], "io")])
-    breathe(s, 110, 150, [100, 100], 0.8, 20)
+    breathe(s, 108, 128, [100, 100], 0.8, 20)
     s.loop(OP)
-    face = rig(c, p=Split(CX, y), s=s, r=r)
+    zoom = null(c, "zoom", (CX, CY), s=(110, 110))
+    face = rig(c, p=Split(CX, y), s=s, r=r, parent=zoom)
     for i, x in enumerate((CX - 112, CX + 112)):
         eo = steps(100, [(90, 0), (104, 100)], OP)
         part(c, f"eye{i}", K.caret(x, 212, 132, h=0.62), face, (x, 212), o=eo)
@@ -323,13 +325,13 @@ def drool(c):
     part(c, "mouth", K.m_smile(CX - 10, 344, 176, 58), face, (CX - 10, 344), s=ms)
     # the drool: hangs from the right corner; grows, swings, thins, snaps back up
     cx0, cy0 = CX + 64, 338
-    g = drip_shape(cx0, cy0, 480, 42, bulb=30)
+    g = drip_shape(cx0, cy0, 462, 42, bulb=30)
     ds = seq([100, 8], [(10, None, None), (70, [100, 100], (0.45, 0.0, 0.3, 1.0)), (78, [92, 102], "io"),
                         (84, [72, 103], "io"), (88, [70, 102], "io"), (93, [120, 6], "i5"), (98, [100, 10], "o"),
-                        (150, [100, 8], "io")])
+                        (128, [100, 8], "io")])
     dr = seq(0, [(40, None, None), (56, 7, "io"), (66, -6, "io"), (76, 4, "io"), (86, -2, "io"), (93, 0, "io")], op=OP)
     part(c, "drool", g, face, (cx0, cy0), s=ds, r=dr)
-    M.twinkle(c, "tw", 400, 150, 32, 96, 22)
+    M.twinkle(c, "tw", 396, 156, 30, 96, 22, parent=zoom)
 
 
 # ================================================================ 105 🤓
@@ -337,23 +339,24 @@ def drool(c):
 
 @emoji("105-nerd", "🤓", "ботан, умник, вообще-то, факт, задрот", "nerd, actually, smart, geek, well actually",
        "очки-люверсы сползают по носу — глаза выглядывают поверх оправы, морда морщится и подкидывает очки: щёлк на место, линзы вспыхивают глухим бликом (глаз не видно), ✦ на оправе, зубы-зайчик",
-       op=120, series=SERIES)
+       op=100, series=SERIES)
 def nerd(c):
-    OP = 120
+    OP = 100
     ey = 212
     s = seq([100, 100], [(38, None, None), (42, [106, 94], "io"), (46, [97, 104], "o5"), (54, [100, 100], "io")])
-    breathe(s, 76, 120, [100, 100], 0.7, 22)
+    breathe(s, 76, 100, [100, 100], 0.7, 12)
     s.loop(OP)
     face = rig(c, s=s, r=seq(0, [(10, None, None), (36, 4, "io"), (46, -2, "o5"), (56, 0, "io")], op=OP))
     # pupils stay put while the glasses slide: they end up peeking over the rims
     for i, x in enumerate((CX - 104, CX + 104)):
         po = steps(100, [(46, 0), (72, 100)], OP)
         py = seq(0.0, [(10, None, None), (36, -6, "io"), (46, 0, "o5")], op=OP, f=lambda v: ey + v)
-        part(c, f"pupil{i}", K.dot(x, ey, 30), face, (x, ey), p=Split(x, py), o=po)
+        bs = seq([100, 100], [(84, None, None), (87, [110, 8], "i"), (92, [100, 100], "o")], op=OP)
+        part(c, f"pupil{i}", K.dot(x, ey, 30), face, (x, ey), p=Split(x, py), o=po, s=bs)
     # glasses: two fat rings + bridge + temples; slide down, pushed back up with a snap
     rings = U(geo.ring(CX - 104, ey, 82, 50, 24), geo.ring(CX + 104, ey, 82, 50, 24),
-              geo.brush([(CX - 26, ey - 8), (CX, ey - 20), (CX + 26, ey - 8)], 26, taper=(1, 1), smooth=True, n=4),
-              geo.line([(CX - 184, ey - 10), (CX - 214, ey - 24)], 26), geo.line([(CX + 184, ey - 10), (CX + 214, ey - 24)], 26))
+              geo.brush([(CX - 26, ey - 8), (CX, ey - 20), (CX + 26, ey - 8)], 30, taper=(1, 1), smooth=True, n=4),
+              geo.line([(CX - 184, ey - 10), (CX - 214, ey - 24)], 30), geo.line([(CX + 184, ey - 10), (CX + 214, ey - 24)], 30))
     gy = seq(0.0, [(10, None, None), (36, 44, "io"), (40, 48, "io"), (44, -10, "o5"), (50, 3, "io"), (56, 0, "io")],
              op=OP, f=lambda v: ey + v)
     gl = null(c, "glasses", (CX, ey), parent=face, p=Split(CX, gy))
@@ -363,7 +366,8 @@ def nerd(c):
         st = U(geo.line([(x - 30, ey + 16), (x + 4, ey - 26)], 16), geo.line([(x + 2, ey + 26), (x + 30, ey - 8)], 12))
         so = seq([0, 0], [(45, None, None), (48, [120, 120], "o5"), (54, [100, 100], "io"), (70, None, None),
                           (74, [0, 0], "i")], op=OP, loop_ease="lin")
-        part(c, f"glare{i}", st, gl, (x, ey), s=so)
+        gp = Track([x - 12.0, ey + 12.0], 0).hold(45).to(74, [x + 12.0, ey - 12.0], "io").hold(OP)
+        part(c, f"glare{i}", st, gl, (x, ey), p=gp, s=so)
     M.twinkle(c, "tw", CX + 184, ey - 72, 34, 48, 24, parent=face)
     # buck-tooth grin: a filled grin with two tooth cut-outs, widening on the push
     grin = geo.poly([(CX - 96, 336)] + geo.arc(CX, 332, 96, 0, 180, 20)[::-1] + [(CX + 96, 336)]).buffer(10).buffer(-10)
@@ -391,10 +395,11 @@ def woozy(c):
         return r, Split(x, y)
 
     # each feature swings on the same slow wave, but late by its own phase: the face "floats apart"
+    zoom = null(c, "zoom", (CX, CY), s=(110, 110))
     r, p = drift(0.0)
-    eyes = rig(c, "eyes", p=p, r=r)
+    eyes = rig(c, "eyes", p=p, r=r, parent=zoom)
     r2, p2 = drift(-0.9, 9.0, 22.0)
-    mouth = rig(c, "mouthrig", p=p2, r=r2)
+    mouth = rig(c, "mouthrig", p=p2, r=r2, parent=zoom)
     lx, rx, ey = CX - 112, CX + 112, 214
     # uneven eyes, swapping on the hiccup
     a_o, b_o = steps(100, [(65, 0), (107, 100)], OP), steps(0, [(65, 100), (107, 0)], OP)
@@ -412,11 +417,11 @@ def woozy(c):
                       (92, [100, 100], "io"), (96, [130, 130], "o"), (98, [0, 0], "i")], op=OP, loop_ease="lin")
     bpx = seq(float(bx), [(64, None, None), (98, bx + 70.0, "os")], op=OP, loop_ease="lin")
     bpy = seq(float(by), [(64, None, None), (98, 120.0, "decel")], op=OP, loop_ease="lin")
-    part(c, "bubble", bub, None, (bx, by), p=Split(bpx, bpy), s=bs, ip=64, op=99)
+    part(c, "bubble", bub, zoom, (bx, by), p=Split(bpx, bpy), s=bs, ip=64, op=99)
     for k, (dx_, dy_) in enumerate(((-1, -1), (1, -1), (-1, 1), (1, 1))):
         x0, y0 = bx + 70, 120
         M.particle(c, f"pop{k}", geo.disc(x0, y0, 14), 97, 12, (x0, y0), (x0 + dx_ * 50, y0 + dy_ * 44), None,
-                   anchor=(x0, y0), fall="o5", xease="o5", pop=0.2, fade=0.5)
+                   anchor=(x0, y0), fall="o5", xease="o5", pop=0.2, fade=0.5, parent=zoom)
 
 
 # ================================================================ 107 🤗
@@ -481,8 +486,8 @@ def yum(c):
     # the tongue: hangs out of the right corner (😋), then licks round the mouth like a wiper (pivot = mouth
     # centre): up over the right corner, across the upper lip, down the left corner and back, "pop"
     mc = (CX, 330)
-    tongue = U(geo.rect(CX - 32, mc[1] + 34, CX + 32, mc[1] + 96), geo.disc(CX, mc[1] + 96, 32, 14))
-    tongue = tongue.difference(geo.line([(CX, mc[1] + 50), (CX, mc[1] + 100)], 10))
+    tongue = U(geo.rect(CX - 40, mc[1] + 34, CX + 40, mc[1] + 94), geo.disc(CX, mc[1] + 94, 40, 16))
+    tongue = tongue.difference(geo.line([(CX, mc[1] + 52), (CX, mc[1] + 98)], 10))
     tr = seq(-38, [(12, None, None), (18, -30, "io"), (34, -176, "io"), (44, -300, "io"), (52, -250, "io"),
                    (58, -38, (0.3, 0.0, 0.2, 1.0))], op=OP)
     ts = seq([100, 100], [(12, None, None), (18, [104, 90], "io"), (34, [100, 110], "io"), (44, [100, 104], "io"),
@@ -499,9 +504,9 @@ BILL_W, BILL_H = 392, 160
 
 def _bill(cx, cy, w=BILL_W, h=BILL_H):
     b = geo.rrect(cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2, 24)
-    b = b.difference(geo.ellipse(cx, cy, 78, 56, 20))
+    b = b.difference(geo.ellipse(cx, cy, 78, 46, 20))
     b = b.difference(geo.disc(cx - w / 2 + 52, cy, 20, 10)).difference(geo.disc(cx + w / 2 - 52, cy, 20, 10))
-    return b.union(brand_x(cx, cy, 84, 50, bold=10))
+    return b.union(brand_x(cx, cy, 62, 42, bold=12))
 
 
 @emoji("109-bills", "💸", "деньги улетают, трачу, зарплата всё, дорого, плачу", "money flying, spending, broke, expensive, paying",
@@ -509,14 +514,14 @@ def _bill(cx, cy, w=BILL_W, h=BILL_H):
        op=150, series=SERIES)
 def bills(c):
     OP = 150
-    cx, y0, pitch = 256, 300, 26
+    cx, y0, pitch = 256, 300, 36
     starts = (12, 36, 60)
     # edge stripes of the pack (hidden while the top bill sits on them), bottom first
     st0 = y0 + BILL_H / 2 + 4
-    for k in (3, 2, 1, 0):
+    for k in (2, 1, 0):
         y = st0 + pitch * k
-        g = geo.rrect(cx - BILL_W / 2 + 6, y, cx + BILL_W / 2 - 6, y + 22, 10)
-        part(c, f"edge{k}", g, None, (cx, y + 11), s=None if k == 3 else steps([100, 100], [(starts[k] + 4, [0, 0]), ((104, 110, 116)[2 - k], [100, 100])], op=OP))
+        g = geo.rrect(cx - BILL_W / 2 + 6, y, cx + BILL_W / 2 - 6, y + 30, 12)
+        part(c, f"edge{k}", g, None, (cx, y + 15), s=steps([100, 100], [(starts[k] + 4, [0, 0]), ((104, 110, 116)[2 - k], [100, 100])], op=OP))
     # the pack's top bill: drops a notch as each bill leaves; «brrr» recount climbs back in three snaps
     fy = seq(float(y0), [(starts[0] + 4, None, None), (starts[0] + 10, y0 + pitch * 1.0, "slam"),
                          (starts[1] + 4, None, None), (starts[1] + 10, y0 + pitch * 2.0, "slam"),
@@ -557,20 +562,20 @@ def bills(c):
 
 @emoji("110-popper", "🎉", "ура, празднуем, поздравляю, бах, вечеринка, успех", "party popper, congrats, hooray, celebrate, bang, tada",
        "хлопушка взводится (шнур с люверсом натягивается, конус сжимается и дрожит) — БАХ: отдача назад, из раструба вылетают серпантины-завитки и конфетти ✦/X, которые, кувыркаясь, планируют вниз",
-       op=150, series=SERIES)
+       op=140, series=SERIES)
 def popper(c):
-    OP, TB = 150, 34                                  # TB = bang
-    tip, ang = (118, 414), 45                          # cone tip (world) and tilt (local up -> up-right)
+    OP, TB = 140, 34                                  # TB = bang
+    tip, ang, Z = (106, 430), 45, 1.15                 # cone tip (world), tilt (local up -> up-right), zoom
     lc = (256, 370)                                    # tip in the cone's local drawing
     cone = geo.poly([(256 - 90, 150), (256 + 90, 150), (256 + 12, 372), (256 - 12, 372)]).buffer(6)
-    cone = U(cone, geo.ellipse(256, 150, 98, 34, 24))
-    cone = cone.difference(geo.ellipse(256, 150, 74, 17, 20))
+    cone = U(cone, geo.ellipse(256, 150, 100, 42, 24))
+    cone = cone.difference(geo.ellipse(256, 150, 68, 13, 20))
     for yb in (228, 298):
         cone = cone.difference(geo.rot(geo.rect(100, yb - 8, 412, yb + 8), -14, (256, yb)))
     # windup: squash along the axis, lean back, tremble; bang: stretch + kick back along the axis; settle
     s = seq([100, 100], [(8, None, None), (26, [108, 90], "io"), (TB - 1, None, None), (TB + 2, [88, 118], "ox"),
                          (TB + 10, [104, 96], "io"), (TB + 20, [99, 101], "io"), (TB + 30, [100, 100], "io")])
-    breathe(s, 120, 150, [100, 100], 0.8, 30)
+    breathe(s, 120, 140, [100, 100], 0.8, 20)
     s.loop(OP)
     r = seq(float(ang), [(8, None, None), (26, ang + 7.0, "io"), (TB - 1, None, None), (TB + 3, ang - 9.0, "ox"),
                          (TB + 16, ang + 3.0, "io"), (TB + 28, float(ang), "io")], op=OP)
@@ -580,9 +585,10 @@ def popper(c):
     tx.to(TB + 3, tip[0] - 22.0, "ox").to(TB + 18, tip[0] + 3.0, "io").to(TB + 28, float(tip[0]), "io").loop(OP)
     ty = seq(float(tip[1]), [(TB - 1, None, None), (TB + 3, tip[1] + 22.0, "ox"), (TB + 18, tip[1] - 3.0, "io"),
                              (TB + 28, float(tip[1]), "io")], op=OP)
-    body = c.layer("cone", [geo.shape(cone, nm="cone")], p=Split(tx, ty), a=lc, s=s, r=r)
+    zoom = null(c, "zoom", tip, s=(Z * 100, Z * 100))
+    c.layer("cone", [geo.shape(cone, nm="cone")], parent=zoom, p=Split(tx, ty), a=lc, s=s, r=r)
     # pull string with an eyelet: tugged down-left during the windup, whips back on the bang
-    e0, e1 = (76, 460), (60, 478)
+    e0, e1 = (68, 458), (52, 470)
     ex = seq(float(e0[0]), [(8, None, None), (26, float(e1[0]), "io"), (TB - 1, None, None), (TB + 2, e0[0] + 14.0, "ox"),
                             (TB + 12, e0[0] - 4.0, "io"), (TB + 24, float(e0[0]), "io")], op=OP)
     ey = seq(float(e0[1]), [(8, None, None), (26, float(e1[1]), "io"), (TB - 1, None, None), (TB + 2, e0[1] - 18.0, "ox"),
@@ -592,10 +598,10 @@ def popper(c):
         if t == 0:
             continue
         str_path.to(t, poly_path([(tx.at(t), ty.at(t)), (ex.at(t), ey.at(t))]), "io")
-    c.layer("string", [lot.group([lot.sh(str_path), lot.stroke(12)], nm="string")], p=(0, 0), a=(0, 0))
-    c.layer("eyelet", [geo.shape(geo.eyelet(e0[0], e0[1], 22, 10), nm="eyelet")], p=Split(ex, ey), a=e0)
+    c.layer("string", [lot.group([lot.sh(str_path), lot.stroke(18)], nm="string")], p=(0, 0), a=(0, 0))
+    c.layer("eyelet", [geo.shape(geo.eyelet(e0[0], e0[1], 28, 10), nm="eyelet")], p=Split(ex, ey), a=e0)
     # bang flash: a fan of rays around the mouth, 9 frames
-    mouth = (tip[0] + 220 * math.sin(math.radians(ang)), tip[1] - 220 * math.cos(math.radians(ang)))
+    mouth = (tip[0] + 220 * Z * math.sin(math.radians(ang)), tip[1] - 220 * Z * math.cos(math.radians(ang)))
     rays = U(*[geo.brush([(mouth[0] + 112 * math.cos(math.radians(a)), mouth[1] + 112 * math.sin(math.radians(a))),
                           (mouth[0] + 160 * math.cos(math.radians(a)), mouth[1] + 160 * math.sin(math.radians(a)))], 22, (0.4, 0.9))
                for a in (-150, -110, -72, -34, 4, 42)])
@@ -618,9 +624,9 @@ def popper(c):
     # confetti: ✦, logo X, bars and eyelets fly out in a fan, then flutter down (sway + tumble)
     kinds = [lambda x, y: geo.spark(x, y, 38, 0.36), lambda x, y: brand_x(x, y, 58, 44, bold=10),
              lambda x, y: geo.rrect(x - 28, y - 12, x + 28, y + 12, 6), lambda x, y: geo.eyelet(x, y, 24, 10)]
-    flights = [((300, 62), (346, 296)), ((366, 56), (398, 284)), ((436, 86), (444, 330)), ((440, 172), (446, 446)),
-               ((394, 130), (414, 404)), ((328, 118), (372, 446)), ((244, 72), (300, 214)), ((418, 240), (428, 452)),
-               ((360, 188), (384, 452)), ((188, 104), (226, 156))]
+    flights = [((300, 62), (334, 150)), ((366, 56), (420, 250)), ((436, 86), (452, 330)), ((440, 172), (454, 440)),
+               ((394, 130), (430, 400)), ((330, 118), (430, 446)), ((244, 72), (288, 138)), ((418, 240), (440, 452)),
+               ((360, 188), (418, 452)), ((188, 104), (214, 136))]
     for i, ((xa, ya), (xe, ye)) in enumerate(flights):
         t0 = TB + 1 + (i % 5) * 0.8
         ta = t0 + 11 + (i % 3) * 2
@@ -697,9 +703,9 @@ def siren(c):
 
 @emoji("112-box-drop", "📦", "дроп, посылка, распаковка, доставка, сюрприз, пришло", "drop, package, unboxing, delivery, surprise, arrived",
        "коробка с X подпрыгивает — внутри что-то рвётся наружу; створки распахиваются, и на пружине выстреливает XTC (джек-из-коробки), раскачивается, ловит ✦, пружина утягивает его обратно — створки захлопываются",
-       op=150, series=SERIES)
+       op=144, series=SERIES)
 def box_drop(c):
-    OP = 150
+    OP = 144
     cx, top, bot, half = 256, 310, 476, 176
     TO, TJ = 36, 38                     # flaps burst open, jack fires
     TB, TS = 96, 110                    # pull back, flaps slam
@@ -709,7 +715,7 @@ def box_drop(c):
     s = seq([100, 100], [(10, None, None), (14, [96, 104], "o"), (20, [106, 94], "slam"), (24, [100, 100], "io"),
                          (27, [95, 106], "o"), (33, [107, 93], "slam"), (TJ, [100, 100], "io"), (TJ + 3, [106, 92], "o"),
                          (TJ + 14, [100, 100], "io"), (TS, None, None), (TS + 3, [106, 92], "o"), (TS + 12, [100, 100], "io")])
-    breathe(s, 124, 150, [100, 100], 0.7, 26)
+    breathe(s, 124, 144, [100, 100], 0.7, 20)
     s.loop(OP)
     box = null(c, "box", (cx, bot), p=Split(cx, ypos_abs(y, bot)), s=s)
     # jack: spring + XTC plate on a pivot at the box mouth (sways as a whole); shown only while out
@@ -770,15 +776,15 @@ def _slosh(th, t_end, dt=0.25, per=18.0, zeta=0.16, gain=1.2):
 
 @emoji("113-cocktail", "🍸", "за нас, чин-чин, выпьем, пятница, отдыхаю, тост", "cheers, drinks, friday, toast, cocktail, party",
        "мартини поднимается и кренится «чин-чин» — дзынь ✦ о край, бокал дёргается назад, жидкость плещет волной и перехлёстывает через край подтёком, который набухает и срывается каплей; оливка-люверс ныряет и выныривает",
-       op=120, series=SERIES)
+       op=108, series=SERIES)
 def cocktail(c):
-    OP = 120
+    OP = 108
     cx, rim, apex, rw = 256, 142, 330, 196
     TC = 29                                             # clink
     th = seq(0.0, [(8, None, None), (24, -10.0, "io"), (TC - 1, -11.0, "io"), (TC + 2, -4.0, "o5"), (TC + 12, 3.0, "io"), (TC + 22, 0.0, "io")], op=OP)
     gy = seq(0.0, [(8, None, None), (24, -18.0, "io"), (TC - 1, None, None), (TC + 2, -10.0, "o5"), (TC + 14, 2.0, "io"), (TC + 22, 0.0, "io")], op=OP)
     gs = seq([100, 100], [(8, None, None), (24, [106, 106], "io"), (TC - 1, None, None), (TC + 2, [103, 103], "o5"), (TC + 16, [100, 100], "io")])
-    breathe(gs, 96, 120, [100, 100], 0.7, 24)
+    breathe(gs, 96, 108, [100, 100], 0.7, 12)
     gs.loop(OP)
     piv = (cx, 236)
     glass = null(c, "glass", piv, p=Split(cx, ypos_abs(gy, piv[1])), s=gs, r=th)
@@ -815,9 +821,9 @@ def cocktail(c):
     lt.loop(OP, "io")
     c.layer("liquid", [lot.group([lot.sh(lt, "l"), lot.fill()], nm="liquid")], parent=glass, p=piv, a=piv)
     outer = geo.poly([(cx - rw, rim), (cx + rw, rim), (cx, apex)])
-    inner = geo.poly([(cx - rw + 30, rim - 30), (cx + rw - 30, rim - 30), (cx, apex - 36)])
+    inner = geo.poly([(cx - rw + 44, rim - 30), (cx + rw - 44, rim - 30), (cx, apex - 50)])
     bowl = outer.difference(inner).buffer(3).buffer(-3)
-    stand = U(geo.rect(cx - 12, apex - 20, cx + 12, 446), geo.rrect(cx - 96, 440, cx + 96, 470, 14))
+    stand = U(geo.rect(cx - 16, apex - 20, cx + 16, 446), geo.rrect(cx - 100, 438, cx + 100, 472, 16))
     part(c, "bowl", U(bowl, stand), glass, piv)
     # olive (eyelet) on a pick, riding the surface; dives on the clink and pops back
     ox = cx + 58
@@ -830,8 +836,8 @@ def cocktail(c):
         orr.to(t, (-th.at(t) + phi(t)) * 0.7, "io")
     oy.loop(OP)
     orr.loop(OP)
-    olive = U(geo.eyelet(ox, 0, 32, 13), geo.line([(ox, 0), (ox + 76, -138)], 14), geo.disc(ox + 76, -138, 13))
-    olive = olive.difference(geo.disc(ox, 0, 13))
+    olive = U(geo.eyelet(ox, 0, 36, 12), geo.line([(ox, 0), (ox + 72, -132)], 22), geo.disc(ox + 72, -132, 18))
+    olive = olive.difference(geo.disc(ox, 0, 12))
     part(c, "olive", olive, glass, (ox, 0), p=Split(float(ox), oy), r=orr)
     # the spill: a drip swells on the right rim corner, stretches, lets go as a drop, splats on the table
     dx, d0 = cx + rw - 4, rim - 6
@@ -855,9 +861,9 @@ def cocktail(c):
 
 @emoji("114-headphones", "🎧", "музыка, слушаю, трек, бас, качает, в наушниках", "music, listening, track, bass, vibing, headphones",
        "наушники качает бас: на каждую долю чашки с X пружинят наружу, оголовье подскакивает, из чашек бьют звуковые дуги; подводка — дрожь, и на дропе большой удар: всё сжимается и выстреливает, ✦",
-       op=150, series=SERIES)
+       op=132, series=SERIES)
 def headphones(c):
-    OP = 150
+    OP = 132
     cx, by, cy, cw = 256, 250, 334, 132              # band base line, cup centre y, cup offset
     beats = [(12, 1.0), (36, 1.0), (60, 1.0), (88, 1.9)]  # (time, strength); 88 = the drop
     roll = (70, 84)                                   # build-up tremble before the drop
@@ -870,7 +876,7 @@ def headphones(c):
             s.hold(roll[0]).to(roll[1], [100, 104], "io")
         y.hold(t).to(t + 2, 7.0 * k, "o").to(t + 10, -2.0 * k, "io").to(t + 18, 0.0, "io")
         s.hold(t).to(t + 2, [100, 100 - 4 * k], "o").to(t + 10, [100, 101], "io").to(t + 18, [100, 100], "io")
-    breathe(s, 120, 150, [100, 100], 0.7, 30)
+    breathe(s, 110, 132, [100, 100], 0.7, 22)
     y.loop(OP)
     s.loop(OP)
     px = seq(float(cx), [(roll[0], None, None)])

@@ -15,25 +15,29 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 # pack order: cover -> brand & DROP -> faces (joy -> anger -> shock -> sadness) -> reactions -> symbols -> badges
-ORDER = {
-    "P0": """
+ORDER = """
 01-pill-x
-44-cross-amen 50-soldout-tee 47-flipclock 48-board-payme 49-board-dropnow 45-buckle-lock 51-latex-heart 52-psp
-53-bag-xtc 46-eyelets-wow 29-drip-xtc 20-split-pill 16-heart-pill
-54-laugh 55-rofl 35-kao-happy 58-heart-eyes 59-kiss 39-kao-wink 66-smirk 68-cool 70-party 71-devil 81-angel
-42-kao-tongue 02-acid-xx 38-kao-tear 80-salute 64-think 79-moai 67-unamused 65-eyeroll 37-kao-meh 76-sleep
-63-flushed 69-peek 77-grimace 78-clown
-60-rage 61-swear 34-kao-squeeze
+44-cross-amen 50-soldout-tee 47-flipclock 48-board-payme 49-board-dropnow 112-box-drop 45-buckle-lock 51-latex-heart
+52-psp 53-bag-xtc 109-bills 46-eyelets-wow 29-drip-xtc 20-split-pill 16-heart-pill
+54-laugh 55-rofl 35-kao-happy 58-heart-eyes 59-kiss 104-drool 108-yum 107-hug 39-kao-wink 66-smirk 68-cool 105-nerd
+70-party 71-devil 81-angel 42-kao-tongue 02-acid-xx 38-kao-tear 80-salute 64-think 101-raised-brow 79-moai 67-unamused
+65-eyeroll 37-kao-meh 102-zipper-mouth 103-yawn 76-sleep 63-flushed 69-peek 77-grimace 78-clown
+60-rage 100-huff 61-swear 34-kao-squeeze
 62-scream 40-kao-shock 75-mind-blown
-57-plead 36-kao-cry 56-sob 73-melt 74-dizzy 82-nausea 33-kao-xx 72-skull
+57-plead 36-kao-cry 56-sob 73-melt 74-dizzy 106-woozy 82-nausea 33-kao-xx 72-skull
 83-eyes 84-fire 85-hundred 86-check 87-cross 88-heart 89-broken-heart 90-sparkles 91-zap 92-question 93-exclaim
+110-popper 111-siren 113-cocktail 114-headphones
+126-thumbs-up 127-thumbs-down 128-victory 129-rock 130-wave
 14-barbed-heart 15-dagger-heart 26-tribal-heart 22-kiss-less3 04-tramp-stamp 10-club-key 13-dagger-cross
 18-spike-collar 19-thorn-star 23-dot-star 28-tribal-cross 27-tribal-eye 24-print-scan 25-mask-glyphs
 21-teddy-skull 03-sigil-x 43-scorpion-sigil 31-cyber-butterfly 32-swallow 17-winged-x 41-patch-x 30-club-banner
-94-lol 95-omg 96-wtf 97-ok 98-no 99-yes
-""".split(),
+94-lol 95-omg 96-wtf 97-ok 98-no 99-yes 115-gm 116-gn 117-xoxo 118-soon 119-sold-out 120-new 121-xtc
+""".split()
+# failed the scale after 2 attempts -> not in the pack (reasons also in scores.csv / REPORT.md)
+CUT = {
+    "119-sold-out": "7 букв на 512 не читаются на 24px; SOLD OUT уже закрыт эмодзи 50",
+    "127-thumbs-down": "2 попытки, Σ27: перевёрнутый 👍 на 24px читается буквой F",
 }
-CUT = {}          # file -> reason (filled when something fails the scale after 2 attempts)
 
 
 def reg():
@@ -56,10 +60,10 @@ def scores():
 
 
 def order(kind):
-    names = list(ORDER["P0"])
-    if kind == "final":
-        names += ORDER.get("P1", []) + ORDER.get("P2", [])
-    return [n for n in names if n not in CUT]
+    names = [n for n in ORDER if n not in CUT]
+    if kind == "P0":
+        names = [n for n in names if int(n.split("-")[0]) < 100]
+    return names
 
 
 def manifest(kind="final"):

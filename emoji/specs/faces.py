@@ -334,53 +334,67 @@ def scream(c):
 
 
 @emoji("63-flushed", "😳", "стыдно, смущён, покраснел, ой, неловко", "flushed, embarrassed, blush, oops, awkward",
-       "O_O: по щекам прорастает штриховка румянца ////, лицо съёживается и отводит глаза",
-       op=120, series="face")
+       "O_O: по щекам прорастает штриховка румянца ////, из макушки пыхает пар — морда съёживается и прячется вниз, потом робко выглядывает",
+       op=150, series="face")
 def flushed(c):
-    s = Track([100, 100], 0).hold(20).to(34, [94, 94], "io").hold(92).to(106, [100, 100], "io").loop(120)
-    y = Track(CY, 0).hold(20).to(34, CY + 12, "io").hold(92).to(106, CY, "io").loop(120)
+    # shrink & hide down (culmination ~70), peek back up
+    s = Track([100, 100], 0).hold(46).to(58, [106, 94], "io").to(66, [74, 70], "snap").hold(96).to(118, [96, 96], "o").to(128, [100, 100], "io").loop(150)
+    y = Track(CY, 0).hold(46).to(58, CY - 8, "io").to(66, CY + 96, "snap").hold(96).to(118, CY + 6, "o").to(128, CY, "io").loop(150)
     face = rig(c, p=Split(CX, y), s=s)
     for i, x in enumerate((CX - 116, CX + 116)):
         es = Track([100, 100], 0).hold(8).to(16, [114, 114], "snap").to(24, [106, 106], "io")
-        for tb in (58, 70):
+        for tb in (30, 40):
             es.hold(tb + i * 2).to(tb + 3 + i * 2, [110, 12], "i").to(tb + 8 + i * 2, [106, 106], "o")
-        es.hold(98).to(108, [100, 100], "io").loop(120)
+        es.hold(104).to(110, [120, 120], "snap").to(120, [100, 100], "io").loop(150)
         part(c, f"eye{i}", K.eyelet(x, 200, 78, 0.5), face, (x, 200), s=es)
-        # blush: 4 hatch strokes drawn on with trim, staggered 3f
         for k in range(4):
             hx = x - 45 + k * 30
-            t0 = 26 + k * 3 + i * 2
-            e = Track(0, 0).hold(t0).to(t0 + 8, 100, "o").hold(96).to(104, 0, "i").loop(120)
+            t0 = 14 + k * 3 + i * 2
+            e = Track(0, 0).hold(t0).to(t0 + 8, 100, "o").hold(132).to(142, 0, "i").loop(150)
             c.layer(f"blush{i}{k}", [geo.stroked([(hx - 14, 336), (hx + 14, 282)], 26, e=e)], parent=face, p=(0, 0), a=(0, 0))
-    ms = Track([100, 100], 0).hold(20).to(30, [70, 100], "io").hold(94).to(106, [100, 100], "io").loop(120)
-    part(c, "mouth", K.m_wave(CX, 382, 110, 10, 30, 1.5), face, (CX, 382), s=ms)
+    ms = Track([100, 100], 0).hold(20).to(30, [70, 100], "io").hold(130).to(142, [100, 100], "io").loop(150)
+    part(c, "mouth", K.m_wave(CX, 390, 110, 10, 30, 1.5), face, (CX, 390), s=ms)
+    for k, (dx, t0) in enumerate(((-40, 52), (30, 56), (0, 61))):
+        M.particle(c, f"steam{k}", K.steam(CX + dx, 110, 64 - k * 8), t0, 30, (CX + dx, 110), (CX + dx * 1.6, 40), None,
+                   parent=face, pop=0.15, fade=0.5, fall="decel", anchor=(CX + dx, 110))
 
 
-@emoji("64-think", "🤔", "хм, думаю, сомнительно, вопрос, ну такое", "hmm, thinking, doubt, sus, wondering",
-       "o_O: один глаз щурится, другой лезет на лоб, над головой пишется «?» и покачивается",
+@emoji("64-think", "🤔", "хм, думаю, сомнительно, вопрос, идея", "hmm, thinking, doubt, idea, wondering",
+       "o_O: один глаз щурится, бровь лезет на лоб, над головой пишется «?» — и переворачивается в «!» (дошло), глаза распахиваются",
        op=150, series="face")
 def think(c):
-    rr = Track(0, 0).hold(14).to(30, -8, "io").hold(118).to(134, 0, "io").loop(150)
+    rr = Track(0, 0).hold(14).to(30, -8, "io").hold(84).to(92, 3, "snap").to(100, 0, "io").loop(150)
     face = rig(c, p=(CX, CY + 30), r=rr)
     face.a = (CX, CY + 30)
-    # left: squint dash; right: ring eye grows, brow lifts
-    ls = Track([100, 100], 0).hold(18).to(30, [100, 55], "io").hold(118).to(132, [100, 100], "io").loop(150)
-    part(c, "eyeL", geo.disc(CX - 150, 236, 32), face, (CX - 150, 236), s=ls)
-    rs = Track([100, 100], 0).hold(18).to(28, [126, 126], "snap").to(36, [118, 118], "io").hold(118).to(132, [100, 100], "io").loop(150)
+    ls = Track([100, 100], 0).hold(18).to(30, [100, 55], "io").hold(84).to(90, [130, 130], "snap").to(98, [118, 118], "io").hold(132).to(144, [100, 100], "io").loop(150)
+    part(c, "eyeL", geo.disc(CX - 150, 236, 36), face, (CX - 150, 236), s=ls)
+    rs = Track([100, 100], 0).hold(18).to(28, [126, 126], "snap").to(36, [118, 118], "io").hold(132).to(144, [100, 100], "io").loop(150)
     part(c, "eyeR", K.eyelet(CX + 70, 236, 64, 0.42), face, (CX + 70, 236), s=rs)
-    bp = Track([CX + 70, 140], 0).hold(18).to(28, [CX + 70, 110], "snap").to(36, [CX + 70, 118], "io").hold(118).to(132, [CX + 70, 140], "io").loop(150)
+    bp = Track([CX + 70, 140], 0).hold(18).to(28, [CX + 70, 110], "snap").to(36, [CX + 70, 118], "io").hold(132).to(144, [CX + 70, 140], "io").loop(150)
     part(c, "brow", K.brow(CX + 70, 140, 120, ang=-10, w=34), face, (CX + 70, 140), p=bp)
-    part(c, "browL", K.brow(CX - 150, 176, 110, ang=6, w=34), face, (CX - 150, 176))
-    mr = Track(0, 0).hold(18).to(30, -10, "io").hold(118).to(132, 0, "io").loop(150)
-    part(c, "mouth", K.m_line(CX - 30, 368, 130, 40), face, (CX - 30, 368), r=mr)
-    # "?" drawn on with trim, then its dot pops, bobbing; top right corner
-    qx, qy = 404, 120
+    bl = Track([CX - 150, 176], 0).hold(84).to(90, [CX - 150, 150], "snap").to(98, [CX - 150, 158], "io").hold(132).to(144, [CX - 150, 176], "io").loop(150)
+    part(c, "browL", K.brow(CX - 150, 176, 110, ang=6, w=34), face, (CX - 150, 176), p=bl)
+    mr = Track(0, 0).hold(18).to(30, -10, "io").hold(84).to(90, 0, "snap").loop(150)
+    ms = Track([100, 100], 0).hold(84).to(90, [60, 60], "snap").hold(132).to(144, [100, 100], "io").loop(150)
+    part(c, "mouth", K.m_line(CX - 30, 368, 130, 40), face, (CX - 30, 368), r=mr, s=ms)
+    # "?" drawn on with trim, bobs, then flips (scaleX through 0) into "!" — the idea lands
+    qx, qy = 404, 124
     pts = geo.arc(qx, qy - 28, 40, 185, 395, 24) + [(qx, qy + 22)]
-    e = Track(0, 0).hold(40).to(60, 100, "o").hold(124).to(136, 0, "i").loop(150)
-    qr = Track(0, 0).hold(60).to(76, 14, "io").to(92, -10, "io").to(108, 8, "io").to(124, 0, "io").loop(150)
-    q = c.layer("q", [geo.stroked(pts, 32, e=e)], p=(qx, qy + 60), a=(qx, qy + 60), r=qr)
-    ds = Track([0, 0], 0).hold(58).to(66, [120, 120], "snap").to(72, [100, 100], "io").hold(124).to(134, [0, 0], "i").loop(150)
-    c.layer("qdot", [geo.shape(geo.disc(qx, qy + 58, 19), nm="dot")], parent=q, p=(qx, qy + 58), a=(qx, qy + 58), s=ds)
+    e = Track(0, 0).hold(40).to(60, 100, "o").loop(150, "lin") if False else Track(0, 0).hold(40).to(60, 100, "o").hold(150)
+    e.k[-1][2] = "hold"
+    e.k.append([149.9, 0, None])
+    qs = Track([100, 100], 0).hold(78).to(84, [0, 110], "i").hold(150)
+    qs.k[-1][2] = "hold"
+    qs.k.append([149.9, [100, 100], None])
+    qr = Track(0, 0).hold(60).to(68, 12, "io").to(76, -6, "io").to(84, 0, "io").loop(150)
+    q = c.layer("q", [geo.stroked(pts, 32, e=e)], p=(qx, qy + 60), a=(qx, qy + 60), r=qr, s=qs, ip=0, op=86)
+    ds = Track([0, 0], 0).hold(58).to(66, [120, 120], "snap").to(72, [100, 100], "io").hold(150)
+    c.layer("qdot", [geo.shape(geo.disc(qx, qy + 58, 19), nm="dot")], parent=q, p=(qx, qy + 58), a=(qx, qy + 58), s=ds, ip=0, op=86)
+    ex = geo.U(geo.brush([(qx, qy - 58), (qx, qy + 26)], 40, (1, 0.6), False), geo.disc(qx, qy + 60, 22))
+    es_ = Track([0, 110], 0).hold(84).to(90, [118, 118], "snap").to(98, [100, 100], "io").hold(128).to(140, [0, 0], "i").hold(150)
+    er = Track(0, 0).hold(90).to(96, 10, "io").to(104, -6, "io").to(112, 0, "io").hold(150)
+    c.layer("ex", [geo.shape(ex, nm="ex")], p=(qx, qy + 80), a=(qx, qy + 80), s=es_, r=er, ip=84, op=141)
+    M.twinkle(c, "tw", qx - 70, qy - 50, 30, 92, 20)
 
 
 @emoji("65-eyeroll", "🙄", "закатываю глаза, ой всё, бесит, скучно, ну да", "eye roll, whatever, ugh, bored, sure",
@@ -648,31 +662,34 @@ def melt(c):
 
 
 @emoji("74-dizzy", "😵‍💫", "голова кругом, плыву, штормит, уф, кружится", "dizzy, woozy, spinning, confused, dazed",
-       "@_@ спирали крутятся в разные стороны, голова ходит восьмёркой, вокруг орбитой летают три ✦ (ближние крупнее)",
-       op=120, series="face")
+       "@_@ спирали крутятся, голова ходит восьмёркой всё шире, ✦ летают орбитой — и она заваливается набок почти в обморок, встряхивается",
+       op=180, series="face")
 def dizzy(c):
     import math as m
-    fx = M.wave(CX, 22, 120, 120)
-    fy = M.wave(CY, 14, 60, 120)
-    fr = M.wave(0, 6, 120, 120, 1.2)
+    fx = M.wave(CX, 22, 60, 120)
+    fy = M.wave(CY, 12, 30, 120)
+    # after 2 figure-8s: faint at 120-150 (tilt + sink), shake it off 150-170
+    fx.to(140, CX + 30, "io").to(160, CX - 6, "snap").to(170, CX + 3, "io").to(180, CX, "io")
+    fy.to(140, CY + 40, "is").to(154, CY - 10, "snap").to(166, CY + 4, "io").to(180, CY, "io")
+    fr = M.wave(0, 5, 60, 120, 1.2)
+    fr.to(142, 26, "is").to(152, -8, "snap").to(160, 5, "io").to(168, -2, "io").to(180, 0, "io")
     face = rig(c, p=Split(fx, fy), r=fr)
     for i, (x, d) in enumerate(((CX - 116, 1), (CX + 116, -1))):
-        rot = Track(0, 0).to(120, d * 720, "lin")
+        rot = Track(0, 0).to(120, d * 720, "lin").to(150, d * 1080, "i").to(180, d * 1440, "o")
         part(c, f"eye{i}", K.spiral(x, 216, 76, 34, 1.9), face, (x, 216), r=rot)
-    mr = M.wave(0, 8, 60, 120)
+    mr = M.wave(0, 8, 60, 180)
     part(c, "mouth", K.m_wave(CX, 356, 170, 18, 38, 1.5), face, (CX, 356), r=mr)
-    # orbiting sparks on an ellipse above the head; nearer (lower) half = bigger
     ocx, ocy, rx, ry = CX, 92, 190, 44
     for k in range(3):
         ph = 2 * m.pi * k / 3
-        x = M.wave(ocx, rx, 120, 120, ph + m.pi / 2)
-        y = M.wave(ocy, ry, 120, 120, ph)
-        sc = M.wave(80, 30, 120, 120, ph)
+        x = M.wave(ocx, rx, 90, 180, ph + m.pi / 2)
+        y = M.wave(ocy, ry, 90, 180, ph)
+        sc = M.wave(80, 30, 90, 180, ph)
         s2 = M.Track([sc.k[0][1]] * 2, 0)
         for j in range(1, len(sc.k)):
             s2.to(sc.k[j][0], [sc.k[j][1]] * 2, sc.k[j - 1][2])
         c.layer(f"star{k}", [geo.shape(geo.spark(ocx, ocy, 44, 0.36), nm="star")], p=Split(x, y), a=(ocx, ocy), s=s2,
-                r=Track(0, 0).to(120, 180, "lin"))
+                r=Track(0, 0).to(180, 180, "lin"))
 
 
 @emoji("75-mind-blown", "🤯", "мозг взорван, офигеть, шок, вау, не может быть", "mind blown, shocked, wow, no way, boom",
@@ -816,26 +833,24 @@ def moai(c):
     geo.hole(lay, geo.rect(182, 176, 240, 190), nm="browL")
 
 
-@emoji("80-salute", "🫡", "есть, так точно, уважение, принял, служу", "salute, yes sir, respect, roger, o7",
-       "ладонь взлетает к брови и щёлкает, рука дрожит от напряжения, взгляд твёрдый, кивок",
+@emoji("80-salute", "🫡", "есть, так точно, уважение, принял, o7", "salute, o7, yes sir, respect, roger",
+       "o7: голова-люверс кивает, рука-«7» взлетает к виску со щелчком и дрожит от напряжения, ✦",
        op=120, series="face")
 def salute(c):
-    y = Track(CY, 0).hold(26).to(30, CY + 8, "slam").to(38, CY, "io").loop(120)
-    face = rig(c, p=Split(CX, y))
-    for i, x in enumerate((CX - 124, CX + 124)):
-        part(c, f"eye{i}", K.dash(x, 228, 130, 46, tilt=-8 if i == 0 else 8), face, (x, 228))
-    part(c, "mouth", K.m_line(CX, 360, 130), face, (CX, 360))
-    # hand: mitten palm (fingers together) at the right brow, forearm diagonal to the elbow (pivot)
-    pv = (424, 462)
-    palm = geo.U(geo.rrect(286, 96, 452, 174, 38), geo.rrect(404, 150, 452, 214, 22))
-    palm = geo.rot(palm, -18, (370, 134))
-    palm = palm.difference(geo.rot(geo.rect(296, 132, 364, 142), -18, (370, 134)))
-    arm = geo.brush([pv, (424, 320), (420, 200)], 64, taper=(1, 1), smooth=False)
-    hr = Track(-30, 0).hold(10).to(24, 4, "slam").to(30, -2, "io").to(36, 0, "io")
-    jitter(hr, 40, 94, 0, 1.0, 2)
-    hr.to(110, -30, "io").loop(120)
-    hs = Track([0, 0], 0).hold(8).to(20, [104, 104], "snap").to(28, [100, 100], "io").hold(100).to(112, [0, 0], "i").loop(120)
-    c.layer("arm", [geo.shape(geo.U(palm, arm), nm="arm")], parent=face, p=pv, a=pv, r=hr, s=hs)
+    from specs.drop import brand_font
+    hx, hy = 150, 270
+    y = Track(hy, 0).hold(24).to(28, hy + 12, "slam").to(36, hy, "io").loop(120)
+    head = c.layer("head", [geo.shape(K.eyelet(hx, hy, 112, 0.46), nm="head")], p=Split(hx, y), a=(hx, hy),
+                   s=Track([100, 100], 0).hold(24).to(28, [106, 94], "slam").to(36, [100, 100], "io").loop(120))
+    seven = geo.text("7", brand_font(), 360, 262, 300, bold=14)
+    seven = geo.fit_box(seven, 270, 90, 470, 440, keep=False)
+    pv = (320, 440)
+    r = Track(58, 0).hold(8).to(22, -4, "slam").to(28, 2, "io").to(34, 0, "io")
+    jitter(r, 38, 96, 0, 0.9, 2)
+    r.to(112, 58, "io").loop(120)
+    s = Track([70, 70], 0).hold(8).to(22, [100, 100], "o").hold(100).to(112, [70, 70], "io").loop(120)
+    c.layer("seven", [geo.shape(seven, nm="seven")], p=pv, a=pv, r=r, s=s)
+    M.twinkle(c, "tw", 470, 96, 30, 26, 20)
 
 
 @emoji("81-angel", "😇", "ангел, невинный, я не я, святой, мило", "angel, innocent, halo, saint, not me",

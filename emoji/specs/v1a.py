@@ -237,15 +237,15 @@ def tramp(c):
     hc = (256, 318)
     heart = geo.heart(256, 322, 214).difference(brand_x(256, 304, 112, 48, bold=10))
     hy = seq(0.0, [(10, None, None), (14, 6, "io"), (20, -18, "o"), (28, -10, "io"), (34, -36, "o"), (44, -30, "io"),
-                   (58, -34, "io"), (96, 0, "io")], f=lambda v: hc[1] + v)
+                   (58, -34, "io"), (84, 0, "io")], f=lambda v: hc[1] + v)
     hy.loop(OP)
     hs = seq([100, 100], [(10, None, None), (14, [104, 96], "io"), (20, [95, 106], "o"), (28, [103, 97], "io"),
-                          (34, [95, 106], "o"), (44, [100, 100], "io"), (96, None, None), (100, [103, 97], "o"),
-                          (106, [100, 100], "io")], op=OP)
+                          (34, [95, 106], "o"), (44, [100, 100], "io"), (84, None, None), (88, [103, 97], "o"),
+                          (94, [100, 100], "io")], op=OP)
     body = rig(c, "body", hc, p=Split(hc[0], hy), s=hs)
     # wing stroke (deg, + = down for the right wing): antic up, down, up, down, glide
     flap = [(6, None, None), (13, -22, "io"), (20, 24, "io3"), (27, -20, "io"), (34, 26, "io3"), (44, -4, "io"),
-            (58, 0, "io"), (96, None, None), (104, 5, "io"), (112, 0, "io")]
+            (58, 0, "io"), (84, None, None), (90, 5, "io"), (98, 0, "io")]
     feathers = [(-72, 176, 44), (-44, 176, 44), (-16, 150, 42)]
     for side in (-1, 1):
         root = (256 + side * 76, 262)
@@ -281,22 +281,23 @@ def key(c):
     front = _key(cx)
     back = front.difference(geo.disc(cx, 118, 20))      # the back shows the rivet of the bow
     # insert (push down), turn to edge-on with resistance, click, back out, momentum spin, settle
-    y = seq(0.0, [(12, None, None), (22, 14, "io"), (52, None, None), (60, -16, "o"), (100, None, None),
-                  (110, 0, "io")], f=lambda v: cy + v)
+    T = 52                                   # the story starts after a calm opening (the key face-on)
+    y = seq(0.0, [(T + 0, None, None), (T + 8, 14, "io"), (T + 34, None, None), (T + 40, -16, "o"), (T + 78, None, None),
+                  (T + 88, 0, "io")], f=lambda v: cy + v)
     y.loop(OP)
-    s = seq([100, 100], [(12, None, None), (22, [103, 97], "io"), (26, [100, 100], "io"), (41, None, None),
-                         (43, [98, 102], "o"), (47, [100, 100], "io"), (104, None, None), (108, [103, 97], "o"),
-                         (116, [100, 100], "io")])
-    breathe(s, 116, 150, [100, 100], 0.7, 17)
+    s = seq([100, 100], [(4, [101, 99], "io"), (16, [100, 100], "io")])
+    breathe(s, 20, T - 2, [100, 100], 0.7, 14)
+    s.hold(T).to(T + 8, [103, 97], "io").to(T + 12, [100, 100], "io").hold(T + 25).to(T + 27, [98, 102], "o")
+    s.to(T + 31, [100, 100], "io").hold(T + 82).to(T + 86, [103, 97], "o").to(T + 94, [100, 100], "io")
     s.loop(OP)
-    px = seq(float(cx), [(42, None, None)])
-    M.shake(px, 42, 52, 4, float(cx), step=2, decay=0.75)
+    px = seq(float(cx), [(T + 26, None, None)])
+    M.shake(px, T + 26, T + 34, 4, float(cx), step=2, decay=0.75)
     px.loop(OP)
     body = rig(c, "body", (cx, cy), p=Split(px, y), s=s)
-    segs = [(24, 40, 0, 88, "io3"), (40, 43, 88, 96, "o"), (43, 50, 96, 90, "io"),
-            (56, 100, 90, 372, (0.3, 0.0, 0.14, 1.0)), (100, 112, 372, 360, "io")]
+    segs = [(T + 10, T + 24, 0, 88, "io3"), (T + 24, T + 27, 88, 96, "o"), (T + 27, T + 32, 96, 90, "io"),
+            (T + 38, T + 80, 90, 372, (0.3, 0.0, 0.14, 1.0)), (T + 80, T + 90, 372, 360, "io")]
     M.spin3d(c, "key", front, back, cx, cy, segs, thick=42, lip=22, parent=body)
-    M.twinkle(c, "tw", cx - 118, 70, 36, 104, 26, parent=body)
+    M.twinkle(c, "tw", cx - 118, 70, 36, T + 82, 16, parent=body)
 
 
 # ================================================================ 13 🗡️
@@ -374,11 +375,13 @@ def _pinch(pts, cy, amount, wy, sig=70):
        op=150, series=SERIES)
 def barbed(c):
     OP = 150
+    T = 30                                    # calm opening with the wire on (the sheet frame shows it)
     hc = (256, 262)
     base = _heart_pts(256, 262, 404)
     wy = 282
     pinched = _pinch(base, 262, 0.3, wy, 80)
-    hp = Track(poly_path(base), 0).hold(16).to(40, poly_path(pinched), "io").hold(48).to(53, poly_path(base), "snap").loop(OP)
+    hp = Track(poly_path(base), 0).hold(T + 16).to(T + 40, poly_path(pinched), "io").hold(T + 48)
+    hp.to(T + 53, poly_path(base), "snap").loop(OP)
     # the wire: one band + barbs, XOR-ed with the heart (evenodd): white across the heart, black outside
     wire = [(48, 326), (150, 304), (256, 282), (362, 256), (464, 232)]
     barbs = []
@@ -391,40 +394,43 @@ def barbed(c):
     for j, (hg, sgn) in enumerate(zip(halves, (-1, 1))):
         mid = (256 + sgn * 104, 282 - sgn * 24)
         end = (256 + sgn * 208, 282 - sgn * 50)       # the tail end: the wire regrows from here
-        # cinch towards the middle, snap off and fly apart spinning on the burst, regrow from the tail and pull tight
-        p = seq(list(mid), [(16, None, None), (40, [mid[0] - sgn * 10, mid[1]], "io"), (49, None, None),
-                            (58, [mid[0] + sgn * 60, mid[1] - 30 + j * 50], "o5")])
+        # cinch towards the middle, snap off and fly apart spinning on the burst, regrow from the tail and pull tight;
+        # position and anchor switch together (hold keys) so the group never jumps
+        p = seq(list(mid), [(T + 16, None, None), (T + 40, [mid[0] - sgn * 10, mid[1]], "io"), (T + 49, None, None),
+                            (T + 58, [mid[0] + sgn * 60, mid[1] - 30 + j * 50], "o5")])
         p.k[-1][2] = "hold"
-        p.k.append([59, list(end), None])       # parked at the tail end (scale 0) while the anchor is there too
+        p.k.append([T + 59, list(end), None])
         p.k[-1][2] = "hold"
-        p.k.append([107, list(mid), None])
+        p.k.append([T + 108, list(mid), None])
         p.loop(OP, "lin")
-        r = seq(0, [(16, None, None), (40, -sgn * 4, "io"), (49, None, None), (58, sgn * 60, "o5")])
+        r = seq(0, [(T + 16, None, None), (T + 40, -sgn * 4, "io"), (T + 49, None, None), (T + 58, sgn * 60, "o5")])
         r.k[-1][2] = "hold"
-        r.k.append([59, -sgn * 30, None])
-        r.hold(78).to(100, sgn * 6, "io").to(108, 0, "io").loop(OP)
-        sc = seq([100, 100], [(49, None, None), (58, [0, 0], "o5")])
-        sc.hold(78).to(98, [104, 104], "o").to(106, [100, 100], "io").loop(OP)
-        # the group anchor switches from the middle (flying off) to the tail end (regrowing) with the hold key
+        r.k.append([T + 59, -sgn * 30, None])
+        r.hold(T + 78).to(T + 100, sgn * 6, "io").to(T + 108, 0, "io").loop(OP)
+        sc = seq([100, 100], [(T + 49, None, None), (T + 58, [0, 0], "o5")])
+        sc.hold(T + 78).to(T + 98, [104, 104], "o").to(T + 106, [100, 100], "io").loop(OP)
         a_ = Track(list(mid), 0)
         a_.k[-1][2] = "hold"
-        a_.k.append([59, list(end), None])
+        a_.k.append([T + 59, list(end), None])
         a_.k[-1][2] = "hold"
-        a_.k.append([107, list(mid), None])
+        a_.k.append([T + 108, list(mid), None])
         a_.loop(OP, "lin")
         groups.append(lot.group(geo.paths(hg), nm=f"wire{j}", p=p, a=a_, r=r, s=sc))
     # freed: a ✦ glint flashes through the lacquer (XOR cut)
     gx, gy = 160, 172
-    gs = seq([0, 0], [(54, None, None), (59, [120, 120], "ox"), (65, [100, 100], "io"), (74, [0, 0], "i")], op=OP, loop_ease="lin")
-    gr = seq(-20, [(54, None, None), (74, 20, "os")], op=OP, loop_ease="lin")
+    gs = seq([0, 0], [(T + 54, None, None), (T + 59, [120, 120], "ox"), (T + 65, [100, 100], "io"), (T + 74, [0, 0], "i")],
+             op=OP, loop_ease="lin")
+    gr = seq(-20, [(T + 54, None, None), (T + 74, 20, "os")], op=OP, loop_ease="lin")
     glint = lot.group(geo.paths(geo.spark(gx, gy, 46, 0.34)), nm="glint", p=(gx, gy), a=(gx, gy), s=gs, r=gr)
     grp = lot.group([lot.sh(hp, "heart")] + groups + [glint, lot.fill()], nm="heart")
-    s = seq([100, 100], [(40, None, None), (47, [96, 97], "io"), (51, [109, 108], "snap"), (58, [96, 97], "io"),
-                         (65, [102, 101.5], "io"), (73, [100, 100], "io")])
-    breathe(s, 76, 150, [100, 100], 0.8, 24)
+    s = seq([100, 100], [])
+    breathe(s, 0, T + 10, [100, 100], 0.8, 18)
+    s.hold(T + 40).to(T + 47, [96, 97], "io").to(T + 51, [109, 108], "snap").to(T + 58, [96, 97], "io")
+    s.to(T + 65, [102, 101.5], "io").to(T + 73, [100, 100], "io")
+    breathe(s, T + 76, 150, [100, 100], 0.8, 22)
     s.loop(OP)
-    px = seq(256.0, [(22, None, None)])
-    M.shake(px, 22, 46, 3, 256.0, step=2, decay=1.0)
+    px = seq(256.0, [(T + 22, None, None)])
+    M.shake(px, T + 22, T + 46, 3, 256.0, step=2, decay=1.0)
     px.loop(OP)
     c.layer("heart", [grp], p=Split(px, hc[1]), a=hc, s=s)
 
@@ -446,27 +452,24 @@ def dagger_heart(c):
     b = dg.bounds
     dc = ((b[0] + b[2]) / 2, (b[1] + b[3]) / 2)
     far = (370, 140)
-    # dagger (inside the heart's fill group -> XOR: white inside the heart, black outside)
-    p = seq(list(dc), [(10, None, None), (16, [dc[0] + 18, dc[1] - 30], "io"), (26, list(far), "o5"), (44, None, None),
-                       (54, list(dc), "lin")], op=OP)
-    r = seq(0, [(10, None, None), (16, -6, "io"), (26, 240, "o5"), (44, -500, "hold"), (54, 0, "lin")], op=OP)
-    r.k[3][2] = "hold"
-    s = seq([100, 100], [(16, None, None), (24, [0, 0], "o"), (44, [26, 26], "hold"), (53, [100, 100], "i")], op=OP)
-    s.k[2][2] = "hold"
+    # stuck (calm opening) -> pushed out and flung tumbling -> heart alone -> thrown back spinning -> recoil
+    p = seq(list(dc), [(56, None, None), (62, [dc[0] + 18, dc[1] - 30], "io"), (72, list(far), "o5"), (84, None, None),
+                       (94, list(dc), "lin")], op=OP)
+    r = seq(0, [(56, None, None), (62, -6, "io"), (72, 240, "o5"), (84, -500, "hold"), (94, 0, "lin")], op=OP)
+    s = seq([100, 100], [(62, None, None), (70, [0, 0], "o"), (84, [26, 26], "hold"), (93, [100, 100], "i")], op=OP)
     dgrp = lot.group(geo.paths(dg), nm="dagger", p=p, a=list(dc), r=r, s=s)
     grp = lot.group([lot.group(geo.paths(heart), nm="heart"), dgrp, lot.fill()], nm="dh")
-    # the heart: squeezes to push the blade out, exhales (one easy breath), recoils on the hit and settles
-    hp = seq(list(hc), [(54, None, None), (57, [hc[0] - 20, hc[1] + 12], "o"), (64, [hc[0] + 6, hc[1] - 4], "io"),
-                        (71, [hc[0] - 2, hc[1] + 1], "io"), (78, list(hc), "io")], op=OP)
-    hr = seq(0, [(54, None, None), (57, -8, "o"), (64, 3, "io"), (71, -1, "io"), (78, 0, "io")], op=OP)
-    hs = seq([100, 100], [(8, None, None), (14, [96, 104], "io"), (18, [104, 96], "o"), (24, [100, 100], "io"),
-                          (30, [103, 103], "io"), (40, [100, 100], "io"), (54, None, None), (56, [94, 106], "o"),
-                          (62, [103, 98], "io"), (70, [100, 100], "io")])
-    breathe(hs, 80, 120, [100, 100], 0.8, 20)
+    hp = seq(list(hc), [(94, None, None), (97, [hc[0] - 20, hc[1] + 12], "o"), (104, [hc[0] + 6, hc[1] - 4], "io"),
+                        (110, [hc[0] - 2, hc[1] + 1], "io"), (116, list(hc), "io")], op=OP)
+    hr = seq(0, [(94, None, None), (97, -8, "o"), (104, 3, "io"), (110, -1, "io"), (116, 0, "io")], op=OP)
+    hs = seq([100, 100], [])
+    breathe(hs, 0, 50, [100, 100], 0.8, 16)
+    hs.hold(54).to(60, [96, 104], "io").to(64, [104, 96], "o").to(70, [100, 100], "io").to(76, [103, 103], "io")
+    hs.to(84, [100, 100], "io").hold(94).to(96, [94, 106], "o").to(102, [103, 98], "io").to(110, [100, 100], "io")
     hs.loop(OP)
     c.layer("dh", [grp], p=hp, a=hc, s=hs, r=hr)
-    # a drop tears off the wound's lower lip and falls
-    for k, (t0, x0) in enumerate(((58, 176), (92, 186))):
+    # drops tear off the wound's lower lip and fall
+    for k, (t0, x0) in enumerate(((98, 176), (22, 186))):
         M.particle(c, f"drop{k}", geo.drop(x0, 404, 18, 42), t0, 26, (x0, 404), (x0 - 6, 478), None, anchor=(x0, 404),
                    fall="i5", pop=0.3, fade=0.25, s_end=40)
 
@@ -509,45 +512,47 @@ def heart_pill(c):
 
 
 @emoji("17-winged-x", "🪽", "крылья, лечу, свобода, взлёт, ангел", "wings, flying, free, take off, angel",
-       "X раскрывает сложенные крылья веером (перья по очереди), мощный взмах — взлетает с растяжкой, трепещет в воздухе, планирует, одно перо медленно падает",
+       "X с настоящими крыльями: поджимает их (антиципация), мощный взмах — взлетает с растяжкой, перья волной отстают от «руки» крыла, трепещет, планирует; одно перо отрывается и кружит вниз",
        op=150, series=SERIES)
 def winged(c):
     OP = 150
-    xc = (256, 356)
-    xg = brand_x(256, 356, 176, 132, bold=14)
-    y = seq(0.0, [(16, None, None), (26, 8, "io"), (36, -64, "o"), (44, -70, "io"), (52, -62, "io"), (60, -68, "io"),
-                  (96, 0, "io")], f=lambda v: xc[1] + v)
+    xc = (256, 372)
+    xg = brand_x(256, 372, 176, 124, bold=14)
+    y = seq(0.0, [(16, None, None), (26, 8, "io"), (36, -60, "o"), (44, -66, "io"), (52, -58, "io"), (60, -64, "io"),
+                  (90, 0, "io")], f=lambda v: xc[1] + v)
     y.loop(OP)
     s = seq([100, 100], [(16, None, None), (26, [108, 92], "io"), (32, [93, 108], "o"), (42, [100, 100], "io"),
-                         (95, None, None), (99, [104, 96], "o"), (106, [100, 100], "io")])
-    breathe(s, 120, 150, [100, 100], 0.8, 15)
+                         (89, None, None), (93, [104, 96], "o"), (100, [100, 100], "io")])
+    breathe(s, 104, 150, [100, 100], 0.8, 15)
     s.loop(OP)
     body = rig(c, "body", xc, p=Split(xc[0], y), s=s)
-    fan = [-88, -64, -40, -16]                 # open fan (right wing, deg from +x, - = up)
-    folded = -40
+    # wing stroke (+ = down for the right wing): tuck up (antic), power down, flutter, glide
+    stroke = [(16, None, None), (26, -26, "io"), (32, 18, "io3"), (37, -12, "io"), (41, 8, "io"), (45, -8, "io"),
+              (49, 6, "io"), (54, -3, "io"), (60, 0, "io"), (96, None, None), (102, 5, "io"), (110, 0, "io")]
     for side in (-1, 1):
-        root = (256 + side * 58, 318)
-        for i, ang in enumerate(fan):
-            ln = 188 - 12 * abs(i - 1)
-            a0 = folded if side > 0 else 180 - folded
-            g = _feather(root, a0, ln, 44)
-            d = (ang - folded) * side             # rotation that opens this feather from the folded stack
-            lag = 2 * i
-            # rest = open fan; fold in (reverse stagger) as the anticipation, burst open into the power stroke,
-            # flutter while hovering, glide back open
-            fl = 2 * (3 - i)
-            wing = [(8 + fl, None, None), (18 + fl, 0, "io"), (26, None, None),
-                    (30 + i, d + side * 26, "o"), (35 + i, d - side * 10, "io"),
-                    (39 + i, d + side * 8, "io"), (43 + i, d - side * 8, "io"), (47 + i, d + side * 6, "io"),
-                    (51 + i, d - side * 4, "io"), (58 + i, d, "io"), (96, None, None), (102 + i, d + side * 5, "io"),
-                    (110 + i, d, "io")]
-            r = seq(d, wing, op=OP)
-            part(c, f"f{side}{i}", g, body, root, r=r)
+        m = lambda p: (256 + side * (p[0] - 256), p[1])
+        root = m((300, 318))
+        arm_pts = [m(p) for p in ((298, 318), (336, 246), (380, 190), (424, 162))]
+        ang = m((0, 0))
+        wing = rig(c, f"wing{side}", root, parent=body, r=seq(0, stroke, op=OP, f=lambda v: side * v))
+        part(c, f"arm{side}", geo.brush(arm_pts, 58, taper=(1.0, 0.55), smooth=True, n=6), wing, root)
+        # primaries hang off the arm; each lags the stroke a little more (a wave runs out along the wing)
+        for i, (t, ln, a_) in enumerate(((0.36, 104, 100), (0.56, 114, 90), (0.76, 110, 80), (0.94, 96, 70))):
+            L = LineString(arm_pts)
+            q = L.interpolate(L.length * t)
+            at = (q.x, q.y)
+            a = math.radians(a_ if side > 0 else 180 - a_)
+            tip = (at[0] + math.cos(a) * ln, at[1] + math.sin(a) * ln)
+            mid = (at[0] + math.cos(a) * ln * 0.5, at[1] + math.sin(a) * ln * 0.5)
+            fg = geo.brush([at, mid, tip], 50, taper=(1.0, 0.3), smooth=False)
+            lag = 2 + 2 * i
+            fr = clip_loop(seq(0, stroke, lag, f=lambda v: side * v * 0.35), OP)
+            part(c, f"p{side}{i}", fg, wing, at, r=fr)
     part(c, "X", xg, body, xc)
-    # a loose feather drifts down, rocking
-    fx, fy = 420, 150
-    fth = _feather((fx, fy - 60), 90, 120, 34)
-    M.particle(c, "loose", fth, 34, 90, (fx, fy), (452, 456), None, anchor=(fx, fy), rot=(-40, 30),
+    # one primary comes loose on the power stroke and spirals down
+    fx, fy = 404, 250
+    fth = geo.brush([(fx, fy - 50), (fx + 5, fy), (fx, fy + 50)], 42, taper=(0.9, 0.18), smooth=True, n=4)
+    M.particle(c, "loose", fth, 34, 90, (fx, fy), (432, 420), None, anchor=(fx, fy), rot=(20, 200),
                fall="io", xease="io", pop=0.08, fade=0.2, s_peak=100)
 
 
@@ -626,18 +631,21 @@ def thorn_star(c):
     # -90° and the whole rig is turned +90°
     f_r, b_r = geo.rot(front, -90, (cx, cy)), geo.rot(back, -90, (cx, cy))
     gy = cy + 190
-    y = seq(0.0, [(14, None, None), (22, 8, "io"), (36, -44, "o"), (46, -48, "io"), (60, 0, "i5"), (66, -10, "o"),
-                  (72, 0, "i")], f=lambda v: gy + v)
+    T = 40
+    y = seq(0.0, [(T + 14, None, None), (T + 22, 8, "io"), (T + 36, -44, "o"), (T + 46, -48, "io"), (T + 60, 0, "i5"),
+                  (T + 66, -10, "o"), (T + 72, 0, "i")], f=lambda v: gy + v)
     y.loop(OP)
-    s = seq([100, 100], [(14, None, None), (22, [107, 92], "io"), (28, [95, 106], "o"), (36, [100, 100], "io"),
-                         (59, None, None), (61, [110, 90], "o"), (68, [97, 103], "io"), (76, [100, 100], "io")])
-    breathe(s, 100, 150, [100, 100], 0.8, 25)
+    s = seq([100, 100], [])
+    breathe(s, 0, T + 10, [100, 100], 0.8, 22)
+    s.hold(T + 14).to(T + 22, [107, 92], "io").to(T + 28, [95, 106], "o").to(T + 36, [100, 100], "io")
+    s.hold(T + 59).to(T + 61, [110, 90], "o").to(T + 68, [97, 103], "io").to(T + 76, [100, 100], "io")
     s.loop(OP)
     body = rig(c, "body", (cx, gy), p=Split(cx, y), s=s)
     turn = rig(c, "turn", (cx, cy), parent=body, r=90)
-    segs = [(20, 26, 0, -16, "io"), (26, 60, -16, 720, (0.3, 0.0, 0.3, 1.0)), (60, 68, 720, 726, "o"), (68, 76, 726, 720, "io")]
+    segs = [(T + 20, T + 26, 0, -16, "io"), (T + 26, T + 60, -16, 720, (0.3, 0.0, 0.3, 1.0)),
+            (T + 60, T + 68, 720, 726, "o"), (T + 68, T + 76, 726, 720, "io")]
     M.spin3d(c, "star", f_r, b_r, cx, cy, segs, thick=40, lip=26, parent=turn)
-    M.twinkle(c, "tw", cx + 118, cy - 150, 38, 78, 26, parent=body)
+    M.twinkle(c, "tw", cx + 118, cy - 150, 38, T + 78, 26, parent=body)
 
 
 # ================================================================ 20 🤝
@@ -659,25 +667,26 @@ def split_pill(c):
     left_region = geo.poly(zig + [(0, 420), (0, 60)])
     left, right = coin.intersection(left_region), coin.difference(left_region)
     # separation (px each side): hover apart, creep closer while trembling, snap, hold, pull apart elastically
-    gap = [(22, None, None), (40, 32, "io"), (45, -2, "i5"), (47, 0, "o"), (84, None, None), (104, 70, "io"),
-           (112, 56, "io"), (120, 60, "io")]
+    T = 20
+    gap = [(T + 22, None, None), (T + 40, 32, "io"), (T + 45, -2, "i5"), (T + 47, 0, "o"), (T + 84, None, None),
+           (T + 104, 70, "io"), (T + 112, 56, "io"), (T + 120, 60, "io")]
     for j, (g, sgn) in enumerate(((left, -1), (right, 1))):
         px = clip_loop(seq(60.0, gap, 0, f=lambda v: cx + sgn * v), OP)
-        bob = seq(0.0, [(10, -8 * sgn, "io"), (22, 0, "io"), (110, None, None), (124, 8 * sgn, "io"), (138, -4 * sgn, "io"),
-                        (150, 0, "io")], f=lambda v: cy + v)
-        r = seq(sgn * 12.0, [(22, None, None), (40, sgn * 6.0, "io"), (45, 0.0, "i5"), (84, None, None), (104, sgn * 16.0, "io"),
-                             (114, sgn * 10.0, "io"), (122, sgn * 12.0, "io")], op=OP)
+        bob = seq(0.0, [(10, -8 * sgn, "io"), (22, 0, "io"), (34, 6 * sgn, "io"), (T + 22, 0, "io"), (T + 118, None, None),
+                        (T + 124, 6 * sgn, "io"), (150, 0, "io")], f=lambda v: cy + v)
+        r = seq(sgn * 12.0, [(T + 22, None, None), (T + 40, sgn * 6.0, "io"), (T + 45, 0.0, "i5"), (T + 84, None, None),
+                             (T + 104, sgn * 16.0, "io"), (T + 114, sgn * 10.0, "io"), (T + 122, sgn * 12.0, "io")], op=OP)
         half = rig(c, f"h{j}", (cx, cy), p=Split(px, bob), r=r)
-        rr = seq(0.0, [(24, None, None)])
-        M.shake(rr, 24, 44, 2.2, 0.0, step=2, decay=1.0)
+        rr = seq(0.0, [(T + 24, None, None)])
+        M.shake(rr, T + 24, T + 44, 2.2, 0.0, step=2, decay=1.0)
         rr.loop(OP)
         part(c, f"half{j}", g, half, (cx, cy), r=rr)
     # the click: sparks out of the seam, the joined pill thumps
     for k, (x1, y1) in enumerate(((cx - 40, 70), (cx + 60, 80), (cx - 20, 440), (cx + 50, 452))):
         y0 = 150 if y1 < 250 else 360
-        M.particle(c, f"spk{k}", geo.spark(cx, y0, 34, 0.34), 45 + k, 20, (cx, y0), (x1, y1), None, anchor=(cx, y0),
+        M.particle(c, f"spk{k}", geo.spark(cx, y0, 34, 0.34), T + 45 + k, 20, (cx, y0), (x1, y1), None, anchor=(cx, y0),
                    rot=(0, 90), fall="o5", xease="o5", pop=0.12, fade=0.5)
-    M.twinkle(c, "tw", cx + 150, cy - 110, 34, 64, 24)
+    M.twinkle(c, "tw", cx + 150, cy - 110, 34, T + 64, 24)
 
 
 # ================================================================ 21 🧸
@@ -705,12 +714,12 @@ def teddy(c):
     nose = affinity.scale(nose, 1, -1, origin=(256, 300))          # upside-down heart nose
     mouth = U(geo.line([(256, 318), (256, 346)], 14), geo.line([(222, 348), (256, 346), (290, 348)], 14))
     eyes = U(*[U(geo.line([(x - 30, 196), (x + 30, 250)], 28), geo.line([(x - 30, 250), (x + 30, 196)], 28)) for x in (190, 322)])
-    face_paths = geo.paths(head.difference(eyes)) + geo.paths(muzzle) + geo.paths(nose) + geo.paths(mouth)
+    face_paths = geo.paths(head) + geo.paths(muzzle) + geo.paths(nose) + geo.paths(mouth)
     # rhythm (beat = 30f): nod, nod, headbang (accent), hold
     r = seq(0, [(2, None, None), (6, 3, "o"), (18, 0, "io"), (32, None, None), (36, -3, "o"), (48, 0, "io"),
                 (58, None, None), (61, -6, "io"), (65, 11, "o5"), (74, -3, "io"), (82, 1.5, "io"), (90, 0, "io")], op=OP)
     y = seq(0.0, [(2, None, None), (6, 12, "o"), (18, 0, "io"), (32, None, None), (36, 12, "o"), (48, 0, "io"),
-                  (58, None, None), (61, -10, "io"), (65, 20, "o5"), (74, -4, "io"), (84, 0, "io")], f=lambda v: 380 + v)
+                  (58, None, None), (61, -12, "io"), (65, 10, "o5"), (74, -4, "io"), (84, 0, "io")], f=lambda v: 380 + v)
     y.loop(OP)
     s = seq([100, 100], [(2, None, None), (6, [103, 97], "o"), (18, [100, 100], "io"), (32, None, None),
                          (36, [103, 97], "o"), (48, [100, 100], "io"), (58, None, None), (61, [97, 103], "io"),
@@ -718,12 +727,13 @@ def teddy(c):
     breathe(s, 92, 120, [100, 100], 0.6, 14)
     s.loop(OP)
     head_n = rig(c, "head", (256, 380), p=Split(256, y), s=s, r=r)
-    # crossbones behind (scissor-clack on the accent)
+    # crossbones behind the head (they move with it; clipped away under the face so the white muzzle stays clean)
     for j, sgn in enumerate((-1, 1)):
-        a0 = (256 - sgn * 196, 468)
-        a1 = (256 + sgn * 170, 250)
+        a0 = (256 - sgn * 186, 424)
+        a1 = (256 + sgn * 166, 230)
+        bone = _bone(a0, a1).difference(geo.disc(256, 256, 132, 24))
         br = seq(0, [(60, None, None), (65, sgn * 9, "o5"), (70, -sgn * 3, "io"), (78, 0, "io")], op=OP)
-        part(c, f"bone{j}", _bone(a0, a1), None, (256, 372), r=br)
+        part(c, f"bone{j}", bone, head_n, (256, 372), r=br)
     # ears = eyelets, flopping 4f behind the head
     for j, sgn in enumerate((-1, 1)):
         ec = (256 + sgn * 118, 136)
@@ -733,8 +743,92 @@ def teddy(c):
         base = (256 + sgn * 84, 184)
         part(c, f"ear{j}", ear, head_n, base, r=er)
     face = c.layer("face", [lot.group(face_paths + [lot.fill()], nm="face")], parent=head_n, p=hc, a=hc)
-    # X eyes squeeze on the accent (a scaled copy of the eye holes closes them: evenodd XOR re-fills)
-    es = seq([0, 0], [(62, None, None), (65, [110, 60], "o"), (72, [100, 90], "io"), (76, [0, 0], "i")], op=OP, loop_ease="lin")
+    # X eyes (cut-outs) squeeze flat on the accent
+    es = seq([100, 100], [(62, None, None), (65, [118, 26], "o"), (74, [104, 70], "io"), (80, [100, 100], "io")], op=OP)
     for k, x in enumerate((190, 322)):
-        lid = geo.ellipse(x, 223, 44, 40, 12)
-        face.shapes[0]["it"].insert(0, lot.group(geo.paths(lid.intersection(eyes)), nm=f"lid{k}", p=(x, 223), a=(x, 223), s=es))
+        ex = U(geo.line([(x - 30, 196), (x + 30, 250)], 28), geo.line([(x - 30, 250), (x + 30, 196)], 28))
+        face.shapes[0]["it"].insert(0, lot.group(geo.paths(ex), nm=f"eye{k}", p=(x, 223), a=(x, 223), s=es))
+
+
+# ================================================================ 22 💕
+
+
+def _glyph_lt():
+    return geo.brush([(214, 136), (58, 254), (214, 372)], 60, taper=(0.85, 0.85), smooth=False)
+
+
+def _glyph_3():
+    top = geo.arc(360, 178, 76, 200, 440, 24)
+    bot = geo.arc(360, 318, 86, 280, 520, 24)
+    pts = top + [(372, 250), (350, 250)] + bot
+    return geo.brush(pts, 58, taper=(0.85, 0.85), smooth=True, n=3)
+
+
+@emoji("22-kiss-less3", "💕", "люблю, <3, чмок, сердечко, обнимаю", "love, <3, kiss, heart, hugs",
+       "«<» и «3» подмигивают друг другу, съезжаются — и плавятся в одно сердце: «чмок», ✦, сердце держится, потом снова распадается на <3",
+       op=120, series=SERIES)
+def less3(c):
+    OP = 120
+    N = 72
+    heart = geo.heart(256, 262, 420)
+    hl = heart.intersection(geo.rect(0, 0, 256, 512))
+    hr = heart.intersection(geo.rect(256, 0, 512, 512))
+    lt, th = _glyph_lt(), _glyph_3()
+    A = poly_path(geo.resample(lt, N, start_angle=-40))
+    Ah = poly_path(geo.resample(hl, N, start_angle=-40))
+    B = poly_path(geo.resample(th, N, start_angle=150))        # 150°: the only alignment without a torn fragment mid-morph
+    Bh = poly_path(geo.resample(hr, N, start_angle=150))
+    for nm, g0, g1, sgn, cx_ in (("lt", A, Ah, -1, 136), ("three", B, Bh, 1, 376)):
+        shp = Track(g0, 0).hold(54).to(67, g1, "io3").hold(96).to(108, g0, (0.3, 0.0, 0.2, 1.0)).loop(OP)
+        # slide together (antic away first), meet, the heart thumps once, then spring apart
+        dx = seq(0.0, [(40, None, None), (48, sgn * 10, "io"), (59, -sgn * 6, "i"), (67, 0, "o"),
+                       (94, None, None), (100, sgn * 4, "io"), (108, -sgn * 14, "o"), (116, 0, "io")],
+                 f=lambda v: 256 + v)
+        dx.loop(OP)
+        wink = seq([100, 100], [(4 + (6 if sgn > 0 else 0), None, None), (8 + (6 if sgn > 0 else 0), [104, 92], "o"),
+                                (14 + (6 if sgn > 0 else 0), [100, 100], "io")])
+        wink.loop(OP)
+        c.layer(nm, [lot.group([lot.sh(shp, nm), lot.fill()], nm=nm)], p=Split(dx, 262), a=(256, 262), s=wink)
+    # the kiss: one thump of the whole heart (a null over both halves would re-parent; scale a copy instead)
+    thump = seq([0, 0], [(67, None, None), (68, [100, 100], "hold"), (71, [114, 112], "snap"), (77, [96, 97], "io"),
+                         (83, [101, 101], "io"), (89, [100, 100], "io"), (95, None, None), (96, [0, 0], "hold")])
+    thump.k[1][2] = "hold"
+    thump.k[-3][2] = "hold"
+    thump.loop(OP, "lin")
+    part(c, "kiss", heart, None, (256, 262), s=thump, ip=67, op=97)
+    M.twinkle(c, "tw", 256, 62, 32, 72, 22)
+
+
+# ================================================================ 23 🌟
+
+
+@emoji("23-dot-star", "🌟", "звезда, сияю, огни, топ, праздник", "star, shine, lights, glowing, party",
+       "звезда из жирных точек-лампочек: по контуру бежит огонёк (волна 2f), обегает круг — и звезда вспыхивает сплошной с ✦, потом снова рассыпается на лампочки",
+       op=150, series=SERIES)
+def dot_star(c):
+    OP = 150
+    cx, cy, R, r = 256, 270, 198, 86
+    verts = []
+    for k in range(10):
+        a = math.radians(-90 + 36 * k)
+        rr = R if k % 2 == 0 else r
+        verts.append((cx + math.cos(a) * rr, cy + math.sin(a) * rr))
+    dots = []
+    for k in range(10):
+        p0, p1 = verts[k], verts[(k + 1) % 10]
+        dots.append(p0)
+        dots.append(((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2))
+    # the flash: a solid star grows under the lamps, holds, and sinks back
+    star = geo.star(cx, cy, R, r, 5, -90).buffer(8, join_style=1).buffer(-8, join_style=1)
+    ss = seq([0, 0], [(56, None, None), (62, [108, 108], "snap"), (68, [98, 98], "io"), (74, [100, 100], "io"),
+                      (92, None, None), (102, [0, 0], "i")], op=OP, loop_ease="lin")
+    part(c, "flash", star, None, (cx, cy), s=ss)
+    for k, (x, y) in enumerate(dots):
+        t0 = 8 + 2 * k                                   # the running light
+        big = k % 2 == 0
+        rd = 25 if big else 21
+        ds = seq([100, 100], [(t0, None, None), (t0 + 3, [165, 165], "o"), (t0 + 9, [100, 100], "io"),
+                              (54 + (k % 4), None, None), (58 + (k % 4), [140, 140], "o"), (66, [118, 118], "io"),
+                              (92, None, None), (100 + k % 5, [80, 80], "io"), (110 + k % 5, [100, 100], "io")], op=OP)
+        part(c, f"dot{k}", geo.disc(x, y, rd, 12), None, (x, y), s=ds)
+    M.twinkle(c, "tw", cx + 150, cy - 170, 36, 64, 26)

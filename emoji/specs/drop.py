@@ -54,12 +54,19 @@ def pill(c):
                   sparks=[(cx + 56, cy - 90, 44, 114, 30)])
 
 
-def tile_glyph(ch, x, y, w, h, fill=0.74, bold=10):
-    """a character as a hole shape, fit into the tile."""
+def tile_glyph(ch, x, y, w, h, fw=0.78, fh=0.6, bold=10):
+    """a character as a hole shape filling the tile (stretched taller than the extended face: at 24px
+    height is what reads)."""
     if ch in (None, " "):
         return None
     g = geo.text(ch, brand_font(), x, y, h * 0.5, bold=bold)
-    return geo.fit_box(g, x - w * fill / 2, y - h * fill * 0.46, x + w * fill / 2, y + h * fill * 0.46)
+    bx0, by0, bx1, by1 = g.bounds
+    aspect = (bx1 - bx0) / (by1 - by0)
+    ww = min(w * fw, h * fh * aspect * 1.25) if aspect < 0.6 else w * fw     # narrow glyphs (1, !) keep shape
+    g = geo.fit_box(g, x - ww / 2, y - h * fh / 2, x + ww / 2, y + h * fh / 2, keep=False)
+    if ch == "C":   # Michroma's C nearly closes when bolded: re-open the aperture
+        g = geo.U(g, geo.rect(x + ww * 0.05, y - h * fh * 0.13, x + ww / 2, y + h * fh * 0.13))
+    return g
 
 
 def board_push(tr, t, base=(100, 100)):
@@ -399,22 +406,23 @@ def psp(c):
 
 
 @emoji("53-bag-xtc", "👜", "сумка, шоппинг, xtc, покупка, мерч", "bag, shopping, xtc, merch, purchase",
-       "сумка XTC подпрыгивает и делает тяжёлый 360 с толщиной, приземляется с отскоком и ловит ✦ на молнии",
+       "сумка XTC висит на пальце за ручку: раскачивается маятником, закручивается на 410° и раскручивается обратно с затуханием, ✦",
        op=150, series="drop")
 def bag(c):
     cx, cy = 256, 296
-    body = geo.poly([(cx - 150, cy - 110), (cx + 150, cy - 110), (cx + 180, cy + 140), (cx - 180, cy + 140)]).buffer(28).buffer(-8)
+    body = geo.poly([(cx - 140, cy - 110), (cx + 140, cy - 110), (cx + 168, cy + 140), (cx - 168, cy + 140)]).buffer(28).buffer(-8)
     handle = geo.brush(geo.arc(cx, cy - 132, 90, 180, 360, 24), 36, taper=(1, 1), smooth=False)
     zipper = geo.rrect(cx - 132, cy - 104, cx + 132, cy - 90, 7)
     tab = geo.rrect(cx + 108, cy - 94, cx + 136, cy - 40, 10).difference(geo.rrect(cx + 116, cy - 70, cx + 128, cy - 50, 5))
     logo = brand_word("XTC", cx, cy + 34, 64, 230, bold=10)
     front = geo.U(body.difference(zipper).difference(logo), handle).difference(tab.buffer(6)).union(tab)
     back = geo.U(body.difference(zipper), handle)
-    gy = cy + 160
-    y = Track(gy, 0).hold(24).to(44, gy - 26, "o").to(70, gy - 30, "io").to(96, gy, "i5").to(104, gy - 10, "o").to(112, gy, "i").loop(150)
-    s = Track([100, 100], 0).hold(14).to(24, [106, 93], "io").to(32, [97, 103], "o").to(48, [100, 100], "io").hold(94)
-    s.to(97, [108, 92], "slam").to(98, [108, 92], "lin").to(106, [97, 103], "io").to(114, [100, 100], "io").loop(150)
-    root = c.null("root", p=Split(cx, y), a=(cx, gy), s=s)
-    segs = [(14, 26, 0, -20, "io"), (26, 104, -20, 374, (0.3, 0.0, 0.14, 1.0)), (104, 118, 374, 360, "io")]
+    # hangs from a finger at the top of the handle: swings like a pendulum while it twists and unwinds
+    top = (cx, cy - 132 - 90 - 10)
+    r = Track(0, 0).hold(12).to(22, -4.5, "io").to(40, 4, "io").to(58, -2.5, "io").to(74, 1.5, "io").to(90, -0.6, "io").to(104, 0, "io").loop(150)
+    s = Track([100, 100], 0).hold(8).to(14, [102, 98], "io").to(22, [98, 103], "io").to(30, [100, 100], "io").hold(118).to(122, [101, 99], "io").to(130, [100, 100], "io").loop(150)
+    root = c.null("root", p=top, a=top, r=r, s=s)
+    segs = [(14, 62, 0, 410, (0.4, 0.0, 0.2, 1.0)), (62, 80, 410, 330, "io"), (80, 96, 330, 385, "io"),
+            (96, 110, 385, 350, "io"), (110, 122, 350, 360, "io")]
     M.spin3d(c, "bag", front, back, cx, cy, segs, thick=64, lip=26, parent=root)
-    M.twinkle(c, "tw", cx - 120, cy - 100, 40, 112, 26, parent=root)
+    M.twinkle(c, "tw", cx - 120, cy - 100, 40, 118, 26, parent=root)

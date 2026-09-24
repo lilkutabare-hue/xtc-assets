@@ -136,8 +136,12 @@ def check(path):
             warns.append(f"{(area - kept) / area:.0%} of the art is thinner than 28px - will blur at 24px")
     if size > 64 * 1024:
         fails.append(f"size {size / 1024:.1f}KB > 64KB")
+    # keep only what the sheets need (full-res mid frame + 100px GIF frames): 100+ files x 180 full
+    # frames do not fit in RAM. Checks above already ran on every full-res frame.
+    keep = {"mid": frames[len(frames) // 3] if frames else None,
+            "gif": [f.resize((100, 100), Image.LANCZOS) for f in frames[::2]]}
     return {"file": os.path.basename(path), "kb": round(size / 1024, 1), "frames": n,
-            "fails": fails, "warns": warns, "frames_img": frames}
+            "fails": fails, "warns": warns, "frames_img": keep}
 
 
 def sheets(results, out):
@@ -151,16 +155,16 @@ def sheets(results, out):
             sheet = Image.new("RGBA", (cols * cell, rows * cell), bg + (255,))
             for i, r in enumerate(results):
                 fr = r["frames_img"]
-                if not fr:
+                if not fr["mid"]:
                     continue
-                img = colorize(fr[len(fr) // 3], fg, bg).resize((px, px), Image.LANCZOS)
+                img = colorize(fr["mid"], fg, bg).resize((px, px), Image.LANCZOS)
                 sheet.paste(img, ((i % cols) * cell + 6, (i // cols) * cell + 6))
             sheet.save(os.path.join(out, f"sheet-{px}-{tname}.png"))
     for r in results:
-        fr = r["frames_img"]
+        fr = r["frames_img"]["gif"]
         if not fr:
             continue
-        gif = [colorize(f, (0, 0, 0), (255, 255, 255)).convert("RGB").resize((100, 100), Image.LANCZOS) for f in fr[::2]]
+        gif = [colorize(f, (0, 0, 0), (255, 255, 255)).convert("RGB") for f in fr]
         gif[0].save(os.path.join(out, r["file"].replace(".tgs", ".gif")), save_all=True,
                     append_images=gif[1:], duration=33, loop=0)
 

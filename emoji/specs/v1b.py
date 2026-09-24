@@ -92,7 +92,7 @@ def tribal_heart(c):
         sc = Track([100, 100], 0)
         rr = Track(0, 0)
         d = -1 if nm.endswith("L") else 1
-        for j, (t, a, v) in enumerate(((12, 118, 6), (26, 92, -4), (38, 112, 5), (52, 96, -3), (66, 110, 4), (80, 94, -2), (96, 104, 2))):
+        for j, (t, a, v) in enumerate(((12, 128, 9), (26, 88, -6), (38, 122, 8), (52, 92, -5), (66, 118, 6), (80, 90, -4), (96, 108, 3))):
             sc.to(t + ph, [100, a], "io")
             rr.to(t + ph, d * v, "io")
         sc.loop(120)
@@ -193,27 +193,31 @@ def drip_xtc(c):
 
 
 @emoji("30-club-banner", "🪩", "клуб, туса, вечеринка, club, рейв", "club, party, rave, night out, banner",
-       "лента CLUB качается на бит: хвосты ленты хлопают с запаздыванием, на каждом бите табличка подпрыгивает",
-       op=120, series="v1")
+       "лента CLUB разворачивается из центра, хвосты выхлёстывают, табличка качается на бит, в конце сворачивается обратно",
+       op=150, series="v1")
 def club_banner(c):
     from specs.drop import brand_word
     cx, cy = 256, 256
     body = geo.rrect(cx - 170, cy - 70, cx + 170, cy + 70, 16).difference(brand_word("CLUB", cx, cy, 70, 270, bold=9))
     tailL = geo.poly([(cx - 150, cy - 30), (cx - 236, cy - 20), (cx - 204, cy + 26), (cx - 236, cy + 72), (cx - 150, cy + 62)])
     tailR = geo.mirror(tailL, cx)
-    y = Track(cy, 0)
-    r = Track(0, 0)
-    for t in (0, 30, 60, 90):
-        y.hold(t).to(t + 5, cy - 18, "decel").to(t + 14, cy, "slam").to(t + 20, cy - 3, "o").to(t + 26, cy, "i")
-        r.hold(t).to(t + 8, 3 if t % 60 == 0 else -3, "io").to(t + 22, 0, "io")
-    root = c.null("root", p=Split(cx, y.loop(120)), a=(cx, cy), r=r.loop(120))
-    lay(c, "body", body, (cx, cy), parent=root)
+    y = Track(cy, 0).hold(24)
+    r = Track(0, 0).hold(24)
+    for t in (24, 54, 84):
+        y.to(t + 5, cy - 18, "decel").to(t + 14, cy, "slam").to(t + 20, cy - 3, "o").to(t + 26, cy, "i")
+        r.to(t + 8, 3 if t % 60 == 24 else -3, "io").to(t + 22, 0, "io")
+    root = c.null("root", p=Split(cx, y.loop(150)), a=(cx, cy), r=r.loop(150))
+    # unfurl: the plate opens from a vertical sliver (scaleX), rolls up at the end
+    us = Track([8, 100], 0).hold(2).to(18, [104, 100], "o").to(24, [100, 100], "io").hold(126).to(146, [8, 100], "i").loop(150)
+    lay(c, "body", body, (cx, cy), parent=root, s=us)
     for k, (g, d) in enumerate(((tailL, -1), (tailR, 1))):
         ax = cx + d * 150
-        tr = Track(0, 0)
-        for t in (0, 30, 60, 90):
+        px = Track(cx, 0).hold(2).to(18, ax + d * 6, "o").to(24, ax, "io").hold(126).to(146, cx, "i").loop(150)
+        tr = Track(d * 30, 0).hold(10).to(24, -d * 10, "snap").to(32, 0, "io")
+        for t in (24, 54, 84):
             tr.hold(t + 4 + k * 2).to(t + 10 + k * 2, d * 14, "snap").to(t + 20 + k * 2, -d * 6, "io").to(t + 28 + k * 2, 0, "io")
-        lay(c, f"tail{k}", g, (ax, cy + 20), parent=root, r=tr.loop(120))
+        tr.hold(126).to(146, d * 30, "i")
+        lay(c, f"tail{k}", g, (ax, cy + 20), parent=root, p=Split(px, cy + 20), r=tr.loop(150))
 
 
 @emoji("31-cyber-butterfly", "🦋", "бабочка, лёгкость, влюблена, порхаю, y2k", "butterfly, flutter, crush, light, y2k",
@@ -245,8 +249,8 @@ def butterfly(c):
 
 
 @emoji("32-swallow", "🐦", "ласточка, лечу, свобода, тату, птичка", "swallow, flying, freedom, tattoo, bird",
-       "тату-ласточка на месте машет крыльями: сильный взмах, парение, хвост-ножницы щёлкают, корпус качается на волне",
-       op=120, series="v1")
+       "тату-ласточка делает мёртвую петлю: разгон взмахами, круг с креном по касательной, выход в парение, хвост-ножницы щёлкают",
+       op=150, series="v1")
 def swallow(c):
     cx, cy = 256, 262
     body = geo.U(geo.ellipse(cx + 20, cy, 112, 50), geo.disc(cx + 118, cy - 26, 44))
@@ -256,28 +260,43 @@ def swallow(c):
     tailD = geo.poly([(cx - 70, cy + 14), (cx - 206, cy + 80), (cx - 188, cy + 96), (cx - 60, cy + 40)]).buffer(10)
     wingU = geo.poly([(cx - 10, cy - 20), (cx - 90, cy - 190), (cx - 60, cy - 206), (cx + 50, cy - 40)]).buffer(18)
     wingD = geo.poly([(cx + 10, cy + 30), (cx - 40, cy + 170), (cx - 10, cy + 186), (cx + 60, cy + 40)]).buffer(16)
-    y = M.wave(cy, 10, 60, 120)
-    r = M.wave(0, 4, 60, 120, 1.2)
-    root = c.null("root", p=Split(cx, y), a=(cx, cy), r=r)
+    # loop-de-loop: the whole bird travels a circle (radius 40) while rotating a full turn (tangent heading)
+    import math as m
+    t0, t1 = 40, 100
+    th = M.spin_angle([(t0, t1, 0, 360, "io3")])
+    ks = [0, t0] + M.crossings(th, [(t0, t1, 0, 360, "io3")], 90, 0) + [t1, 150]
+    ks = sorted(set(round(k, 2) for k in ks))
+    R = 30
+    px = M.fit(lambda t: cx + R * m.sin(m.radians(th(t))), ks)
+    py = M.fit(lambda t: cy - R + R * m.cos(m.radians(th(t))) + 0.0, ks)
+    rr = M.fit(lambda t: -th(t), ks)
+    rr.k[-1][2] = None
+    rr.k[-2][2] = "hold" if False else rr.k[-2][2]
+    # the rotation ends at -360 == 0: close the loop with a hold jump at the very end
+    rr.k[-1][1] = -360
+    rr.k[-1][2] = "hold"
+    rr.k.append([149.99, 0, None])
+    root = c.null("root", p=Split(px, py), a=(cx, cy), r=rr,
+                  s=Track([84, 84], 0).hold(150))
     wu = Track(0, 0)
     wd = Track(0, 0)
-    for t in (0, 60):
-        wu.hold(t).to(t + 10, 58, "io").to(t + 20, -8, "snap").to(t + 30, 4, "io").to(t + 40, 0, "io")
-        wd.hold(t + 3).to(t + 13, -40, "io").to(t + 23, 8, "snap").to(t + 33, -3, "io").to(t + 43, 0, "io")
-    lay(c, "wingD", wingD, (cx + 20, cy + 30), parent=root, r=wd.loop(120))
+    for t in (4, 20, 104, 120):
+        wu.hold(t).to(t + 7, 58, "io").to(t + 14, -8, "snap").to(t + 16, 0, "io")
+        wd.hold(t + 2).to(t + 9, -40, "io").to(t + 16, 8, "snap").to(t + 18, 0, "io")
+    lay(c, "wingD", wingD, (cx + 20, cy + 30), parent=root, r=wd.loop(150))
     tu = Track(0, 0)
     td = Track(0, 0)
-    for t in (22, 82):
+    for t in (36, 100):
         tu.hold(t).to(t + 5, -10, "snap").to(t + 12, 0, "io")
         td.hold(t).to(t + 5, 10, "snap").to(t + 12, 0, "io")
-    lay(c, "tailU", tailU, (cx - 70, cy + 10), parent=root, r=tu.loop(120))
-    lay(c, "tailD", tailD, (cx - 70, cy + 20), parent=root, r=td.loop(120))
+    lay(c, "tailU", tailU, (cx - 70, cy + 10), parent=root, r=tu.loop(150))
+    lay(c, "tailD", tailD, (cx - 70, cy + 20), parent=root, r=td.loop(150))
     lay(c, "body", body, (cx, cy), parent=root)
-    lay(c, "wingU", wingU, (cx + 10, cy - 20), parent=root, r=wu.loop(120))
+    lay(c, "wingU", wingU, (cx + 10, cy - 20), parent=root, r=wu.loop(150))
 
 
 @emoji("41-patch-x", "🩹", "пластырь, заживёт, береги себя, ранен, ой", "bandage, heal, get well, hurt, patch",
-       "пластырь-X шлёпается сверху и натягивается, делает тяжёлый 360 с торцом, приклеивается обратно — ✦",
+       "пластырь-X шлёпается и натягивается, переворачивается через длинную ось как блин (360 с торцом), прилипает — ✦",
        op=150, series="v1")
 def patch(c):
     cx, cy = 256, 262
@@ -288,12 +307,14 @@ def patch(c):
         for dx, dy in ((0, -30), (0, 30), (46, 0)):
             front = front.difference(geo.disc(cx + sx * (140 + dx), cy + dy, 13))
     back = band.difference(geo.rrect(cx - 200, cy - 6, cx + 200, cy + 6, 6))
-    y = Track(cy, 0).hold(90).to(104, cy - 30, "o").to(118, cy, "i5").loop(150)
+    # slaps on (squash), then flips over its long axis like a pancake (spin3d on a null turned 90°)
     s = Track([100, 100], 0).hold(10).to(20, [96, 104], "io").to(26, [110, 90], "slam").to(27, [110, 90], "lin").to(34, [97, 103], "io").to(42, [100, 100], "io")
-    s.hold(118).to(120, [106, 94], "slam").to(128, [99, 101], "io").to(134, [100, 100], "io").loop(150)
-    root = c.null("root", p=Split(cx, y), a=(cx, cy), s=s, r=-14)
-    segs = [(40, 52, 0, -20, "io"), (52, 112, -20, 372, (0.3, 0.0, 0.14, 1.0)), (112, 124, 372, 360, "io")]
-    M.spin3d(c, "patch", front, back, cx, cy, segs, thick=30, lip=22, parent=root)
+    s.hold(118).to(120, [104, 96], "slam").to(128, [99, 101], "io").to(134, [100, 100], "io").loop(150)
+    body = c.null("body", p=(cx, cy), a=(cx, cy), s=s, r=-14)
+    turn = c.null("turn", parent=body, p=(cx, cy), a=(cx, cy), r=90)
+    fr, bk = geo.rot(front, 90, (cx, cy)), geo.rot(back, 90, (cx, cy))
+    segs = [(40, 52, 0, -24, "io"), (52, 112, -24, 380, (0.3, 0.0, 0.14, 1.0)), (112, 124, 380, 360, "io")]
+    M.spin3d(c, "patch", fr, bk, cx, cy, segs, thick=30, lip=22, parent=turn)
     M.twinkle(c, "tw", cx + 170, cy - 110, 40, 124, 24)
 
 
@@ -307,7 +328,7 @@ def brand_word_x(cx, cy):
        op=150, series="v1")
 def scorpion(c):
     parts = geo.tgs_geometry("/tmp/claude-0/-home-user-xtc-assets/ecf9e5e6-596f-594c-9de0-56b0f9bf2e83/scratchpad/in/anim/tg-anim/43-scorpion-sigil.tgs")
-    fat = {k: v.buffer(9).buffer(-4) for k, v in parts.items()}
+    fat = {k: v.buffer(13).buffer(-5) for k, v in parts.items()}
     root = c.null("root", p=(256, 322), a=(256, 300),
                   s=Track([88, 88], 0).hold(60).to(64, [92, 84], "slam").to(72, [87, 89], "io").to(78, [88, 88], "io").loop(150))
     lay(c, "body", fat["body"], (256, 360), parent=root)

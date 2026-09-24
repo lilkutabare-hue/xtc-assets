@@ -56,25 +56,28 @@ def kao_squeeze(c):
 
 
 @emoji("35-kao-happy", "😊", "радуюсь, счастлив, мило, ура, ^^", "happy, glad, yay, cute, ^^",
-       "^‿^ подпрыгивает от радости дважды со squash/stretch, на втором прыжке щёки вспыхивают ✦",
+       "^‿^ танцует два шага на бит: перенос веса влево-вправо с наклоном и приседом, на каждом шаге щёки вспыхивают ✦",
        op=120, series="v1")
 def kao_happy(c):
-    gy = 420
-    y = Track(gy, 0).hold(14)
-    s = Track([100, 100], 0).hold(8)
-    for t, h in ((12, 44), (54, 60)):
-        s.to(t, [108, 92], "io").to(t + 5, [94, 108], "snap").to(t + 14, [100, 100], "io")
-        y.hold(t).to(t + 12, gy - h, "decel").to(t + 24, gy, "slam")
-        s.hold(t + 23).to(t + 24, [112, 88], "lin").to(t + 30, [97, 103], "io").to(t + 36, [100, 100], "io")
-    y.loop(120)
-    s.loop(120)
-    face = rig(c, p=Split(CX, y), s=s)
+    gy = 440
+    x = Track(CX, 0)
+    r = Track(0, 0)
+    s = Track([100, 100], 0)
+    for k, t in enumerate((0, 30, 60, 90)):
+        d = -1 if k % 2 == 0 else 1
+        x.to(t + 14, CX + d * 22, "io").to(t + 30, CX + d * 22 * 0.2, "io")
+        r.to(t + 14, d * 6, "io").to(t + 30, d * 1.5, "io")
+        s.to(t + 8, [106, 93], "io").to(t + 16, [96, 104], "o").to(t + 30, [100, 100], "io")
+    x.k[-1][1] = CX
+    r.k[-1][1] = 0
+    face = rig(c, p=Split(x, gy), s=s, r=r)
     face.a = (CX, gy)
-    for i, x in enumerate((CX - 116, CX + 116)):
-        part(c, f"eye{i}", K.caret(x, 214, 140), face, (x, 214))
+    for i, xx in enumerate((CX - 116, CX + 116)):
+        part(c, f"eye{i}", K.caret(xx, 214, 140), face, (xx, 214))
     part(c, "mouth", K.m_smile(CX, 344, 190, 58), face, (CX, 344))
-    for i, x in enumerate((CX - 186, CX + 186)):
-        M.twinkle(c, f"tw{i}", x * 0.92 + CX * 0.08, 300, 30, 70 + i * 3, 22, parent=face)
+    for k, t in enumerate((10, 40, 70, 100)):
+        xx = CX + (-1 if k % 2 == 0 else 1) * 158
+        M.twinkle(c, f"tw{k}", xx, 300, 30, t, 20, parent=face)
 
 
 @emoji("36-kao-cry", "😢", "грустно, плачу, обидно, слеза, эх", "sad, crying, tear, upset, hurt",

@@ -45,7 +45,7 @@ def poster_svg(tgs, name, frame=None):
     from rlottie_python import LottieAnimation
     a = LottieAnimation.from_tgs(tgs)
     n = a.lottie_animation_get_totalframe()
-    fr = a.render_pillow_frame(frame_num=frame if frame is not None else 0, width=1024, height=1024)
+    fr = a.render_pillow_frame(frame_num=frame if frame is not None else n // 3, width=1024, height=1024)
     alpha = fr.split()[3].point(lambda p: 0 if p > 127 else 255)
     with tempfile.TemporaryDirectory() as d:
         bmp = os.path.join(d, "f.bmp")

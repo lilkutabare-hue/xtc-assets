@@ -224,12 +224,16 @@ def kiss(c):
     part(c, "mouth", K.m_3(CX + 10, 350, 124), face, (CX + 10, 350), p=mp, s=ms)
     # the heart: shoots out of the lips with a 140% vertical stretch (M25), arcs up-right, beats once, pops
     hx, hy = CX + 70, 330
-    g = geo.heart(hx, hy, 120)
-    p = Split(Track(hx, 0).hold(34).to(84, 408, "os"), Track(hy, 0).hold(34).to(84, 104, "decel"))
+    g = geo.heart(hx, hy, 150)
+    p = Split(Track(hx, 0).hold(34).to(80, 392, "os"), Track(hy, 0).hold(34).to(80, 118, "decel"))
     s = Track([0, 0], 0).hold(34).to(40, [70, 140], "snapo").to(50, [104, 96], "io").to(58, [100, 100], "io")
-    s.hold(70).to(75, [116, 116], "snap").to(82, [96, 96], "io").to(88, [0, 0], "i5").loop(120, "lin")
+    s.hold(70).to(75, [118, 118], "snap").to(80, [126, 126], "io").to(84, [0, 0], "i5").loop(120, "lin")
     r = Track(-30, 0).hold(34).to(60, 14, "io").to(88, 4, "io").loop(120, "lin")
-    c.layer("heart", [geo.shape(g, nm="heart")], p=p, a=(hx, hy), s=s, r=r, ip=34, op=89)
+    c.layer("heart", [geo.shape(g, nm="heart")], p=p, a=(hx, hy), s=s, r=r, ip=34, op=85)
+    # burst: three mini hearts fly apart from where the big one popped
+    for k, (dx, dy, rot) in enumerate(((-86, -40, -30), (70, -70, 25), (40, 60, 15))):
+        M.particle(c, f"mini{k}", geo.heart(392, 118, 66), 83 + k, 30, (392, 118), (392 + dx, 118 + dy), None,
+                   anchor=(392, 118), rot=(0, rot), pop=0.15, fade=0.4, fall="decel", xease="decel")
 
 
 @emoji("60-rage", "😡", "бесит, злой, ярость, гнев, сука", "angry, rage, mad, furious, pissed",
@@ -259,6 +263,11 @@ def rage(c):
         t += dt
     vs.to(t + 6, [124, 124], "snap").hold(100).to(114, [100, 100], "io").hold(132).to(142, [0, 0], "i").loop(150, "lin")
     part(c, "vein", K.vein(vx, vy, 92, 24), face, (vx, vy), s=vs)
+    # peak: impact lines burst around the head (M8)
+    for k, (p0, p1) in enumerate((((96, 96), (64, 64)), ((416, 96), (448, 64)), ((70, 420), (40, 446)), ((442, 420), (472, 446)))):
+        e = Track(0, 0).hold(76).to(83, 100, "o").hold(150)
+        s0 = Track(0, 0).hold(78).to(86, 100, "i").hold(150)
+        c.layer(f"hit{k}", [geo.stroked([p0, p1], 24, e=e, s=s0)], p=(0, 0), a=(0, 0), ip=76, op=87)
     # steam puffs from the ears at the peak
     for side, d in enumerate((-1, 1)):
         for k in range(3):
@@ -427,8 +436,9 @@ def eyeroll(c):
        "¬‿¬ веки полуопущены, ухмылка ползёт в один угол, «ну-ну» бровями дважды и ✦ на уголке рта",
        op=120, series="face")
 def smirk(c):
-    rr = Track(0, 0).hold(12).to(28, 5, "io").hold(96).to(110, 0, "io").loop(120)
-    face = rig(c, r=rr)
+    rr = Track(0, 0).hold(12).to(28, 5, "io").hold(78).to(88, 9, "io").hold(96).to(110, 0, "io").loop(120)
+    ls = Track([100, 100], 0).hold(74).to(86, [110, 110], "back").hold(98).to(112, [100, 100], "io").loop(120)
+    face = rig(c, r=rr, s=ls)
     for i, x in enumerate((CX - 118, CX + 118)):
         # eyebrow-wiggle: lids bob up twice quickly (M5 settle)
         ly = Track(0, 0).hold(46 + i * 2)
@@ -446,6 +456,7 @@ def smirk(c):
     ms = Track([70, 60], 0).hold(14).to(34, [112, 118], "back").hold(96).to(110, [70, 60], "io").loop(120)
     part(c, "mouth", K.m_smirk(CX + 10, 360, 190, 46), face, (CX - 85, 364), s=ms)
     M.twinkle(c, "glint", CX + 150, 318, 40, 36, 22, parent=face)
+    M.twinkle(c, "glint2", CX + 160, 300, 46, 86, 24, parent=face)
 
 
 @emoji("67-unamused", "😒", "фу, недоволен, ну и?, скептик, пфф", "unamused, meh, side eye, skeptical, pfft",
@@ -549,11 +560,14 @@ def party(c):
     hr.hold(128).to(144, -40, "io")
     part(c, "hat", hat, face, (hx, hy), p=hp.loop(150), r=hr.loop(150), s=ho)
     # confetti fan out of the horn bell: bars, rings, sparks, dots; arcs + spin, 1.5f stagger
-    kinds = [lambda x, y: geo.rrect(x - 20, y - 9, x + 20, y + 9, 5), lambda x, y: geo.ring(x, y, 17, 7),
-             lambda x, y: geo.spark(x, y, 22, 0.3), lambda x, y: geo.disc(x, y, 14)]
+    kinds = [lambda x, y: geo.rrect(x - 24, y - 11, x + 24, y + 11, 6), lambda x, y: geo.ring(x, y, 21, 9),
+             lambda x, y: geo.spark(x, y, 28, 0.36), lambda x, y: geo.xmark(x, y, 26, 14)]
     import random
     rnd = random.Random(7)
     x0, y0 = CX + 170, 360
+    rs = Track([30, 30], 0).hold(46).to(58, [100, 100], "ring").hold(150)
+    rw = Track(26, 0).hold(46).to(58, 6, "ring").to(62, 0, "i").hold(150)
+    c.layer("pop", [lot_ring(x0, y0, 60, rw)], p=(x0, y0), a=(x0, y0), s=rs, ip=46, op=63)
     for k in range(12):
         x1 = rnd.uniform(250, 480)
         y1 = rnd.uniform(400, 470)
@@ -787,7 +801,23 @@ def grimace(c):
     jitter(mx, 26, 92, CX, 4, 2)
     mx.loop(120)
     ms = Track([100, 100], 0).hold(14).to(24, [110, 92], "snap").hold(92).to(104, [100, 100], "io").loop(120)
-    part(c, "mouth", K.m_grit(CX, 360, 380, 136, 30, 5), face, (CX, 360), p=Split(mx, 360), s=ms)
+    o1 = Track(100, 0).hold(26)
+    o2 = Track(0, 0).hold(26)
+    t = 26
+    k = 0
+    while t + 3 < 92:
+        t += 3
+        for tr_, on in ((o1, k % 2 == 1), (o2, k % 2 == 0)):
+            tr_.k[-1][2] = "hold"
+            tr_.k.append([t, 100 if on else 0, None])
+        k += 1
+    for tr_, v in ((o1, 100), (o2, 0)):
+        if tr_.v != v:
+            tr_.k[-1][2] = "hold"
+            tr_.k.append([94, v, None])
+        tr_.hold(120)
+    part(c, "mouth", K.m_grit(CX, 360, 380, 136, 30, 5), face, (CX, 360), p=Split(mx, 360), s=ms, o=o1)
+    part(c, "mouth2", K.m_grit(CX, 360, 380, 118, 30, 5), face, (CX, 360), p=Split(mx, 360), s=ms, o=o2)
     M.particle(c, "sweat", K.tear(CX + 200, 110, 24), 36, 50, (CX + 200, 110), (CX + 214, 230), None, parent=face,
                anchor=(CX + 200, 110), pop=0.15, fade=0.2, fall="io", s_end=40)
 
@@ -811,6 +841,9 @@ def clown(c):
     ns = Track([100, 100], 0).hold(10).to(42, [124, 124], "is").to(46, [142, 74], "slam").to(47, [142, 74], "lin")
     ns.to(54, [88, 116], "snap").to(62, [106, 95], "io").to(70, [98, 102], "io").to(78, [100, 100], "io").loop(120)
     part(c, "nose", geo.disc(CX, 292, 56), face, (CX, 292), s=ns)
+    rs = Track([60, 60], 0).hold(46).to(58, [100, 100], "ring").hold(120)
+    rw = Track(22, 0).hold(46).to(58, 6, "ring").to(62, 0, "i").hold(120)
+    c.layer("honk", [lot_ring(CX, 292, 110, rw)], parent=face, p=(CX, 292), a=(CX, 292), s=rs, ip=46, op=63)
 
 
 @emoji("79-moai", "🗿", "моаи, ну да, бро, серьёзно, каменное лицо", "moai, stone face, bruh, deadpan, sure",
@@ -843,14 +876,14 @@ def salute(c):
     head = c.layer("head", [geo.shape(K.eyelet(hx, hy, 112, 0.46), nm="head")], p=Split(hx, y), a=(hx, hy),
                    s=Track([100, 100], 0).hold(24).to(28, [106, 94], "slam").to(36, [100, 100], "io").loop(120))
     seven = geo.text("7", brand_font(), 360, 262, 300, bold=14)
-    seven = geo.fit_box(seven, 270, 90, 470, 440, keep=False)
-    pv = (320, 440)
-    r = Track(58, 0).hold(8).to(22, -4, "slam").to(28, 2, "io").to(34, 0, "io")
+    seven = geo.fit_box(seven, 262, 96, 444, 440, keep=False)
+    pv = (300, 440)
+    r = Track(76, 0).hold(8).to(16, 30, "i").to(22, -4, "slam").to(28, 2, "io").to(34, 0, "io")
     jitter(r, 38, 96, 0, 0.9, 2)
-    r.to(112, 58, "io").loop(120)
-    s = Track([70, 70], 0).hold(8).to(22, [100, 100], "o").hold(100).to(112, [70, 70], "io").loop(120)
+    r.hold(106).to(114, 76, "io").loop(120)
+    s = Track([52, 52], 0).hold(8).to(16, [58, 58], "i").to(22, [100, 100], "slam").hold(98).to(106, [52, 52], "io").loop(120)
     c.layer("seven", [geo.shape(seven, nm="seven")], p=pv, a=pv, r=r, s=s)
-    M.twinkle(c, "tw", 470, 96, 30, 26, 20)
+    M.twinkle(c, "tw", 452, 100, 30, 26, 20)
 
 
 @emoji("81-angel", "😇", "ангел, невинный, я не я, святой, мило", "angel, innocent, halo, saint, not me",
@@ -887,7 +920,7 @@ def angel(c):
        "щёки раздуваются шарами, лицо позеленело — зажмуривается, глотает (всё сжимается вниз) и снова пухнет",
        op=150, series="face")
 def nausea(c):
-    s = Track([100, 100], 0).hold(20).to(50, [104, 98], "is").to(58, [96, 108], "snap").to(66, [102, 96], "io").to(76, [100, 100], "io")
+    s = Track([100, 100], 0).hold(20).to(46, [104, 98], "is").to(50, [112, 108], "slam").to(58, [96, 106], "snap").to(66, [102, 96], "io").to(76, [100, 100], "io")
     s.hold(90).to(110, [104, 98], "is").to(116, [96, 108], "snap").to(126, [100, 100], "io").loop(150)
     face = rig(c, p=(CX, 440), s=s)
     face.a = (CX, 440)

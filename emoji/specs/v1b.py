@@ -221,14 +221,14 @@ def club_banner(c):
 
 
 @emoji("31-cyber-butterfly", "🦋", "бабочка, лёгкость, влюблена, порхаю, y2k", "butterfly, flutter, crush, light, y2k",
-       "кибер-бабочка складывает крылья как страницы (fake-3D), два взмаха с подъёмом, парит, крылья обгоняют друг друга на 3 кадра",
+       "кибер-бабочка с люверсами на крыльях складывает их как страницы (fake-3D), два взмаха с подъёмом, парит, крылья обгоняют друг друга на 3 кадра",
        op=120, series="v1")
 def butterfly(c):
     cx, cy = 256, 262
     upper = geo.poly([(cx - 18, cy - 20), (cx - 150, cy - 196), (cx - 226, cy - 170), (cx - 214, cy - 60), (cx - 20, cy + 4)]).buffer(24).buffer(-10)
-    upper = upper.difference(geo.ellipse(cx - 150, cy - 110, 32, 24)).difference(geo.disc(cx - 110, cy - 50, 14))
+    upper = upper.difference(geo.ring(cx - 146, cy - 106, 38, 18)).difference(geo.disc(cx - 104, cy - 44, 14))
     lower = geo.poly([(cx - 18, cy + 10), (cx - 190, cy + 40), (cx - 196, cy + 150), (cx - 110, cy + 190), (cx - 20, cy + 60)]).buffer(22).buffer(-10)
-    lower = lower.difference(geo.ellipse(cx - 118, cy + 92, 26, 22))
+    lower = lower.difference(geo.ring(cx - 116, cy + 96, 30, 14))
     body = geo.U(geo.rrect(cx - 16, cy - 110, cx + 16, cy + 150, 16), geo.disc(cx, cy - 124, 24))
     antL = geo.brush([(cx - 6, cy - 140), (cx - 40, cy - 200), (cx - 70, cy - 216)], 18, (1, 1), True, 6)
     y = Track(cy, 0)

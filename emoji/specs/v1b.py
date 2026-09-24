@@ -1,0 +1,329 @@
+"""v1 objects 24-32, 41, 43 reworked (bold redraws of the v1 silhouettes, new stories)."""
+import math
+import os
+
+from xtc import geo, kao as K, motion as M
+from xtc.lot import Split, Track
+from xtc.reg import emoji
+from specs.drop import brand_word, speed_lines
+
+V1 = "/tmp/claude-0/-home-user-xtc-assets/ecf9e5e6-596f-594c-9de0-56b0f9bf2e83/scratchpad/in/noanim/tg"
+
+
+def lay(c, nm, g, anchor, parent=None, **kw):
+    return c.layer(nm, [geo.shape(g, nm=nm)], parent=parent, p=kw.pop("p", anchor), a=anchor, **kw)
+
+
+@emoji("24-print-scan", "🫆", "отпечаток, это я, подтверждаю, доступ, скан", "fingerprint, its me, verified, access, scan",
+       "отпечаток-гравюра в рамке сканера: линия пробегает сверху вниз, уголки рамки защёлкиваются, гребни вспыхивают волной от центра, ✦",
+       op=150, series="v1")
+def print_scan(c):
+    cx, cy = 256, 280
+    ridges = []
+    for k in range(4):
+        rx = 40 + k * 46
+        ry = rx * 1.18
+        top = [(cx + rx * math.cos(math.radians(a)), cy - 20 + ry * math.sin(math.radians(a))) for a in range(180, 361, 6)]
+        pts = [(cx - rx, cy + 44 + k * 20)] + top + [(cx + rx, cy + 30 + k * 12)]
+        ridges.append(geo.brush(pts, 32, taper=(0.6, 0.66), smooth=False))
+    core = geo.brush([(cx, cy - 20), (cx, cy + 36)], 32, (0.8, 0.8), False)
+    parts = [core] + ridges
+    for k, g in enumerate(parts):
+        t0 = 64 + k * 4
+        sk = Track([100, 100], 0).hold(t0).to(t0 + 5, [106, 106], "snap").to(t0 + 14, [100, 100], "io").loop(150)
+        lay(c, f"r{k}", g, (cx, cy), s=sk)
+    # viewfinder corners: open wide while scanning, snap onto the print when done
+    L = 60
+    for k, (sx, sy) in enumerate(((-1, -1), (1, -1), (1, 1), (-1, 1))):
+        x0, y0 = cx + sx * 212, cy - 8 + sy * 204
+        g = geo.line([(x0, y0 - sy * -0 + sy * -L * 0 - sy * L * -0 + sy * -L), (x0, y0), (x0 - sx * L, y0)], 28, "round", "round")
+        pp = Track([x0 + sx * 10, y0 + sy * 10], 0).hold(56).to(62, [x0 - sx * 8, y0 - sy * 8], "slam").to(70, [x0, y0], "io").hold(128).to(146, [x0 + sx * 10, y0 + sy * 10], "io").loop(150)
+        lay(c, f"corner{k}", g, (x0, y0), p=pp)
+    # scan line sweeping down (visible through the gaps between the ridges)
+    bar = geo.rrect(cx - 196, cy - 9, cx + 196, cy + 9, 9)
+    py = Track(cy - 190, 0).hold(10).to(56, cy + 190, "io").hold(150)
+    lay(c, "scan", bar, (cx, cy), p=Split(cx, py), ip=10, op=57)
+    M.twinkle(c, "tw", cx + 150, cy - 150, 42, 82, 26)
+
+
+@emoji("25-mask-glyphs", "🎭", "маска, хоррор, маньяк, пятница, джейсон", "mask, horror, slasher, creepy, jason",
+       "хоккейная маска медленно поворачивается к тебе (параллакс прорезей), в прорезях вспыхивают глаза и косятся, по кромке — блик ножа ✦",
+       op=180, series="v1")
+def mask(c):
+    g = geo.svg(os.path.join(V1, "25-mask-glyphs.svg"))
+    shell = geo.U(*[geo.Polygon(p.exterior) for p in geo._polys(g)])
+    holes = shell.difference(g)
+    cx, cy = 256, 255
+    # yaw: outline narrows a little, holes slide further (parallax = fake 3D)
+    yaw = lambda a0, a1: None
+    sx = Track([92, 100], 0).hold(20).to(60, [100, 100], "io").hold(140).to(176, [92, 100], "io").loop(180)
+    base = c.layer("mask", [geo.shape(shell, nm="shell")], p=(cx, cy), a=(cx, cy), s=sx)
+    hx = Track([-22, 0], 0).hold(20).to(60, [0, 0], "io").hold(140).to(176, [-22, 0], "io").loop(180)
+    geo.hole(base, holes, nm="holes", p=hx)
+    # eyes lighting up inside the eye holes: pupils pop in, glance, blink out
+    eyes = [e for e in geo._polys(holes) if e.area > 2500]
+    for k, e in enumerate(sorted(eyes, key=lambda e: e.centroid.x)[:2]):
+        ex, ey = e.centroid.x, e.centroid.y
+        es = Track([0, 0], 0).hold(64 + k * 3).to(72 + k * 3, [118, 118], "snap").to(78 + k * 3, [100, 100], "io")
+        es.hold(128).to(132, [110, 10], "i").to(136, [0, 0], "lin").loop(180, "lin")
+        ep = Track([ex, ey], 0).hold(86).to(94, [ex + 16, ey], "snap").hold(104).to(112, [ex - 14, ey + 2], "snap").hold(120).to(126, [ex, ey], "io").loop(180)
+        c.layer(f"eye{k}", [geo.shape(geo.disc(ex, ey, 22), nm="eye")], p=ep, a=(ex, ey), s=es)
+    M.twinkle(c, "tw", 404, 118, 42, 104, 26)
+
+
+@emoji("26-tribal-heart", "❤️‍🔥", "горю, страсть, огонь, люблю, трайбл", "on fire, passion, burning love, tribal, heart",
+       "трайбл-сердце загорается: рога-завитки лижут вверх как языки пламени вразнобой, из макушки летят угли",
+       op=120, series="v1")
+def tribal_heart(c):
+    g = geo.svg(os.path.join(V1, "26-tribal-heart.svg")).buffer(3)
+    cx = 256
+    # cut the curls (top corners) and thorns (sides) off the heart body, each flickers from its root
+    zones = [("curlL", geo.poly([(20, 20), (230, 20), (230, 170), (20, 170)]), (190, 150)),
+             ("curlR", geo.poly([(282, 20), (492, 20), (492, 170), (282, 170)]), (322, 150)),
+             ("thornL", geo.poly([(20, 170), (120, 170), (120, 330), (20, 330)]), (120, 240)),
+             ("thornR", geo.poly([(392, 170), (492, 170), (492, 330), (392, 330)]), (392, 240))]
+    rest = g
+    s = Track([100, 100], 0).hold(10).to(30, [104, 104], "is").to(36, [100, 100], "o").hold(100).to(112, [100, 100], "lin").loop(120)
+    root = c.null("root", p=(cx, 420), a=(cx, 420), s=s)
+    for k, (nm, z, anchor) in enumerate(zones):
+        part = g.intersection(z)
+        rest = rest.difference(z)
+        ph = k * 5
+        sc = Track([100, 100], 0)
+        rr = Track(0, 0)
+        d = -1 if nm.endswith("L") else 1
+        for j, (t, a, v) in enumerate(((12, 118, 6), (26, 92, -4), (38, 112, 5), (52, 96, -3), (66, 110, 4), (80, 94, -2), (96, 104, 2))):
+            sc.to(t + ph, [100, a], "io")
+            rr.to(t + ph, d * v, "io")
+        sc.loop(120)
+        rr.loop(120)
+        lay(c, nm, part, anchor, parent=root, s=sc, r=rr)
+    lay(c, "body", rest, (cx, 300), parent=root)
+    # embers: small drops rising and fading (M17)
+    import random
+    rnd = random.Random(5)
+    for k in range(7):
+        x0 = rnd.choice([150, 190, 320, 360])
+        t0 = k * 16
+        M.particle(c, f"ember{k}", geo.spark(x0, 110, 20, 0.34), t0, 36, (x0, 120), (x0 + rnd.uniform(-30, 30), 30), None,
+                   pop=0.2, fade=0.4, fall="decel", rot=(0, rnd.choice([-90, 90])), anchor=(x0, 110))
+
+
+@emoji("27-tribal-eye", "👁️", "вижу, слежу, палю, глаз, око", "i see you, watching, eye, all seeing, stare",
+       "трайбл-око закрыто — распахивается, лучи выстреливают по кругу с задержкой, X-зрачок проворачивается, моргает",
+       op=150, series="v1")
+def tribal_eye(c):
+    cx, cy = 256, 256
+    upper = geo.brush(geo.quad((cx - 190, cy), (cx, cy - 170), (cx + 190, cy), 24), 40, (0.35, 0.35), False)
+    lower = geo.brush(geo.quad((cx - 190, cy), (cx, cy + 170), (cx + 190, cy), 24), 40, (0.35, 0.35), False)
+    pupil = geo.disc(cx, cy, 62).difference(geo.text("X", __import__("specs.drop", fromlist=["x"]).brand_font(), cx, cy, 42, bold=6, width=70))
+    open_ = Track([100, 100], 0).hold(40).to(44, [104, 8], "i").to(52, [100, 100], "o").hold(96).to(116, [100, 10], "is")
+    open_.hold(124).to(132, [100, 112], "snap").to(140, [100, 96], "io").to(148, [100, 100], "io").loop(150)
+    lay(c, "upper", upper, (cx, cy), s=open_)
+    lay(c, "lower", lower, (cx, cy), s=open_)
+    ps = Track([100, 100], 0).hold(40).to(44, [100, 10], "i").to(52, [100, 100], "o").hold(96).to(112, [0, 0], "is")
+    ps.hold(126).to(136, [112, 112], "snap").to(144, [100, 100], "io").loop(150)
+    pr = Track(0, 0).hold(60).to(78, 90, (0.4, 0.0, 0.1, 1.0)).to(84, 84, "io").to(90, 90, "io").hold(150)
+    pr.k[-1][2] = "hold"
+    pr.k.append([149.99, 0, None])
+    lay(c, "pupil", pupil, (cx, cy), s=ps, r=pr)
+    for k in range(8):
+        a = math.radians(-90 + k * 45)
+        r0, r1 = (176, 222) if k % 2 == 0 else (150, 194)
+        if k in (2, 6):
+            r0, r1 = 204, 226
+        p0 = (cx + r0 * math.cos(a), cy + r0 * math.sin(a) * 0.9)
+        p1 = (cx + r1 * math.cos(a), cy + r1 * math.sin(a) * 0.9)
+        t0 = 128 + (k % 4) * 2
+        e = Track(100, 0).hold(100).to(114, 0, "i").hold(t0).to(t0 + 8, 100, "o").loop(150)
+        c.layer(f"ray{k}", [geo.stroked([p0, p1], 30, e=e)], p=(0, 0), a=(0, 0))
+
+
+@emoji("28-tribal-cross", "✝️", "крест, вера, святое, gothic, аминь", "cross, faith, holy, gothic, amen",
+       "готический крест тяжело покачивается, собирается в центр и выстреливает лучами по очереди, вспыхивает ✦",
+       op=150, series="v1")
+def tribal_cross(c):
+    cx, cy = 256, 200
+    def arm(ang, L, W):
+        a = math.radians(ang)
+        ux, uy = math.cos(a), math.sin(a)
+        nx, ny = -uy, ux
+        pts = [(cx + nx * W / 2, cy + ny * W / 2), (cx + ux * (L - W * 0.9) + nx * W / 2, cy + uy * (L - W * 0.9) + ny * W / 2),
+               (cx + ux * (L - W * 0.55) + nx * W * 0.78, cy + uy * (L - W * 0.55) + ny * W * 0.78),
+               (cx + ux * L, cy + uy * L),
+               (cx + ux * (L - W * 0.55) - nx * W * 0.78, cy + uy * (L - W * 0.55) - ny * W * 0.78),
+               (cx + ux * (L - W * 0.9) - nx * W / 2, cy + uy * (L - W * 0.9) - ny * W / 2), (cx - nx * W / 2, cy - ny * W / 2)]
+        return geo.poly(pts)
+    arms = [(-90, 162, 76), (0, 176, 70), (90, 276, 80), (180, 176, 70)]
+    core = geo.disc(cx, cy, 58).difference(geo.disc(cx, cy, 24))
+    r = Track(0, 0).to(20, 3, "io").to(44, -2.5, "io").to(62, 0, "io").hold(128).to(140, 2, "io").to(150, 0, "io")
+    root = c.null("root", p=(cx, 20), a=(cx, 20), r=r)
+    for k, (ang, L, W) in enumerate(arms):
+        t0 = 96 + k * 5
+        s = Track([100, 100], 0).hold(78).to(92, [40, 40], "is").hold(t0).to(t0 + 8, [106, 106], "snap").to(t0 + 16, [97, 97], "io").to(t0 + 24, [100, 100], "io").loop(150)
+        c.layer(f"arm{k}", [geo.shape(arm(ang, L, W), nm="arm")], parent=root, p=(cx, cy), a=(cx, cy), s=s)
+    cs = Track([100, 100], 0).hold(78).to(92, [120, 120], "is").to(98, [90, 90], "snap").to(106, [100, 100], "io").loop(150)
+    lay(c, "core", core, (cx, cy), parent=root, s=cs)
+    M.twinkle(c, "tw", cx + 110, cy - 100, 46, 112, 28)
+    M.twinkle(c, "tw2", cx - 104, cy + 126, 30, 122, 22)
+
+
+@emoji("29-drip-xtc", "💦", "капает, течёт, мокро, xtc, сочно", "dripping, wet, drip, xtc, juicy",
+       "XTC трясётся желе волной по буквам, с нижних кромок набухают подтёки, тянутся и срываются каплями",
+       op=150, series="v1")
+def drip_xtc(c):
+    from specs.drop import brand_letter
+    cy = 196
+    letters = [("X", 110), ("T", 256), ("C", 402)]
+    for k, (ch, x) in enumerate(letters):
+        g = brand_letter(ch, x, cy, 118, 150, 16)
+        t0 = 10 + k * 8                                  # M16 jelly, letters offset 7-8f
+        s = Track([100, 100], 0).hold(t0).to(t0 + 10, [95, 105], "io").to(t0 + 20, [105, 95], "io").to(t0 + 30, [97, 103], "io").to(t0 + 40, [100, 100], "io").loop(150)
+        lay(c, f"L{k}", g, (x, cy + 59), s=s)
+    # drips: hang from letter bottoms, stretch down, detach and fall (stagger 2-4f per M16)
+    drips = [(78, 250, 22), (140, 252, 18), (256, 252, 24), (370, 252, 20), (440, 250, 18)]
+    for k, (x, y0, r) in enumerate(drips):
+        t0 = 40 + k * 7
+        # the hanging tongue: grows from the letter bottom
+        tongue = geo.U(geo.rect(x - r * 0.7, y0 - 10, x + r * 0.7, y0 + 40), geo.disc(x, y0 + 40, r))
+        ts = Track([100, 0], 0).hold(t0 - 20).to(t0, [100, 100], "is").to(t0 + 4, [90, 120], "io").to(t0 + 8, [100, 20], "snap").to(t0 + 30, [100, 0], "io").loop(150)
+        lay(c, f"tongue{k}", tongue, (x, y0 - 10), s=ts)
+        M.particle(c, f"drop{k}", K.tear(x, y0 + 40, r), t0 + 6, 30, (x, y0 + 40), (x, 470), None, anchor=(x, y0 + 40),
+                   pop=0.1, fade=0.15, fall="i", s_end=60)
+
+
+@emoji("30-club-banner", "🪩", "клуб, туса, вечеринка, club, рейв", "club, party, rave, night out, banner",
+       "лента CLUB качается на бит: хвосты ленты хлопают с запаздыванием, на каждом бите табличка подпрыгивает",
+       op=120, series="v1")
+def club_banner(c):
+    from specs.drop import brand_word
+    cx, cy = 256, 256
+    body = geo.rrect(cx - 170, cy - 70, cx + 170, cy + 70, 16).difference(brand_word("CLUB", cx, cy, 70, 270, bold=9))
+    tailL = geo.poly([(cx - 150, cy - 30), (cx - 236, cy - 20), (cx - 204, cy + 26), (cx - 236, cy + 72), (cx - 150, cy + 62)])
+    tailR = geo.mirror(tailL, cx)
+    y = Track(cy, 0)
+    r = Track(0, 0)
+    for t in (0, 30, 60, 90):
+        y.hold(t).to(t + 5, cy - 18, "decel").to(t + 14, cy, "slam").to(t + 20, cy - 3, "o").to(t + 26, cy, "i")
+        r.hold(t).to(t + 8, 3 if t % 60 == 0 else -3, "io").to(t + 22, 0, "io")
+    root = c.null("root", p=Split(cx, y.loop(120)), a=(cx, cy), r=r.loop(120))
+    lay(c, "body", body, (cx, cy), parent=root)
+    for k, (g, d) in enumerate(((tailL, -1), (tailR, 1))):
+        ax = cx + d * 150
+        tr = Track(0, 0)
+        for t in (0, 30, 60, 90):
+            tr.hold(t + 4 + k * 2).to(t + 10 + k * 2, d * 14, "snap").to(t + 20 + k * 2, -d * 6, "io").to(t + 28 + k * 2, 0, "io")
+        lay(c, f"tail{k}", g, (ax, cy + 20), parent=root, r=tr.loop(120))
+
+
+@emoji("31-cyber-butterfly", "🦋", "бабочка, лёгкость, влюблена, порхаю, y2k", "butterfly, flutter, crush, light, y2k",
+       "кибер-бабочка складывает крылья как страницы (fake-3D), два взмаха с подъёмом, парит, крылья обгоняют друг друга на 3 кадра",
+       op=120, series="v1")
+def butterfly(c):
+    cx, cy = 256, 262
+    upper = geo.poly([(cx - 18, cy - 20), (cx - 150, cy - 196), (cx - 226, cy - 170), (cx - 214, cy - 60), (cx - 20, cy + 4)]).buffer(24).buffer(-10)
+    upper = upper.difference(geo.ellipse(cx - 150, cy - 110, 32, 24)).difference(geo.disc(cx - 110, cy - 50, 14))
+    lower = geo.poly([(cx - 18, cy + 10), (cx - 190, cy + 40), (cx - 196, cy + 150), (cx - 110, cy + 190), (cx - 20, cy + 60)]).buffer(22).buffer(-10)
+    lower = lower.difference(geo.ellipse(cx - 118, cy + 92, 26, 22))
+    body = geo.U(geo.rrect(cx - 16, cy - 110, cx + 16, cy + 150, 16), geo.disc(cx, cy - 124, 24))
+    antL = geo.brush([(cx - 6, cy - 140), (cx - 40, cy - 200), (cx - 70, cy - 216)], 18, (1, 1), True, 6)
+    y = Track(cy, 0)
+    for t in (0, 30):
+        y.hold(t).to(t + 8, cy + 10, "io").to(t + 20, cy - 26, "decel").to(t + 30, cy - 20, "io")
+    y.hold(60).to(100, cy + 4, "io").to(120, cy, "io")
+    root = c.null("root", p=Split(cx, y.loop(120)), a=(cx, cy))
+    lay(c, "body", geo.U(body, antL, geo.mirror(antL, cx)), (cx, cy), parent=root)
+    for side, d in enumerate((1, -1)):
+        for k, g in enumerate((upper, lower)):
+            g2 = g if d == 1 else geo.mirror(g, cx)
+            lag = k * 3
+            s = Track([100, 100], 0)
+            for t in (0, 30):
+                s.hold(t + lag).to(t + 8 + lag, [22, 100], "io").to(t + 20 + lag, [100, 100], "o")
+            s.hold(70 + lag).to(84 + lag, [70, 100], "io").to(100 + lag, [100, 100], "io").loop(120)
+            lay(c, f"w{side}{k}", g2, (cx, cy), parent=root, s=s)
+
+
+@emoji("32-swallow", "🐦", "ласточка, лечу, свобода, тату, птичка", "swallow, flying, freedom, tattoo, bird",
+       "тату-ласточка на месте машет крыльями: сильный взмах, парение, хвост-ножницы щёлкают, корпус качается на волне",
+       op=120, series="v1")
+def swallow(c):
+    cx, cy = 256, 262
+    body = geo.U(geo.ellipse(cx + 20, cy, 112, 50), geo.disc(cx + 118, cy - 26, 44))
+    body = geo.U(body, geo.poly([(cx + 150, cy - 44), (cx + 212, cy - 30), (cx + 152, cy - 12)]))
+    body = geo.rot(body, -18, (cx, cy)).difference(geo.disc(cx + 126, cy - 64, 10))
+    tailU = geo.poly([(cx - 70, cy + 2), (cx - 214, cy - 40), (cx - 196, cy - 18), (cx - 70, cy + 30)]).buffer(10)
+    tailD = geo.poly([(cx - 70, cy + 14), (cx - 206, cy + 80), (cx - 188, cy + 96), (cx - 60, cy + 40)]).buffer(10)
+    wingU = geo.poly([(cx - 10, cy - 20), (cx - 90, cy - 190), (cx - 60, cy - 206), (cx + 50, cy - 40)]).buffer(18)
+    wingD = geo.poly([(cx + 10, cy + 30), (cx - 40, cy + 170), (cx - 10, cy + 186), (cx + 60, cy + 40)]).buffer(16)
+    y = M.wave(cy, 10, 60, 120)
+    r = M.wave(0, 4, 60, 120, 1.2)
+    root = c.null("root", p=Split(cx, y), a=(cx, cy), r=r)
+    wu = Track(0, 0)
+    wd = Track(0, 0)
+    for t in (0, 60):
+        wu.hold(t).to(t + 10, 58, "io").to(t + 20, -8, "snap").to(t + 30, 4, "io").to(t + 40, 0, "io")
+        wd.hold(t + 3).to(t + 13, -40, "io").to(t + 23, 8, "snap").to(t + 33, -3, "io").to(t + 43, 0, "io")
+    lay(c, "wingD", wingD, (cx + 20, cy + 30), parent=root, r=wd.loop(120))
+    tu = Track(0, 0)
+    td = Track(0, 0)
+    for t in (22, 82):
+        tu.hold(t).to(t + 5, -10, "snap").to(t + 12, 0, "io")
+        td.hold(t).to(t + 5, 10, "snap").to(t + 12, 0, "io")
+    lay(c, "tailU", tailU, (cx - 70, cy + 10), parent=root, r=tu.loop(120))
+    lay(c, "tailD", tailD, (cx - 70, cy + 20), parent=root, r=td.loop(120))
+    lay(c, "body", body, (cx, cy), parent=root)
+    lay(c, "wingU", wingU, (cx + 10, cy - 20), parent=root, r=wu.loop(120))
+
+
+@emoji("41-patch-x", "🩹", "пластырь, заживёт, береги себя, ранен, ой", "bandage, heal, get well, hurt, patch",
+       "пластырь-X шлёпается сверху и натягивается, делает тяжёлый 360 с торцом, приклеивается обратно — ✦",
+       op=150, series="v1")
+def patch(c):
+    cx, cy = 256, 262
+    band = geo.rrect(cx - 220, cy - 84, cx + 220, cy + 84, 84)
+    pad = geo.rrect(cx - 78, cy - 56, cx + 78, cy + 56, 16)
+    front = band.difference(pad.difference(pad.buffer(-20))).difference(brand_word_x(cx, cy))
+    for sx in (-1, 1):
+        for dx, dy in ((0, -30), (0, 30), (46, 0)):
+            front = front.difference(geo.disc(cx + sx * (140 + dx), cy + dy, 13))
+    back = band.difference(geo.rrect(cx - 200, cy - 6, cx + 200, cy + 6, 6))
+    y = Track(cy, 0).hold(90).to(104, cy - 30, "o").to(118, cy, "i5").loop(150)
+    s = Track([100, 100], 0).hold(10).to(20, [96, 104], "io").to(26, [110, 90], "slam").to(27, [110, 90], "lin").to(34, [97, 103], "io").to(42, [100, 100], "io")
+    s.hold(118).to(120, [106, 94], "slam").to(128, [99, 101], "io").to(134, [100, 100], "io").loop(150)
+    root = c.null("root", p=Split(cx, y), a=(cx, cy), s=s, r=-14)
+    segs = [(40, 52, 0, -20, "io"), (52, 112, -20, 372, (0.3, 0.0, 0.14, 1.0)), (112, 124, 372, 360, "io")]
+    M.spin3d(c, "patch", front, back, cx, cy, segs, thick=30, lip=22, parent=root)
+    M.twinkle(c, "tw", cx + 170, cy - 110, 40, 124, 24)
+
+
+def brand_word_x(cx, cy):
+    from specs.drop import brand_letter
+    return brand_letter("X", cx, cy, 46, 90, 11)
+
+
+@emoji("43-scorpion-sigil", "🦂", "скорпион, ужалю, опасно, тату, яд", "scorpion, sting, danger, tattoo, venom",
+       "скорпион взводит хвост назад (антиципация) и бьёт жалом вперёд с ударом, клешни щёлкают дважды, на жале ✦",
+       op=150, series="v1")
+def scorpion(c):
+    parts = geo.tgs_geometry("/tmp/claude-0/-home-user-xtc-assets/ecf9e5e6-596f-594c-9de0-56b0f9bf2e83/scratchpad/in/anim/tg-anim/43-scorpion-sigil.tgs")
+    fat = {k: v.buffer(9).buffer(-4) for k, v in parts.items()}
+    root = c.null("root", p=(256, 322), a=(256, 300),
+                  s=Track([88, 88], 0).hold(60).to(64, [92, 84], "slam").to(72, [87, 89], "io").to(78, [88, 88], "io").loop(150))
+    lay(c, "body", fat["body"], (256, 360), parent=root)
+    tb = (384, 350)
+    tr = Track(0, 0).hold(24).to(52, 14, "io").to(60, -30, "strike").to(64, -24, "io").to(72, -28, "io").hold(96).to(120, 0, "io").loop(150)
+    tail = lay(c, "tail", fat["tail"], tb, parent=root, r=tr)
+    cr = Track(0, 0)
+    for t in (84, 96):
+        cr.hold(t).to(t + 4, -16, "snap").to(t + 9, 0, "slam")
+    cr.loop(150)
+    lay(c, "claw_up", fat["claw_up"], (150, 280), parent=root, r=cr)
+    lay(c, "claw_low", fat["claw_low"], (120, 330), parent=root,
+        r=Track(0, 0).hold(86).to(90, 12, "snap").to(95, 0, "slam").hold(98).to(102, 12, "snap").to(107, 0, "slam").loop(150))
+    M.twinkle(c, "tw", 336, 96, 36, 62, 24, parent=tail)
+    from specs.drop import speed_lines
+    for k, (p0, p1) in enumerate((((236, 110), (200, 92)), ((236, 150), (192, 146)), ((250, 72), (224, 48)))):
+        e = Track(0, 0).hold(60).to(66, 100, "o").hold(150)
+        s0 = Track(0, 0).hold(62).to(69, 100, "i").hold(150)
+        c.layer(f"hit{k}", [geo.stroked([p0, p1], 20, e=e, s=s0)], p=(0, 0), a=(0, 0), ip=60, op=70)

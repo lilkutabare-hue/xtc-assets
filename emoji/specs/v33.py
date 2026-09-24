@@ -54,11 +54,15 @@ def lips_e(c):
     g = rec("lips")
     b_ = g.bounds
     cx, cy = (b_[0] + b_[2]) / 2, (b_[1] + b_[3]) / 2
-    # the kiss: gather (narrow + tall), smack with recoil, long rest with a breath; slight tilt
-    s = seq([100, 100], [(20, None, None), (36, [88, 106], "io"), (44, [108, 95], "snap"), (54, [98, 101], "io"), (64, [100, 100], "io")])
-    breathe(s, 80, 150, [100, 100], 0.6, 35)
+    # kiss ×2: pucker (narrow, taller, 14f) -> push to the camera (110%, 5f snap) -> hold -> release with settle
+    s = Track([100, 100], 0)
+    for t in (14, 70):
+        s.hold(t).to(t + 14, [86, 108], "io").to(t + 19, [112, 112], "snap").hold(t + 25).to(t + 33, [96, 98], "o").to(t + 41, [101.5, 100.5], "io").to(t + 49, [100, 100], "io")
     s.loop(OP)
-    r = seq(0, [(20, None, None), (44, -5, "io"), (90, 0, "io")], op=OP)
+    r = Track(0, 0)
+    for t, d in ((14, -4), (70, 3)):
+        r.hold(t).to(t + 19, d, "io").to(t + 49, 0, "io")
+    r.loop(OP)
     root = rig(c, "lips", (cx, cy), s=s, r=r)
     part(c, "lips", g, root, (cx, cy))
 
@@ -110,25 +114,29 @@ def _sh(tr, d):
 
 @emoji("155-star-ring", "🌟", "звёзды, кольцо, xtc records, лого, орбита", "stars, ring, xtc records, logo, orbit",
        "двенадцать звёзд-контуров кольцом вокруг XTC: кольцо тяжело проворачивается на одну звезду и садится, каждая звезда по очереди вспыхивает заливкой по кругу",
-       op=150, series=SER)
+       op=180, series=SER)
 def star_ring(c):
-    OP = 150
+    OP = 180
     g = rec("starring")
     polys = sorted(geo._polys(g), key=lambda p: -p.area)
     cx, cy = 256, 256
-    # the XTC mark = the polys off the ring radius (right of centre, near the middle line)
-    mark = polys[0]                     # the XTC mark is the one big poly; the 11 stars are the rest
-    stars = polys[1:]
+    stars = [p for p in polys if math.hypot(p.centroid.x - cx, p.centroid.y - cy) > 150]
+    mark = geo.U(*[p for p in polys if math.hypot(p.centroid.x - cx, p.centroid.y - cy) <= 150])
     mb = mark.bounds
     part(c, "xtc", mark, None, ((mb[0] + mb[2]) / 2, (mb[1] + mb[3]) / 2))
-    rr_ = seq(0, [(30, None, None), (66, 30, (0.4, 0.0, 0.16, 1.0)), (74, 26, "io"), (82, 26.5, "io")], op=OP)
-    ring = rig(c, "ring", (cx, cy), r=rr_)
+    # the ring turns one full circle per loop (seamless), stars keep upright and spin on themselves in turn
+    ring = rig(c, "ring", (cx, cy), r=seq(0, [(OP, 360, "lin")]))
     stars.sort(key=lambda p: math.atan2(p.centroid.y - cy, p.centroid.x - cx))
+    n = len(stars)
     for k, p in enumerate(stars):
         c_ = p.centroid
-        t = 90 + k * 4
-        ps = seq([100, 100], [(t, None, None), (t + 4, [122, 122], "snap"), (t + 12, [100, 100], "io")], op=OP)
-        part(c, f"s{k}", p, ring, (c_.x, c_.y), s=ps)
+        t = 10 + k * (150 // n)
+        spin = Track(0, 0).hold(t).to(t + 30, 360, (0.4, 0.0, 0.16, 1.0))
+        spin.k[-1][2] = "hold"
+        spin.k.append([OP, 0, None])
+        rr = seq(0, [(OP, -360, "lin")])          # counter-rotate: the star stays upright while orbiting
+        up = c.null(f"u{k}", parent=ring, p=(c_.x, c_.y), a=(c_.x, c_.y), r=rr)
+        part(c, f"s{k}", p, up, (c_.x, c_.y), r=spin)
 
 
 # ================================================================ 156 ⭐ star
@@ -142,11 +150,13 @@ def star_e(c):
     front = rec("star")
     fb = front.bounds
     cx, cy = (fb[0] + fb[2]) / 2, (fb[1] + fb[3]) / 2
+    # anticipation back, a heavy 360 in the plane, overshoot and settle; then a short edge flip that shows the X
+    r = seq(0, [(10, None, None), (22, -18, "io"), (66, 372, (0.35, 0.0, 0.14, 1.0)), (76, 356, "io"), (86, 361, "io"), (96, 360, "io")], op=OP, loop_ease="lin")
+    r.k[-1][2] = "hold"
+    body = rig(c, "body", (cx, cy), r=r, s=(88, 88))
     back = front.difference(logo.letter("X", cx, cy + 24, 150, 74))
-    ss = seq([100, 100], [(10, None, None), (20, [96, 104], "io"), (28, [100, 100], "o"), (88, None, None), (92, [104, 97], "o"), (100, [99, 101], "io"), (108, [100, 100], "io")], op=OP)
-    body = rig(c, "body", (cx, fb[3]), s=ss)
-    segs = [(20, 88, 0, 360, (0.35, 0.0, 0.14, 1.0))]
-    M.spin3d(c, "star", front, back, cx, cy, segs, thick=40, lip=30, parent=body)
+    segs = [(104, 136, 0, 360, (0.4, 0.0, 0.16, 1.0))]
+    M.spin3d(c, "star", front, back, cx, cy, segs, thick=36, lip=28, parent=body)
 
 
 # ================================================================ 157 ❄️ star snowflake
@@ -159,16 +169,17 @@ def star_flake(c):
     OP = 180
     g = rec("flake")
     cx, cy = 256, 256
-    # the traced flake is not exactly 6-fold symmetric, so no continuous spin: a heavy rock and back
-    ring = rig(c, "flake", (cx, cy), r=seq(0, [(20, None, None), (80, 14, "io"), (150, 0, "io")], op=OP), s=(90, 90))
-    # split the flake into 3 radial bands; each band pulses in turn (wave from the centre)
-    bands = [(0, 110), (110, 190), (190, 300)]
-    for j, (r0, r1) in enumerate(bands):
-        band = g.intersection(geo.disc(cx, cy, r1, 48).difference(geo.disc(cx, cy, r0, 48)))
-        t = 30 + j * 16
-        bs = seq([100, 100], [(t, None, None), (t + 8, [110, 110], "o"), (t + 24, [100, 100], "io"), (120 + j * 16, None, None),
-                              (128 + j * 16, [108, 108], "o"), (144 + j * 16, [100, 100], "io")], op=OP)
-        part(c, f"band{j}", band, ring, (cx, cy), s=bs)
+    ring = rig(c, "flake", (cx, cy), r=seq(0, [(OP, 360, "lin")]), s=(92, 92))
+    polys = geo._polys(g)
+    polys.sort(key=lambda p: math.hypot(p.centroid.x - cx, p.centroid.y - cy))
+    for k, p in enumerate(polys):
+        c_ = p.centroid
+        d = math.hypot(c_.x - cx, c_.y - cy)
+        t = 16 + int(d / 240 * 60)                # wave: inner stars first
+        spin = Track(0, 0).hold(t).to(t + 36, 360, (0.4, 0.0, 0.16, 1.0)).hold(120 + t).to(156 + t if 156 + t < OP else OP - 1, 720, (0.4, 0.0, 0.16, 1.0))
+        spin.k[-1][2] = "hold"
+        spin.k.append([OP, 0, None])
+        part(c, f"s{k}", p, ring, (c_.x, c_.y), r=spin)
 
 
 # ================================================================ 158 🎼 clef

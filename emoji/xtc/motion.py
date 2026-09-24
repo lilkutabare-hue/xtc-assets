@@ -130,8 +130,13 @@ def particle(comp, nm, g, t0, life, p0, p1, apex=None, parent=None, s_peak=100, 
     return lay
 
 
+SPARKS = False   # client (v3.4): «меньше звёздочек» — ✦ glints are off pack-wide; glare sweeps stay
+
+
 def twinkle(comp, nm, x, y, r, t0, dur=16, parent=None, spin=45, pinch=0.36):
-    """✦ latex glint: pops to 120%, settles, spins a bit, pinches out."""
+    """✦ latex glint: pops to 120%, settles, spins a bit, pinches out. No-op while SPARKS is off."""
+    if not SPARKS:
+        return None
     g = geo.spark(x, y, r, pinch)
     s = Track([0, 0], t0).to(t0 + dur * 0.3, [118, 118], "ox").to(t0 + dur * 0.55, [100, 100], "io").to(t0 + dur, [0, 0], "i")
     rr = Track(-spin / 2, t0).to(t0 + dur, spin / 2, "os")
@@ -269,7 +274,7 @@ def glare_sweep(comp, target, cx, cy, t0, dur=24, travel=280, angle=-35, parent=
     p.k[-1][2] = "hold"          # jump back while parked off-art
     p.k.append([comp.op, [-dx, -dy], None])
     shapes = [geo.shape(geo.glare(cx, cy, angle=angle, **kw), nm="glare", p=p)]
-    for i, (x, y, r, tp, life) in enumerate(sparks):
+    for i, (x, y, r, tp, life) in enumerate(sparks if SPARKS else ()):
         s = Track([0, 0], 0).hold(tp).to(tp + life * 0.3, [120, 120], "ox").to(tp + life * 0.55, [100, 100], "io")
         s.to(tp + life, [0, 0], "i").loop(comp.op, "lin")
         rr = Track(-25, 0).hold(tp).to(tp + life, 20, "os").loop(comp.op, "lin")

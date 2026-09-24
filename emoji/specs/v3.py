@@ -99,12 +99,18 @@ def tile_c(c):
 # ================================================================ 134 🎽 louverse tank
 
 
-def tank_shape(cx=256, top=30, bottom=490):
-    """tank top silhouette."""
-    pts = [(cx - 118, top + 4), (cx - 92, top + 30), (cx - 108, top + 118), (cx - 170, top + 160), (cx - 176, bottom),
-           (cx + 176, bottom), (cx + 170, top + 160), (cx + 108, top + 118), (cx + 92, top + 30), (cx + 118, top + 4),
-           (cx + 60, top + 60), (cx, top + 84), (cx - 60, top + 60)]
-    return geo.poly(pts).buffer(16).buffer(-10)
+def tank_shape(cx=256, top=34, bottom=490):
+    """tank top: clean symmetric silhouette (straps, round armholes, straight hem)."""
+    hw, strap, chest = 172, 46, 150
+    outer = geo.rrect(cx - hw, top + chest, cx + hw, bottom, 22)
+    torso = geo.rrect(cx - hw + 28, top + 60, cx + hw - 28, bottom, 30)
+    body = geo.U(outer, torso)
+    straps = geo.U(geo.rrect(cx - hw + 34, top, cx - hw + 34 + strap, top + 120, 14), geo.rrect(cx + hw - 34 - strap, top, cx + hw - 34, top + 120, 14))
+    body = geo.U(body, straps)
+    body = body.difference(geo.ellipse(cx, top - 60, 110, 108, 24))                       # neckline
+    body = body.difference(geo.ellipse(cx - hw - 44, top + 96, 84, 76, 24))              # armholes
+    body = body.difference(geo.ellipse(cx + hw + 44, top + 96, 84, 76, 24))
+    return body.buffer(8, join_style=1).buffer(-8, join_style=1)
 
 
 DOTS = {"X": ["X.X", "X.X", ".X.", "X.X", "X.X"], "T": ["XXX", ".X.", ".X.", ".X.", ".X."], "C": [".XX", "X..", "X..", "X..", ".XX"]}
@@ -115,8 +121,8 @@ DOTS = {"X": ["X.X", "X.X", ".X.", "X.X", "X.X"], "T": ["XXX", ".X.", ".X.", ".X
        op=150, series="drop")
 def tank(c):
     body = tank_shape()
-    pitch, r = 36, 14
-    x0, y0 = 256 - 5 * pitch, 292 - 2 * pitch
+    pitch, r = 30, 12
+    x0, y0 = 256 - 5 * pitch, 300 - 2 * pitch
     cols = {}
     col = 0
     for ch in "XTC":
@@ -134,7 +140,7 @@ def tank(c):
         cx = x0 + k * pitch
         t = 30 + k * 3
         s = Track([100, 100], 0).hold(t).to(t + 5, [112, 10], "i").to(t + 11, [100, 100], "o").loop(150)
-        geo.hole(lay, geo.U(*g), nm=f"col{k}", p=(cx, 292), a=(cx, 292), s=s)
+        geo.hole(lay, geo.U(*g), nm=f"col{k}", p=(cx, 300), a=(cx, 300), s=s)
     M.glare_sweep(c, lay, 256, 300, 96, 30, travel=330, angle=-35, length=560, w1=30, w2=14, gap=14,
                   sparks=[(x0 + 10 * pitch, y0, 30, 100, 22)])
 

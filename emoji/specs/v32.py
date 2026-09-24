@@ -15,19 +15,22 @@ def latin_cross(cx=256, cy=256, w=400, h=440, bar=118, arm_y=-70, r=10):
     return geo.U(v, hz)
 
 
-def fleury_cross(cx=256, cy=256, L=176, w=54):
-    """gothic cross: arms flare into three lobes (fleur) at the ends."""
+def fleury_cross(cx=256, cy=256, L=176, w=54, arms=(0.72, 0.72, 0.72, 1.0)):
+    """gothic latin cross: straight arms (right, down, left, up as fractions of L) that flare into a
+    clean trapezoid tip."""
     parts = []
-    for ang in (0, 90, 180, 270):
+    for ang, f in zip((0, 90, 180, 270), arms):
         a = math.radians(ang)
+        L_ = L * f
         ux, uy = math.cos(a), math.sin(a)
         px, py = -uy, ux
-        tip = (cx + ux * L, cy + uy * L)
-        parts.append(geo.brush([(cx, cy), (cx + ux * L * 0.62, cy + uy * L * 0.62), tip], w, taper=(1.15, 0.7), smooth=False))
-        for s in (-1, 1):
-            parts.append(geo.disc(tip[0] + px * s * 34 - ux * 14, tip[1] + py * s * 34 - uy * 14, 26))
-        parts.append(geo.disc(tip[0] + ux * 8, tip[1] + uy * 8, 28))
-    return geo.U(*parts)
+        w1 = w * 1.7
+        pts = [(cx + px * w / 2, cy + py * w / 2), (cx + ux * (L_ - 40) + px * w / 2, cy + uy * (L_ - 40) + py * w / 2),
+               (cx + ux * L_ + px * w1 / 2, cy + uy * L_ + py * w1 / 2), (cx + ux * (L_ - 10), cy + uy * (L_ - 10)),
+               (cx + ux * L_ - px * w1 / 2, cy + uy * L_ - py * w1 / 2), (cx + ux * (L_ - 40) - px * w / 2, cy + uy * (L_ - 40) - py * w / 2),
+               (cx - px * w / 2, cy - py * w / 2)]
+        parts.append(geo.poly(pts))
+    return geo.U(*parts).buffer(4, join_style=2).buffer(-4, join_style=2)
 
 
 def pattee_cross(cx=256, cy=256, L=214, w0=44, w1=150):
@@ -54,8 +57,8 @@ def pendant(c):
     OP = 150
     top = (256, 14)
     hang = 60
-    cross = fleury_cross(256, top[1] + hang + 190, 148, 48)
-    back = cross.difference(brand_x(256, top[1] + hang + 190, 120, 60))
+    cross = fleury_cross(256, top[1] + hang + 176, 190, 50, arms=(0.62, 1.0, 0.62, 0.56))
+    back = cross.difference(brand_x(256, top[1] + hang + 176, 110, 56))
     links = geo.U(*[geo.ring(256, top[1] + 18 + k * 30, 15, 6, 12) for k in range(2)])
     # pendulum from the bail: big swing, damped 4 half-periods
     pr = seq(0, [(6, None, None), (16, -13, "io"), (40, 12, "io"), (64, -8, "io"), (86, 5, "io"), (106, -2.5, "io"), (124, 1, "io"), (140, 0, "io")], op=OP)
@@ -64,8 +67,8 @@ def pendant(c):
     body = rig(c, "body", (256, top[1] + hang), parent=pend)
     # the cross twists edge-on at the extremes of the swing (fake-3D about its own axis)
     segs = [(10, 40, 0, 180, "io"), (40, 64, 180, 360, "io"), (64, 86, 360, 520, "io"), (86, 106, 520, 720, "io")]
-    root, th, fr, bk = M.spin3d(c, "cross", cross, back, 256, top[1] + hang + 190, segs, thick=26, lip=18, parent=body)
-    M.glare_sweep(c, fr, 256, top[1] + hang + 190, 110, 24, travel=300, parent=root, length=520, w1=26, w2=12, gap=12,
+    root, th, fr, bk = M.spin3d(c, "cross", cross, back, 256, top[1] + hang + 176, segs, thick=26, lip=18, parent=body)
+    M.glare_sweep(c, fr, 256, top[1] + hang + 176, 110, 24, travel=300, parent=root, length=520, w1=26, w2=12, gap=12,
                   sparks=[(256 + 120, top[1] + hang + 70, 36, 112, 22)])
 
 
@@ -112,8 +115,8 @@ def iron(c):
 def cross_plate(c):
     OP = 150
     cx, cy = 256, 262
-    plate = latin_cross(cx, cy, 420, 452, 116, -84, 12)
-    L = logo.cross(cx, cy - 84, lh=60, width=400)
+    plate = latin_cross(cx, cy, 440, 464, 150, -70, 14)
+    L = logo.cross(cx, cy - 70, lh=52, width=376)
     holes = geo.U(*[g for g, _ in L.values()])
     front = plate.difference(holes)
     s = seq([100, 100], [(8, None, None), (18, [96, 104], "io"), (26, [100, 100], "o"), (96, None, None), (100, [103, 98], "o"),
@@ -231,3 +234,29 @@ def broken_x(c):
     for k, (t0, x0, y0) in enumerate(((58, hx - 10, by0 + d * 1.2), (66, hx + 14, by0 + d * 2.6), (96, hx - 12, by0 + d * 1.6))):
         M.particle(c, f"drop{k}", geo.drop(x0, y0, 15, 36), t0, 30, (x0, y0), (x0 + (-18 if k % 2 == 0 else 18), by1 + 30), None,
                    anchor=(x0, y0), fall="i5", pop=0.25, fade=0.25, s_end=60)
+
+
+# ================================================================ 149 opium face
+
+
+def blade_eye(x, y, d=1, L=186, w=44):
+    """sharp eyeliner wedge: thick at the inner-bottom, tapering to a thin point outward-up (d=-1 left)."""
+    pts = [(x, y + 34), (x - d * 34, y - 26), (x - d * L, y - 60), (x - d * 60, y + 10)]
+    return geo.poly(pts).buffer(3, join_style=2).buffer(-3, join_style=2)
+
+
+@emoji("149-opium", "😑", "опиум, взгляд, серьёзно, мрак, xtc, свэг", "opium, stare, serious, dark, xtc, swag",
+       "опиумная морда: два острых глаза-лезвия и черта-рот; почти неподвижна — медленный наклон к зрителю, глаза сужаются в щели и резко раскрываются, черта чуть дёргается",
+       op=180, series="face")
+def opium(c):
+    OP = 180
+    cx, ey, my = 256, 232, 318
+    r = seq(0, [(30, None, None), (90, -3, "io"), (150, 0, "io")], op=OP)
+    s = seq([100, 100], [(30, None, None), (90, [104, 104], "io"), (150, [100, 100], "io")], op=OP)
+    face = rig(c, "face", (cx, my), r=r, s=s)
+    for i, d in enumerate((-1, 1)):
+        x = cx + d * 24
+        es = seq([100, 100], [(60, None, None), (84, [100, 46], "is"), (96, None, None), (100, [104, 112], "snap"), (110, [100, 100], "io")], op=OP)
+        part(c, f"eye{i}", blade_eye(x, ey, d), face, (x - d * 60, ey - 10), s=es)
+    ms = seq([100, 100], [(98, None, None), (101, [118, 100], "snap"), (112, [100, 100], "io")], op=OP)
+    part(c, "mouth", geo.brush([(cx - 36, my), (cx + 36, my)], 34, taper=(0.9, 0.9), smooth=False), face, (cx, my), s=ms)

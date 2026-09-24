@@ -78,36 +78,18 @@ def mask(c):
 def tribal_heart(c):
     g = geo.svg(os.path.join(V1, "26-tribal-heart.svg")).buffer(3)
     cx = 256
-    # cut the curls (top corners) and thorns (sides) off the heart body, each flickers from its root
-    zones = [("curlL", geo.poly([(20, 20), (230, 20), (230, 170), (20, 170)]), (190, 150)),
-             ("curlR", geo.poly([(282, 20), (492, 20), (492, 170), (282, 170)]), (322, 150)),
-             ("thornL", geo.poly([(20, 170), (120, 170), (120, 330), (20, 330)]), (120, 240)),
-             ("thornR", geo.poly([(392, 170), (492, 170), (492, 330), (392, 330)]), (392, 240))]
-    rest = g
-    s = Track([100, 100], 0).hold(10).to(30, [104, 104], "is").to(36, [100, 100], "o").hold(100).to(112, [100, 100], "lin").loop(120)
-    root = c.null("root", p=(cx, 420), a=(cx, 420), s=s)
-    for k, (nm, z, anchor) in enumerate(zones):
-        part = g.intersection(z)
-        rest = rest.difference(z)
-        ph = k * 5
-        sc = Track([100, 100], 0)
-        rr = Track(0, 0)
-        d = -1 if nm.endswith("L") else 1
-        for j, (t, a, v) in enumerate(((12, 128, 9), (26, 88, -6), (38, 122, 8), (52, 92, -5), (66, 118, 6), (80, 90, -4), (96, 108, 3))):
-            sc.to(t + ph, [100, a], "io")
-            rr.to(t + ph, d * v, "io")
-        sc.loop(120)
-        rr.loop(120)
-        lay(c, nm, part, anchor, parent=root, s=sc, r=rr)
-    lay(c, "body", rest, (cx, 300), parent=root)
-    # embers: small drops rising and fading (M17)
-    import random
-    rnd = random.Random(5)
-    for k in range(7):
-        x0 = rnd.choice([150, 190, 320, 360])
-        t0 = k * 16
-        M.particle(c, f"ember{k}", geo.spark(x0, 110, 20, 0.34), t0, 36, (x0, 120), (x0 + rnd.uniform(-30, 30), 30), None,
-                   pop=0.2, fade=0.4, fall="decel", rot=(0, rnd.choice([-90, 90])), anchor=(x0, 110))
+    # heavy double beat (lub-dub, M1) from the tip, thorns bend a touch behind the beat, long rest
+    s = Track([100, 100], 0).hold(20).to(25, [108, 108], "snap").to(35, [100, 100], "io").to(40, [105, 105], "snap")
+    s.to(47, [99, 99], "io").to(55, [100.5, 100.5], "io").to(64, [100, 100], "io").hold(120)
+    root = c.null("root", p=(cx, 440), a=(cx, 440), s=s)
+    zones = [("L", geo.poly([(0, 0), (256, 0), (256, 512), (0, 512)]), (176, 250), -1),
+             ("R", geo.poly([(256, 0), (512, 0), (512, 512), (256, 512)]), (336, 250), 1)]
+    core = g.intersection(geo.disc(cx, 250, 150))
+    c.layer("core", [geo.shape(core, nm="core")], parent=root, p=(cx, 250), a=(cx, 250))
+    for nm, z, anchor, d in zones:
+        side = g.intersection(z).difference(geo.disc(cx, 250, 140))
+        rr = Track(0, 0).hold(24).to(30, d * 2.5, "o").to(40, -d * 1, "io").to(44, d * 1.5, "o").to(56, 0, "io").loop(120)
+        c.layer(f"thorns{nm}", [geo.shape(side, nm=nm)], parent=root, p=anchor, a=anchor, r=rr)
 
 
 @emoji("27-tribal-eye", "👁️", "вижу, слежу, палю, глаз, око", "i see you, watching, eye, all seeing, stare",

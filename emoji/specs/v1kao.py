@@ -8,7 +8,7 @@ from specs.faces import CX, CY, cyc, jitter, part, rig
 
 
 @emoji("33-kao-xx", "😵", "нокаут, всё, вырубило, x_x, умер", "knocked out, ko, dead, x_x, dizzy",
-       "x_x получает удар сверху: морду сплющивает в блин, X-глаза подскакивают, пружинит обратно и качается",
+       "X_X логотипными X: удар сверху — морду сплющивает в блин, X-глаза подскакивают и крутятся, черта-рот растягивается, пружинит обратно и качается",
        op=150, series="v1")
 def kao_xx(c):
     # bonk from above at 30: pancake 130/60 for 2f, spring back with 3 swings
@@ -22,9 +22,10 @@ def kao_xx(c):
         er = Track(0, 0).hold(34).to(48, (-1) ** i * 180, "o").hold(150)
         er.k[-1][2] = "hold"
         er.k.append([149.99, 0, None])
-        part(c, f"eye{i}", K.xeye(x, 214, 118, 46), face, (x, 214), p=Split(x, ey), r=er)
-    ms = Track([100, 100], 0).hold(34).to(44, [70, 170], "snap").to(60, [100, 100], "io").loop(150)
-    part(c, "mouth", K.m_wave(CX, 360, 150, 14, 40, 1), face, (CX, 360), s=ms)
+        from specs.drop import brand_x
+        part(c, f"eye{i}", brand_x(x, 214, 150, 84, bold=13), face, (x, 214), p=Split(x, ey), r=er)     # logo X eyes
+    ms = Track([100, 100], 0).hold(34).to(44, [130, 100], "snap").to(60, [100, 100], "io").loop(150)
+    part(c, "mouth", K.m_line(CX, 356, 170, 42), face, (CX, 356), s=ms)                                 # the "_" of X_X
     # impact lines above the head
     from specs.drop import speed_lines
     for k, (p0, p1) in enumerate((((CX - 90, 110), (CX - 120, 70)), ((CX, 96), (CX, 50)), ((CX + 90, 110), (CX + 120, 70)))):

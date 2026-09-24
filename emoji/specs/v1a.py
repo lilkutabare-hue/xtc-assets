@@ -264,7 +264,7 @@ def tramp(c):
 
 def _key(cx, top=30, bottom=482):
     bow_o = geo.heart(cx, top + 88, 204)
-    bow = bow_o.difference(geo.heart(cx, top + 84, 96))
+    bow = bow_o.difference(geo.heart(cx, top + 84, 118))
     collar = geo.rrect(cx - 44, top + 186, cx + 44, top + 214, 12)
     shaft = geo.rrect(cx - 27, top + 170, cx + 27, bottom, 14)
     teeth = U(geo.rect(cx + 20, bottom - 124, cx + 86, bottom - 88), geo.rect(cx + 20, bottom - 58, cx + 100, bottom - 22),
@@ -273,13 +273,15 @@ def _key(cx, top=30, bottom=482):
 
 
 @emoji("10-club-key", "🔑", "ключ, открыть, доступ, клуб, пропуск", "key, unlock, access, club, pass",
-       "ключ-сердце входит в скважину и туго проворачивается ребром — щелчок, дрожь — его отпускают, и он докручивается по инерции тяжёлым оборотом, на головке ✦",
+       "клубный ключ-сердце с X в головке входит в скважину и туго проворачивается ребром — щелчок, дрожь — его отпускают, и он докручивается по инерции тяжёлым оборотом: X → люверс на обороте → снова X, на головке ✦",
        op=150, series=SERIES)
 def key(c):
     OP = 150
     cx, cy = 256, 256
-    front = _key(cx)
-    back = front.difference(geo.disc(cx, 118, 20))      # the back shows the rivet of the bow
+    # club key: the logo X sits in the heart bow on the face, a grommet (eyelet) on the back -
+    # the momentum spin flashes X / eyelet / X
+    front = U(_key(cx), brand_x(cx, 108, 40, 32, bold=8))
+    back = U(_key(cx), geo.eyelet(cx, 108, 24, 10))
     # insert (push down), turn to edge-on with resistance, click, back out, momentum spin, settle
     T = 52                                   # the story starts after a calm opening (the key face-on)
     y = seq(0.0, [(T + 0, None, None), (T + 8, 14, "io"), (T + 34, None, None), (T + 40, -16, "o"), (T + 78, None, None),
@@ -803,7 +805,7 @@ def less3(c):
 
 
 @emoji("23-dot-star", "🌟", "звезда, сияю, огни, топ, праздник", "star, shine, lights, glowing, party",
-       "звезда из жирных точек-лампочек: по контуру бежит огонёк (волна 2f), обегает круг — и звезда вспыхивает сплошной с ✦, потом снова рассыпается на лампочки",
+       "звезда из лампочек: по контуру бежит огонёк — каждая лампа на миг раскрывается люверсом (волна 2f), обегает круг — и звезда вспыхивает сплошной, в сердцевине проступает X-вырез, ✦; потом рассыпается обратно, лампы перемигиваются люверсами",
        op=150, series=SERIES)
 def dot_star(c):
     OP = 150
@@ -820,6 +822,7 @@ def dot_star(c):
         dots.append(((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2))
     # the flash: a solid star grows under the lamps, holds, and sinks back
     star = geo.star(cx, cy, R, r, 5, -90).buffer(8, join_style=1).buffer(-8, join_style=1)
+    star = star.difference(brand_x(cx, cy + 6, 96, 74, bold=12))      # the lights converge into the logo
     ss = seq([0, 0], [(56, None, None), (62, [108, 108], "snap"), (68, [98, 98], "io"), (74, [100, 100], "io"),
                       (92, None, None), (102, [0, 0], "i")], op=OP, loop_ease="lin")
     part(c, "flash", star, None, (cx, cy), s=ss)
@@ -830,5 +833,9 @@ def dot_star(c):
         ds = seq([100, 100], [(t0, None, None), (t0 + 3, [165, 165], "o"), (t0 + 9, [100, 100], "io"),
                               (54 + (k % 4), None, None), (58 + (k % 4), [140, 140], "o"), (66, [118, 118], "io"),
                               (92, None, None), (100 + k % 5, [80, 80], "io"), (110 + k % 5, [100, 100], "io")], op=OP)
-        part(c, f"dot{k}", geo.disc(x, y, rd, 12), None, (x, y), s=ds)
+        lamp = part(c, f"dot{k}", geo.disc(x, y, rd + 2, 12), None, (x, y), s=ds)
+        # a lit lamp opens into an eyelet: its hole flashes as the running light passes (and on the recap)
+        hs = seq([0, 0], [(t0, None, None), (t0 + 3, [100, 100], "ox"), (t0 + 12, [0, 0], "i"),
+                          (104 + k % 5, None, None), (108 + k % 5, [80, 80], "o"), (116 + k % 5, [0, 0], "i")], op=OP, loop_ease="lin")
+        geo.hole(lamp, geo.disc(x, y, rd * 0.5, 10), nm="lit", p=(x, y), a=(x, y), s=hs)
     M.twinkle(c, "tw", cx + 150, cy - 170, 36, 64, 26)

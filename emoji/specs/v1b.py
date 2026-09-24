@@ -7,7 +7,7 @@ from xtc.lot import Split, Track
 from xtc.reg import emoji
 from specs.drop import brand_word, speed_lines
 
-V1 = "/tmp/claude-0/-home-user-xtc-assets/ecf9e5e6-596f-594c-9de0-56b0f9bf2e83/scratchpad/in/noanim/tg"
+V1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "v1", "tg")          # v1 sources (vendored)
 
 
 def lay(c, nm, g, anchor, parent=None, **kw):
@@ -327,7 +327,7 @@ def brand_word_x(cx, cy):
        "скорпион взводит хвост назад (антиципация) и бьёт жалом вперёд с ударом, клешни щёлкают дважды, на жале ✦",
        op=150, series="v1")
 def scorpion(c):
-    parts = geo.tgs_geometry("/tmp/claude-0/-home-user-xtc-assets/ecf9e5e6-596f-594c-9de0-56b0f9bf2e83/scratchpad/in/anim/tg-anim/43-scorpion-sigil.tgs")
+    parts = geo.tgs_geometry(os.path.join(V1, "..", "tg-anim", "43-scorpion-sigil.tgs"))
     fat = {k: v.buffer(13).buffer(-5) for k, v in parts.items()}
     root = c.null("root", p=(256, 322), a=(256, 300),
                   s=Track([88, 88], 0).hold(60).to(64, [92, 84], "slam").to(72, [87, 89], "io").to(78, [88, 88], "io").loop(150))

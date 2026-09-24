@@ -340,24 +340,26 @@ def hundred(c):
 
 
 @emoji("86-check", "✅", "готово, да, сделано, принято, ок, чек", "done, check, yes, approved, ok, complete",
-       "кисть одним росчерком закрашивает галочку, плашка проваливается в точку, жирная галочка остаётся одна и раздувается — плашка прыгает обратно 108→92→100 и галочка выворачивается в вырез, по углу ✦-блик",
+       "плашка-бирка на люверсе: кисть одним росчерком закрашивает галочку, бирка крутнувшись схлопывается в свой люверс, жирная галочка остаётся одна и раздувается — бирка выстреливает из люверса обратно 108→92→100, покачивается на нём, галочка выворачивается в вырез, с кромки люверса ✦",
        op=120, series=SERIES)
 def check(c):
     OP = 120
     box = geo.rrect(30, 30, 482, 482, 116)
     ck = [(140, 262), (222, 344), (378, 166)]
     cw = 72
+    ex, ey = 126, 126                                   # the hang-tag grommet: the plate hangs and spins on it
+    box = box.difference(geo.ring(ex, ey, 34, 15, 20))
     holed = box.difference(geo.line(ck, cw, "round", "round"))
     s = seq([100, 100], [(20, None, None), (26, [106, 94], "io"), (33, [0, 0], "i"), (44, None, None),
-                         (49, [108, 108], "snap"), (55, [92, 93], "io"), (62, [103, 102], "io"), (69, [99.5, 100], "io"),
+                         (49, [105, 105], "snap"), (55, [95, 95], "io"), (62, [102, 101.5], "io"), (69, [99.5, 100], "io"),
                          (76, [100, 100], "io")])
     breathe(s, 76, 120, [100, 100], 0.7, 22)
     s.loop(OP)
     r = seq(0, [(20, None, None), (26, 3, "io"), (33, -35, "i"), (44, None, None), (49, 0, "snap"), (55, 2, "io"),
                 (62, -1, "io"), (69, 0, "io")], op=OP)
-    t_swap = t_cross(44, 49, 0, 108, "snap", 100)
+    t_swap = t_cross(44, 49, 0, 105, "snap", 100)
     ts = int(math.ceil(t_swap))
-    plate = rig(c, "plate", (256, 256), s=s, r=r)
+    plate = rig(c, "plate", (ex, ey), s=s, r=r)
     # the plate is holed at rest; solid while the black tick covers the check (no slivers), holed again at the swap
     oh, osd = Track(100, 0), Track(0, 0)
     # rlottie still draws a layer on its op frame, so the plate flips one frame after the tick's op
@@ -368,11 +370,11 @@ def check(c):
         tr_.loop(OP, "lin")
     boxl = part(c, "box", holed, plate, (256, 256), o=oh)
     part(c, "solid", box, plate, (256, 256), o=osd)
-    gx, gy = 128, 128
+    gx, gy = 186, 88                                    # the glint pops off the grommet's rim
     gs = seq([0, 0], [(58, None, None), (63, [120, 120], "ox"), (69, [100, 100], "io"), (78, [0, 0], "i"),
                       (98, None, None), (103, [84, 84], "ox"), (108, [70, 70], "io"), (115, [0, 0], "i")], op=OP, loop_ease="lin")
     gr = seq(-14, [(58, None, None), (78, 14, "os"), (98, None, None), (115, 40, "os")], op=OP, loop_ease="lin")
-    geo.hole(boxl, spark_g(gx, gy, 50, 0.3), nm="glare", p=(gx, gy), a=(gx, gy), s=gs, r=gr)
+    geo.hole(boxl, spark_g(gx, gy, 42, 0.3), nm="glare", p=(gx, gy), a=(gx, gy), s=gs, r=gr)
     # the brush inks the white check (slightly wider than the hole), stays alone, swells, sinks back at the swap
     e = seq(0, [(8, None, None), (19, 100, (0.3, 0.0, 0.2, 1.0))])
     cs = Track([100, 100], 0).hold(33).to(37, [132, 112], "o").to(41, [118, 128], "io").to(t_swap, [100, 100], "i")

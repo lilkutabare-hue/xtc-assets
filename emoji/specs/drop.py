@@ -12,7 +12,7 @@ def brand_font():
 
 def brand_x(x, y, w, h, bold=9):
     """the logo X, 1:1 letterform from fonts/xtc-logo.svg, stretched into w x h."""
-    return logo.letter("X", x, y, w, h, bold=max(0.0, bold - 9))
+    return logo.letter("X", x, y, w, h)
 
 
 def pill_faces(cx, cy, R):
@@ -60,7 +60,7 @@ def tile_glyph(ch, x, y, w, h, fw=0.78, fh=0.6, bold=10):
     if ch in (None, " "):
         return None
     if ch in "XTC":
-        return logo.letter(ch, x, y, w * fw, h * fh * 0.9, bold=2)
+        return logo.letter(ch, x, y, w * 0.86, h * 0.7)
     g = geo.text(ch, brand_font(), x, y, h * 0.5, bold=bold)
     bx0, by0, bx1, by1 = g.bounds
     aspect = (bx1 - bx0) / (by1 - by0)
@@ -173,25 +173,25 @@ def dropnow(c):
 def brand_letter(ch, x, y, lh, lw, bold):
     """a logo letter (1:1 letterform) in a lw x lh box."""
     if ch in "XTC":
-        return logo.letter(ch, x, y, lw, lh, bold=max(0.0, bold - 10))
+        return logo.letter(ch, x, y, lw, lh)
     return geo.text(ch, brand_font(), x, y, lh, bold=bold, width=lw)
 
 
 def brand_word(word, cx, cy, lh, total_w, bold=10, gap=0.2):
     """a word in the logo letters."""
-    return logo.word(word, cx, cy, lh, total_w, bold=max(0.0, bold - 10), gap=gap)
+    return logo.word(word, cx, cy, lh, total_w, gap=max(gap, 0.3))
 
 
-def cross_letters(cx=256, cy=256, lh=84, lw=136, dx=158, dy=124, bold=14):
+def cross_letters(cx=256, cy=256, lh=84, lw=136, dx=158, dy=124, bold=14, width=480):
     """the XTC cross logo: X on top, X T C across, C below (T shared). Layout as in the brand file."""
-    return logo.cross(cx, cy, lh=lh, lw=lw, gap=dx - lw, vgap=dy - lh, bold=max(0.0, bold - 12))
+    return logo.cross(cx, cy, lh=lh, width=width)
 
 
 @emoji("44-cross-amen", "🙏", "аминь, благословляю, молюсь, спасибо, крест", "amen, bless, pray, thank you, cross",
        "буквы слетаются в крест-лого X·XTC·C, щелчок сборки, крест делает тяжёлый 360 с торцом и вспыхивает ✦ на концах",
        op=180, series="drop")
 def cross(c):
-    L = cross_letters()
+    L = cross_letters(width=424)
     cx, cy = 256, 256
     # scattered start (and end) poses: pushed out along their arm, small, rotated
     off = {"xt": (0, -30, -40), "xl": (-26, 0, 35), "t": (0, 0, 0), "cr": (26, 0, -30), "cb": (0, 30, 45)}
@@ -254,7 +254,7 @@ def longsleeve(cx=256, top=128):
            (cx - 130, y + 116), (cx - 122, y + 330), (cx + 122, y + 330), (cx + 130, y + 116), (cx + 156, y + 288),
            (cx + 198, y + 276), (cx + 170, y + 70), (cx + 116, y + 18), (cx + 50, y), (cx, y + 26)]
     tee = geo.poly(pts).buffer(12).buffer(-6)
-    logo = brand_word("XTC", cx, y + 112, 42, 180, bold=9)
+    logo = brand_word("XTC", cx, y + 112, 42, 250, bold=9)
     tee = tee.difference(logo)
     hook = geo.brush(geo.arc(cx + 16, y - 52, 28, 180, 450, 20)[::-1] + [(cx, y - 6)], 22, taper=(0.9, 1.0), smooth=False)
     return geo.U(tee, hook), (cx, y - 70)
@@ -326,7 +326,7 @@ def bag(c):
     handle = geo.brush(geo.arc(cx, cy - 132, 90, 180, 360, 24), 36, taper=(1, 1), smooth=False)
     zipper = geo.rrect(cx - 132, cy - 104, cx + 132, cy - 90, 7)
     tab = geo.rrect(cx + 108, cy - 94, cx + 136, cy - 40, 10).difference(geo.rrect(cx + 116, cy - 70, cx + 128, cy - 50, 5))
-    logo = brand_word("XTC", cx, cy + 34, 64, 230, bold=10)
+    logo = brand_word("XTC", cx, cy + 34, 64, 300, bold=10)
     front = geo.U(body.difference(zipper).difference(logo), handle).difference(tab.buffer(6)).union(tab)
     back = geo.U(body.difference(zipper), handle)
     # hangs from a finger at the top of the handle: swings like a pendulum while it twists and unwinds

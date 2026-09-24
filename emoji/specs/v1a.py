@@ -666,7 +666,7 @@ def split_pill(c):
     rim = geo.ellipse(cx, cy + 24, 164, 108, 32)
     body = U(face, rim, geo.rect(cx - 164, cy - 20, cx + 164, cy + 24))
     groove = face.exterior.buffer(9).intersection(geo.rect(0, cy - 10, 512, 512)).intersection(rim.buffer(-4))
-    xg = affinity.scale(brand_x(cx, cy - 22, 184, 104, bold=13), 1, 0.72, origin=(cx, cy - 22))
+    xg = brand_x(cx, cy - 22, 184, 80, bold=13)
     coin = body.difference(groove).difference(xg)
     zig = [(cx + 6, 60), (cx - 14, 150), (cx + 16, 210), (cx - 16, 262), (cx + 14, 320), (cx - 6, 420)]
     left_region = geo.poly(zig + [(0, 420), (0, 60)])

@@ -183,7 +183,7 @@ def pants(c):
        op=150, series="drop")
 def flash(c):
     card = geo.rrect(30, 30, 482, 482, 44)
-    L = cross_letters(256, 262, lh=74, lw=120, dx=140, dy=110, bold=12)
+    L = cross_letters(256, 262, lh=74, width=410)
     logo = geo.U(*[g for g, _ in L.values()])
     pos = card.difference(logo)
     neg = geo.U(card.difference(card.buffer(-30)), logo)
@@ -333,7 +333,7 @@ def psp(c):
         py.loop(150)
         c.layer(nm, [geo.shape(geo.rrect(px - 10, -32, px + 10, 32, 8), nm=nm)], parent=root, p=Split(px, py), a=(px, 0))
     # miss: the screen fills with the logo for 14f (game over), then the rally restarts
-    logo = brand_word("XTC", cx, cy - 6, 46, 160, bold=9)
+    logo = brand_word("XTC", cx, cy - 6, 46, 200, bold=9)
     lo = Track(0, 0).hold(111)
     lo.k[-1][2] = "hold"
     lo.k.append([112, 100, None])

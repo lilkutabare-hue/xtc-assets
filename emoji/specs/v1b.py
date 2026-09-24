@@ -54,21 +54,22 @@ def mask(c):
     shell = geo.U(*[geo.Polygon(p.exterior) for p in geo._polys(g)])
     holes = shell.difference(g)
     cx, cy = 256, 255
-    # yaw: outline narrows a little, holes slide further (parallax = fake 3D)
-    yaw = lambda a0, a1: None
-    sx = Track([92, 100], 0).hold(20).to(60, [100, 100], "io").hold(140).to(176, [92, 100], "io").loop(180)
+    # yaw: the shell narrows a little while the holes slide the other way (parallax = fake 3D); the
+    # holes never leave the shell (shift 10px inside a 20px rim)
+    sx = Track([95, 100], 0).hold(20).to(60, [100, 100], "io").hold(140).to(176, [95, 100], "io").loop(180)
     base = c.layer("mask", [geo.shape(shell, nm="shell")], p=(cx, cy), a=(cx, cy), s=sx)
-    hx = Track([-22, 0], 0).hold(20).to(60, [0, 0], "io").hold(140).to(176, [-22, 0], "io").loop(180)
+    hx = Track([-10, 0], 0).hold(20).to(60, [0, 0], "io").hold(140).to(176, [-10, 0], "io").loop(180)
     geo.hole(base, holes, nm="holes", p=hx)
-    # eyes lighting up inside the eye holes: pupils pop in, glance, blink out
-    eyes = [e for e in geo._polys(holes) if e.area > 2500]
-    for k, e in enumerate(sorted(eyes, key=lambda e: e.centroid.x)[:2]):
-        ex, ey = e.centroid.x, e.centroid.y
+    # eyes light up inside the two eye slots: pop in, glance right, glance left, blink out
+    eyes = sorted([e for e in geo._polys(holes) if e.area > 4000 and e.centroid.y > 150], key=lambda e: e.centroid.x)[:2]
+    off = c.null("eyes", p=Split(Track(256, 0).hold(20).to(60, 266, "io").hold(140).to(176, 256, "io").loop(180), 256), a=(256, 256))
+    for k, e in enumerate(eyes):
+        ex, ey = e.centroid.x - 10, e.centroid.y
         es = Track([0, 0], 0).hold(64 + k * 3).to(72 + k * 3, [118, 118], "snap").to(78 + k * 3, [100, 100], "io")
         es.hold(128).to(132, [110, 10], "i").to(136, [0, 0], "lin").loop(180, "lin")
-        ep = Track([ex, ey], 0).hold(86).to(94, [ex + 16, ey], "snap").hold(104).to(112, [ex - 14, ey + 2], "snap").hold(120).to(126, [ex, ey], "io").loop(180)
-        c.layer(f"eye{k}", [geo.shape(geo.disc(ex, ey, 22), nm="eye")], p=ep, a=(ex, ey), s=es)
-    M.twinkle(c, "tw", 404, 118, 42, 104, 26)
+        ep = Track([ex, ey], 0).hold(86).to(94, [ex + 14, ey], "snap").hold(104).to(112, [ex - 12, ey + 2], "snap").hold(120).to(126, [ex, ey], "io").loop(180)
+        c.layer(f"eye{k}", [geo.shape(geo.disc(ex, ey, 21), nm="eye")], parent=off, p=ep, a=(ex, ey), s=es)
+    M.twinkle(c, "tw", 392, 96, 40, 104, 26)
 
 
 @emoji("26-tribal-heart", "❤️‍🔥", "горю, страсть, огонь, люблю, трайбл", "on fire, passion, burning love, tribal, heart",

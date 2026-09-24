@@ -74,3 +74,30 @@ def grid(path, out, step=3, cell=96, cols=15):
         d.text((x + 3, y + cell - 12), str(i), fill=(200, 0, 0))
     img.save(out)
     return out
+
+
+def multi(paths, out, step=6, cell=72, cols=None):
+    """several emoji, one row each (every `step` frames) — batch review."""
+    rows = []
+    for p in paths:
+        fr = frames_of(p)
+        idx = list(range(0, len(fr), step))
+        row = Image.new("RGB", (cell * (len(idx) + 2), cell), (235, 235, 235))
+        d = ImageDraw.Draw(row)
+        for j, i in enumerate(idx):
+            c = colorize(fr[i], (0, 0, 0), (255, 255, 255)).resize((cell - 2, cell - 2), Image.LANCZOS)
+            row.paste(c.convert("RGB"), (j * cell + 1, 1))
+            d.text((j * cell + 2, cell - 11), str(i), fill=(200, 0, 0))
+        x = len(idx) * cell + 4
+        for fg, bg in (((0, 0, 0), (255, 255, 255)), ((255, 255, 255), (23, 33, 43))):
+            s = colorize(fr[len(fr) // 3], fg, bg).resize((24, 24), Image.LANCZOS).convert("RGB")
+            row.paste(s, (x, 4))
+            x += 28
+        d.text((len(idx) * cell + 4, 34), p.split("/")[-1][:14], fill=(0, 0, 0))
+        rows.append(row)
+    W = max(r.width for r in rows)
+    img = Image.new("RGB", (W, cell * len(rows)), (200, 200, 200))
+    for i, r in enumerate(rows):
+        img.paste(r, (0, i * cell))
+    img.save(out)
+    return out

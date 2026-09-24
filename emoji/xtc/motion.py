@@ -86,32 +86,48 @@ def breathe(tr, t0, t1, base, amp=1.2, per=60):
 
 
 def particle(comp, nm, g, t0, life, p0, p1, apex=None, parent=None, s_peak=100, rot=(0, 0),
-             pop=0.18, fade=0.3, anchor=None, fall="i", s_end=0):
+             pop=0.18, fade=0.3, anchor=None, fall="i", s_end=0, xease=None):
     """One particle living [t0, t0+life): pops in, travels p0 -> p1 along a parabola (apex = y of the
     top of the arc, or None for a straight eased fall), shrinks out. g = shapely geometry drawn around
-    `anchor` (defaults to its centroid)."""
-    t1 = t0 + life
+    `anchor` (defaults to its centroid). A particle crossing the loop point is split in two layers
+    (the tail replays at the start with negative key times) so the loop stays seamless."""
     if anchor is None:
         c = g.centroid
         anchor = (c.x, c.y)
-    x = Track(p0[0], t0).to(t1, p1[0], "lin" if apex is not None else "os")
-    if apex is None:
-        y = Track(p0[1], t0).to(t1, p1[1], fall)
-    else:
-        # time of apex from parabola symmetry
-        up = abs(p0[1] - apex)
-        down = abs(p1[1] - apex)
-        ta = t0 + life * (math.sqrt(up) / (math.sqrt(up) + math.sqrt(down) + 1e-9))
-        y = Track(p0[1], t0).to(ta, apex, "os").to(t1, p1[1], "is")
-        x = Track(p0[0], t0).to(t1, p1[0], "lin")
-    tp = t0 + max(2, life * pop)
-    tf = t1 - max(3, life * fade)
-    s = Track([0, 0], t0).to(tp, [s_peak * 1.15] * 2, "ox").to(tp + 4 if tp + 4 < tf else (tp + tf) / 2, [s_peak] * 2, "io")
-    s.to(tf, [s_peak] * 2, "lin") if tf > s.t + 0.5 else None
-    s.to(t1, [s_end] * 2, "i")
-    r = Track(rot[0], t0).to(t1, rot[1], "os") if rot[0] != rot[1] else rot[0]
-    return comp.layer(nm, [geo.shape(g, nm=nm)], parent=parent, p=Split(x, y), a=anchor, s=s, r=r,
-                      ip=int(math.floor(t0)), op=int(math.ceil(t1)))
+    shapes = [geo.shape(g, nm=nm)]
+
+    def tracks(t0):
+        t1 = t0 + life
+        if apex is None:
+            x = Track(p0[0], t0).to(t1, p1[0], xease or "os")
+            y = Track(p0[1], t0).to(t1, p1[1], fall)
+        else:
+            up = abs(p0[1] - apex)
+            down = abs(p1[1] - apex)
+            ta = t0 + life * (math.sqrt(up) / (math.sqrt(up) + math.sqrt(down) + 1e-9))
+            y = Track(p0[1], t0).to(ta, apex, "os").to(t1, p1[1], "is")
+            x = Track(p0[0], t0).to(t1, p1[0], xease or "lin")
+        tp = t0 + max(2, life * pop)
+        tf = t1 - max(3, life * fade)
+        s = Track([0, 0], t0).to(tp, [s_peak * 1.15] * 2, "ox")
+        mid = tp + 4 if tp + 4 < tf else (tp + tf) / 2
+        if mid < t1 - 0.5:
+            s.to(mid, [s_peak] * 2, "io")
+        if tf > s.t + 0.5:
+            s.to(tf, [s_peak] * 2, "lin")
+        s.to(t1, [s_end] * 2, "i")
+        r = Track(rot[0], t0).to(t1, rot[1], "os") if rot[0] != rot[1] else rot[0]
+        return Split(x, y), s, r
+
+    t1 = t0 + life
+    p, s, r = tracks(t0)
+    lay = comp.layer(nm, shapes, parent=parent, p=p, a=anchor, s=s, r=r,
+                     ip=int(math.floor(t0)), op=min(comp.op, int(math.ceil(t1))))
+    if t1 > comp.op:
+        p, s, r = tracks(t0 - comp.op)
+        comp.layer(nm + "w", shapes, parent=parent, p=p, a=anchor, s=s, r=r, ip=0,
+                   op=int(math.ceil(t1 - comp.op)))
+    return lay
 
 
 def twinkle(comp, nm, x, y, r, t0, dur=16, parent=None, spin=45, pinch=0.24):

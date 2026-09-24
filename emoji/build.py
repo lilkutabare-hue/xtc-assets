@@ -26,7 +26,10 @@ from xtc.reg import REG  # noqa: E402
 import specs  # noqa: E402
 
 for m in pkgutil.iter_modules(specs.__path__):
-    importlib.import_module(f"specs.{m.name}")
+    try:
+        importlib.import_module(f"specs.{m.name}")
+    except Exception as e:  # one broken spec module must not stop the others
+        print(f"!! specs/{m.name}.py failed to import: {e!r}", file=sys.stderr)
 
 
 def build(name):
@@ -59,6 +62,7 @@ def main():
     ap.add_argument("names", nargs="*")
     ap.add_argument("--view", action="store_true")
     ap.add_argument("--svg", action="store_true")
+    ap.add_argument("--multi", action="store_true", help="one combined review image for all built")
     a = ap.parse_args()
     names = sorted(n for n in REG if not a.names or any(x in n for x in a.names))
     for n in names:
@@ -71,6 +75,11 @@ def main():
             view.grid(out, os.path.join(HERE, "sheets", "_view", n + "-grid.png"))
         if a.svg:
             poster_svg(out, n, REG[n].get("poster"))
+    if a.multi:
+        from xtc import view
+        os.makedirs(os.path.join(HERE, "sheets", "_view"), exist_ok=True)
+        print(view.multi([os.path.join(HERE, "tgs", n + ".tgs") for n in names],
+                         os.path.join(HERE, "sheets", "_view", "_multi.png")))
 
 
 if __name__ == "__main__":

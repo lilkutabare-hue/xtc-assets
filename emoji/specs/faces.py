@@ -60,7 +60,7 @@ def laugh(c):
         for k in range(4):
             t0 = 16 + k * 16 + side * 6
             M.particle(c, f"tear{side}{k}", K.tear(x0, 170, 30), t0, 34,
-                       (x0, 170), (CX + d * (212 - 8 * (k % 2)), 372 - 18 * (k % 3)), apex=58 + 14 * (k % 2),
+                       (x0, 170), (CX + d * (196 - 8 * (k % 2)), 372 - 18 * (k % 3)), apex=80 + 14 * (k % 2),
                        parent=face, rot=(-d * 163, -d * 8), anchor=(x0, 170), s_peak=100 - 8 * (k % 2))
 
 
@@ -268,9 +268,9 @@ def rage(c):
     vs.to(t + 6, [124, 124], "snap").hold(100).to(114, [100, 100], "io").hold(132).to(142, [0, 0], "i").loop(150, "lin")
     part(c, "vein", geo.xmark(vx, vy, 84, 30), face, (vx, vy), s=vs)
     for d in (-1, 1):
-        ex = CX + d * 178
+        ex = CX + d * 166
         er = Track([100, 100], 0).hold(70).to(76, [124, 124], "snap").to(84, [96, 96], "io").to(92, [100, 100], "io").loop(150)
-        part(c, f"ear{d}", geo.eyelet(ex, 300, 40, 20), face, (ex, 300), s=er)
+        part(c, f"ear{d}", geo.eyelet(ex, 300, 36, 18), face, (ex, 300), s=er)
     # peak: impact lines burst around the head (M8)
     for k, (p0, p1) in enumerate((((96, 96), (64, 64)), ((416, 96), (448, 64)), ((70, 420), (40, 446)), ((442, 420), (472, 446)))):
         e = Track(0, 0).hold(76).to(83, 100, "o").hold(150)
@@ -280,9 +280,9 @@ def rage(c):
     for side, d in enumerate((-1, 1)):
         for k in range(3):
             t0 = 76 + k * 5 + side * 2
-            x0 = CX + d * 178
-            M.particle(c, f"steam{side}{k}", K.steam(x0, 300, 76 - k * 12, d=-d), t0, 30,
-                       (x0, 300), (x0 + d * 10, 120 - k * 30), None, parent=face, anchor=(x0, 300),
+            x0 = CX + d * 166
+            M.particle(c, f"steam{side}{k}", K.steam(x0, 300, 72 - k * 12, d=-d), t0, 30,
+                       (x0, 300), (x0 + d * 4, 130 - k * 30), None, parent=face, anchor=(x0, 300),
                        pop=0.15, fade=0.5, fall="decel", s_peak=100 - k * 10)
 
 

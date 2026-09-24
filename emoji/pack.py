@@ -24,7 +24,7 @@ ORDER = """
 75-mind-blown 57-plead 56-sob 73-melt 72-skull 83-eyes
 84-fire 85-hundred 86-check 87-cross 88-heart 89-broken-heart 90-sparkles 111-siren 113-cocktail 114-headphones
 14-barbed-heart 15-dagger-heart 22-kiss-less3 13-dagger-cross 19-thorn-star 41-patch-x 32-swallow 25-mask-glyphs
-94-lol 95-omg 96-wtf 97-ok 98-no 99-yes 115-gm 116-gn 117-xoxo 118-soon 120-new 121-xtc
+94-lol 95-omg 96-wtf 97-ok 98-no 99-yes 115-gm 116-gn 117-xoxo 118-soon 121-xtc
 """.split()
 # not in v3 (reasons: REVIEW-v3.md)
 CUT_V2 = {
@@ -38,7 +38,7 @@ CUT_V3 = """
 38-kao-tear 39-kao-wink 40-kao-shock 42-kao-tongue
 91-zap 92-question 93-exclaim 110-popper 126-thumbs-up 128-victory 129-rock 130-wave
 03-sigil-x 04-tramp-stamp 10-club-key 17-winged-x 18-spike-collar 21-teddy-skull 23-dot-star 24-print-scan
-26-tribal-heart 27-tribal-eye 28-tribal-cross 30-club-banner 31-cyber-butterfly 43-scorpion-sigil
+26-tribal-heart 27-tribal-eye 28-tribal-cross 30-club-banner 31-cyber-butterfly 43-scorpion-sigil 120-new
 """.split()
 CUT = dict(CUT_V2)
 CUT.update({n: "см. REVIEW-v3.md" for n in CUT_V3})
@@ -118,6 +118,42 @@ def make_zip(kind, sheets_dir=None):
     return out
 
 
+V3_MD = """## Было → стало (v2 → v3)
+
+**Претензии клиента:** много рожиц («0_0»), нет единого свэга, есть кринж, нужно «экспенсив» и инновационно.
+
+| | v2 | v3 |
+|---|---|---|
+| эмодзи в паке | 117 | 66 |
+| лиц (kaomoji и морды) | 55 | 14 |
+| из них «0_0» (глаза-кольца) | 9 | 3 (57 plead, 75 mind-blown, 83 eyes) |
+| бренд-предметка | 16 | 25 (+9 новых) |
+| порог шкалы | Σ≥29, брендовость ≥3 | каждый критерий ≥4, плавность/луп = 5, Σ≥31, свэг-тест STYLE.md |
+| средняя Σ | 30.6 | 31.6 |
+
+**Вырезано 61:** 35 лиц (стоковые тропы — клоун, нимб, моаи, o7, колпак; дубли «0_0»; kaomoji ради kaomoji), 4 руки-пиктограммы, 4 реакции без вещи (?, !, хлопушка, молния → стала вспышкой), 14 символов v1 (каша на 24px, Σ≤30), 4 бейджа/дубля механики (46, 91, 120, 55).
+
+**Переделано (реальный приём, не подкрутка):** 45 пряжка (была навесным замком → ремень с двумя рядами люверсов въезжает в рамку, язычок в люверс), 52 PSP (экран = дырка, внутри понг), 85 «100» (шрифт лого, нули пробиваются как люверсы), 86 галочка (прорезается матт-ом), 90 ✨ (три ✦ → хром-люверс с бликами-вырезами), 88/89/22/15/58/59 (лаковые сердца: блик-вырез бежит по форме), 60 (╬ → X, пар из люверсов), 72 (глазницы-люверсы), 84 (угли крупнее), 114 (блик по оголовью на дропе), 48 (декоративная ✦-плитка убрана), 54 (подтёки крупнее).
+
+**Новые вау (9 файлов, 8 приёмов):**
+
+| файл | приём |
+|---|---|
+| 131/132/133 tile-x/t/c | пазл: три плитки закрепа с одним op=150 и флапами на к.40/76; подряд в тексте = табло `X T C`. Риск: Telegram не гарантирует синхронный старт лупов трёх эмодзи в одной строке (каждый стартует при появлении на экране); при одновременном появлении в одном сообщении они идут синхронно, при разном — расходятся |
+| 134 louverse-tank | XTC выложено люверсами на майке; люверсы моргают волной (кольцо → щель, M3), ткань дышит, блик по ткани |
+| 135 latexx-pants | латекс тянется с сохранением объёма (109/92 → 94/106), jelly ×0.5, бегущий блик-вырез, молния едет по слоту-дырке |
+| 136 flash | негатив на 3 кадра: карточка с крест-лого инвертируется (чёрное ↔ дырка), «проявляется» с пережогом 106% |
+| 137 tee-daynight | лонгслив переворачивается 180° (fake-3D с торцом): night = силуэт, day = контур-дырка с чёрным XTC |
+| 138 seal | клише давит сургуч (slam 112/86), поднимается — оттиск X·XTC·C дыркой, к концу лупа заплывает |
+| 45 buckle-lock | пряжка: въезд ремня (0.5,0,0.18,1), щелчок язычка в люверс 1f, отдача рамки, ✦ по хрому |
+| 52 psp | понг внутри экрана-дырки: чёрные ракетки и шарик на цвете фона, кнопки жмутся в такт, game over = XTC |
+
+**WARN разобраны:** «Mattes are not officially supported» (14 файлов) — по одному inverted matte на эмодзи, рендер в rlottie проверен (факты BRIEF-v2). «Thinner than 28px»: 44 cross (56%, штрихи букв лого; на `sheet-24` крест читается), 57 plead (50%, брови и блики в зрачках), 60/59/85/95 (25–28%, кадр 0 — узкие глифы; читаемость на sheet-24 проверена). «Spans 76–84%»: 114 headphones — объект увеличен через null zoom 109%.
+
+**Не проверено:** лимиты custom emoji на core.telegram.org (закрыт прокси), 🫆 больше не используется. Флаги 🇽 🇹 🇨 у плиток — regional indicator symbols, в @Stickers их приём не проверен; при отказе фоллбэк ✖️ ➕ ©️ (`upload.md`).
+"""
+
+
 def report():
     """REPORT.md: table in pack order, top-10, cuts, what is left."""
     R = reg()
@@ -133,7 +169,11 @@ def report():
         lines.append(f"| {i} | {n} | {e['emoji']} | {e['story']} | {sc[n]['render_sum']} | {kb} |")
     top = sorted(names, key=lambda n: (-int(sc[n]["render_sum"]), n))[:10]
     lines += ["", "## Топ-10", ""] + [f"{i}. **{n}** {R[n]['emoji']}: {sc[n]['render_sum']}/35, {R[n]['story']}" for i, n in enumerate(top, 1)]
-    lines += ["", "## Вырезано", ""] + [f"- **{n}** {R[n]['emoji']}: {why}" for n, why in CUT.items()]
+    lines += ["", "## Вырезано", "",
+              f"v3: вырезано {len(CUT_V3)} из 117 v2 (вердикт и причина по каждому — `REVIEW-v3.md`): "
+              + ", ".join(sorted(CUT_V3, key=lambda n: int(n.split("-")[0]))) + ".",
+              ""] + [f"- **{n}** {R[n]['emoji']} (v2): {why}" for n, why in CUT_V2.items()]
+    lines += ["", V3_MD]
     return lines
 
 

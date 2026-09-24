@@ -261,9 +261,9 @@ def fire(c):
     s.loop(OP)
     c.layer("flame", [grp], p=(256, 494), a=(256, 494), s=s)
     # embers = little flames tearing off the tips: burst on the flare (stagger 2-3f) + stragglers
-    em = [(55, 262, 92, 292, 52, 30, 22), (57, 136, 170, 84, 106, 32, 20), (59, 400, 196, 452, 132, 30, 20),
-          (63, 214, 140, 172, 72, 28, 18), (66, 322, 150, 376, 88, 28, 18),
-          (14, 300, 118, 330, 62, 34, 18), (100, 142, 180, 104, 112, 34, 18)]
+    em = [(55, 262, 92, 292, 84, 30, 22), (57, 136, 170, 84, 136, 32, 20), (59, 400, 196, 452, 162, 30, 20),
+          (63, 214, 140, 172, 104, 28, 18), (66, 322, 150, 376, 120, 28, 18),
+          (14, 300, 118, 330, 94, 34, 18), (100, 142, 180, 104, 142, 34, 18)]
     for k, (t0, x0, y0, x1, y1, life, r) in enumerate(em):
         g = geo.drop(x0, y0, r, r * 2.8)
         M.particle(c, f"ember{k}", g, t0, life, (x0, y0), (x1, y1), None, anchor=(x0, y0),
@@ -293,40 +293,33 @@ def _affine(sx, tx, ty, sk):
 def hundred(c):
     OP = 120
     from specs.drop import brand_font
-    one = geo.text("1", brand_font(), 96, 186, 150, bold=12)
-    one = geo.fit_box(one, 36, 96, 132, 276, keep=False)
-    zc = [(232, 186), (412, 186)]
+    one = geo.text("1", brand_font(), 96, 186, 150, bold=18)
+    one = geo.fit_box(one, 34, 96, 122, 276, keep=False)
+    zc = [(224, 186), (396, 186)]
     root = rig(c, "mark", (256, 300))
     # the 1: drops in as a bar from above and slams, 1f squash
-    oy = seq(186.0, [(4, None, None), (6, 150.0, "io"), (14, 186.0, "slam")], op=OP)
+    oy = seq(276.0, [(4, None, None), (6, 240.0, "io"), (14, 276.0, "slam")], op=OP)
     os_ = seq([100, 100], [(13, None, None), (14, [112, 88], "slam"), (15, [112, 88], "lin"), (21, [97, 103], "io"), (27, [100, 100], "io")], op=OP)
-    oo = Track(0, 0)
-    oo.k[-1][2] = "hold"
-    oo.k.append([4, 100, None])
-    oo.hold(112)
-    oo.k[-1][2] = "hold"
-    oo.k.append([113, 0, None])
-    oo.loop(OP, "lin")
-    part(c, "one", one, root, (84, 276), p=Split(84, oy), s=os_, o=oo)
+    part(c, "one", one, root, (84, 276), p=Split(84, oy), s=os_)
     # the zeros: eyelets punched by a press, 12f apart (click + shock ring), ✦ on the chrome of the second
     for k, (x, y) in enumerate(zc):
-        t = 24 + k * 14
+        t = 12 + k * 14
         ring = geo.ring(x, y, 84, 42, 24)
         zs = seq([0, 0], [(t, None, None), (t + 3, [118, 82], "slam"), (t + 4, [118, 82], "lin"), (t + 11, [94, 106], "o"),
                           (t + 18, [102, 98], "io"), (t + 25, [100, 100], "io"), (108, None, None), (113, [0, 0], "i")], op=OP, loop_ease="lin")
         part(c, f"zero{k}", ring, root, (x, y), s=zs)
         from specs.faces import lot_ring
-        rs = Track([100, 100], 0).hold(t + 2).to(t + 14, [136, 136], "ring").hold(OP)
+        rs = Track([100, 100], 0).hold(t + 2).to(t + 14, [112, 112], "ring").hold(OP)
         rw = Track(22, 0).hold(t + 2).to(t + 14, 4, "ring").to(t + 18, 0, "i").hold(OP)
-        c.layer(f"z{k}-ring", [lot_ring(x, y, 92, rw)], parent=root, p=(x, y), a=(x, y), s=rs, ip=t + 2, op=t + 19)
+        c.layer(f"z{k}-ring", [lot_ring(x, y, 84, rw)], parent=root, p=(x, y), a=(x, y), s=rs, ip=t + 2, op=t + 19)
     # whole mark answers the punches
-    root.s = seq([100, 100], [(27, None, None), (30, [102, 98], "o"), (36, [100, 100], "io"), (41, None, None),
-                              (44, [102, 98], "o"), (50, [100, 100], "io")], op=OP)
+    root.s = seq([100, 100], [(15, None, None), (18, [102, 98], "o"), (24, [100, 100], "io"), (29, None, None),
+                              (32, [102, 98], "o"), (38, [100, 100], "io")], op=OP)
     # underlines whip out after the second punch, retract at the end of the loop
-    for j, (u, t_in) in enumerate((([(52, 340), (256, 332), (470, 322)], 48), ([(96, 412), (300, 404), (440, 396)], 56))):
+    for j, (u, t_in) in enumerate((([(52, 340), (256, 332), (470, 322)], 36), ([(96, 412), (300, 404), (440, 396)], 44))):
         e = seq(0, [(t_in, None, None), (t_in + 9, 100, (0.2, 0.0, 0.1, 1.0)), (100 + 2 * j, None, None), (110 + 2 * j, 0, "i")], op=OP, loop_ease="lin")
         c.layer(f"under{j}", [stroke_line(u, W, nm=f"under{j}", e=e)], parent=root, p=(0, 0), a=(0, 0))
-    M.twinkle(c, "tw", 412 + 62, 186 - 62, 34, 66, 22, parent=root)
+    M.twinkle(c, "tw", 396 + 60, 186 - 60, 34, 54, 22, parent=root)
 
 
 # ================================================================ 86 ✅
@@ -340,10 +333,10 @@ def check(c):
     ex, ey = 126, 126
     box = geo.rrect(30, 30, 482, 482, 116).difference(geo.ring(ex, ey, 34, 15, 20))
     ck = [(140, 262), (222, 344), (378, 166)]
-    s = seq([100, 100], [(30, None, None), (33, [106, 95], "o"), (40, [98, 102], "io"), (47, [100.5, 99.7], "io"), (54, [100, 100], "io")])
-    breathe(s, 60, 120, [100, 100], 0.6, 30)
+    s = seq([100, 100], [(30, None, None), (33, [103, 97], "o"), (40, [99, 101], "io"), (47, [100.3, 99.8], "io"), (54, [100, 100], "io")])
+    breathe(s, 60, 120, [100, 100], 0.5, 30)
     s.loop(OP)
-    r = seq(0, [(30, None, None), (34, 5, "o"), (46, -3, "io"), (58, 1.5, "io"), (70, 0, "io")], op=OP)
+    r = seq(0, [(30, None, None), (34, 2.5, "o"), (46, -1.5, "io"), (58, 0.8, "io"), (70, 0, "io")], op=OP)
     plate = rig(c, "plate", (ex, ey), s=s, r=r)
     lay = part(c, "box", box, plate, (256, 256))
     # the one matte: a stroke drawn by trim cuts the check through the plate (draw-on of a hole)
@@ -511,16 +504,18 @@ def broken(c):
 def sparkles(c):
     OP = 150
     cx, cy = 256, 262
-    ring = geo.ring(cx, cy, 196, 104, 32)
+    ring = geo.ring(cx, cy, 196, 96, 32)
     ss = seq([100, 100], [(8, None, None), (18, [94, 106], "io"), (26, [100, 100], "o"), (74, None, None), (78, [104, 97], "o"),
                           (86, [99, 101], "io"), (94, [100, 100], "io")], op=OP)
     body = rig(c, "body", (cx, cy + 196), s=ss)
     segs = [(18, 74, 0, 360, (0.35, 0.0, 0.14, 1.0)), (110, 136, 360, 720, (0.4, 0.0, 0.2, 1.0))]
     root, th, fr, bk = M.spin3d(c, "eyelet", ring, ring, cx, cy, segs, thick=46, lip=30, parent=body)
-    for k, (ang, t0, r) in enumerate(((-60, 70, 64), (30, 80, 48), (150, 90, 40))):
+    # chrome: the glare streak crosses the ring as it lands face-on, three ✦ cut through the rim in turn
+    sp = []
+    for k, (ang, t0, r) in enumerate(((-60, 72, 54), (30, 80, 40), (150, 88, 34), (-60, 136, 44))):
         a = math.radians(ang)
-        M.twinkle(c, f"tw{k}", cx + 150 * math.cos(a), cy + 150 * math.sin(a), r, t0, 30, parent=root, spin=30)
-    M.twinkle(c, "tw3", cx + 150 * math.cos(math.radians(-60)), cy + 150 * math.sin(math.radians(-60)), 50, 136, 14, parent=root)
+        sp.append((cx + 146 * math.cos(a), cy + 146 * math.sin(a), r, t0, 26 if k < 3 else 12))
+    M.glare_sweep(c, fr, cx, cy, 68, 26, travel=330, angle=-35, parent=root, sparks=sp, length=560, w1=34, w2=14, gap=14)
 
 
 # ================================================================ 91 ⚡

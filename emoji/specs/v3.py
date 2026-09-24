@@ -50,14 +50,15 @@ def buckle(c):
     sx.to(80, 256 + travel - 12, "i5").to(92, 256 + travel, "o").hold(120).to(146, 256, "io").loop(150)
     c.layer("strap", [geo.shape(strap, nm="strap")], parent=root, p=Split(sx, 256), a=(256, 256))
     fs = Track([100, 100], 0)
-    click(fs, 50, amp=(6, -6))
-    fs.hold(80).to(84, [102, 99], "io").to(92, [100, 100], "io").loop(150)
-    fr = c.layer("frame", [geo.shape(frame, nm="frame")], parent=root, p=(fx0, sy), a=(fx0, sy), s=fs)
+    click(fs, 50, amp=(4, -5))
+    fs.hold(80).to(84, [101.5, 99], "io").to(92, [100, 100], "io").loop(150)
+    fcx = (fx0 + fx1) / 2
+    fr = c.layer("frame", [geo.shape(frame, nm="frame")], parent=root, p=(fcx, sy), a=(fcx, sy), s=fs)
     tr = Track(0, 0).hold(8).to(20, -34, "io").hold(44).to(50, 3, "slam").to(51, 3, "lin").to(56, -2, "io").to(62, 0, "io")
     tr.hold(116).to(126, -34, "io").hold(136).to(148, 0, "io").loop(150)
     c.layer("tongue", [geo.shape(tongue, nm="tongue")], parent=root, p=pivot, a=pivot, r=tr)
-    hit_lines(c, "hit", [((fx1 + 2, fy0 - 10), (fx1 + 14, fy0 - 40)), ((fx1 + 12, sy - 40), (fx1 + 40, sy - 52)),
-                         ((fx1 + 2, fy1 + 10), (fx1 + 14, fy1 + 40))], 50, w=20)
+    hit_lines(c, "hit", [((fx1 - 44, fy0 - 14), (fx1 - 30, fy0 - 46)), ((fx0 + 44, fy0 - 14), (fx0 + 30, fy0 - 46)),
+                         ((fx1 - 44, fy1 + 14), (fx1 - 30, fy1 + 46)), ((fx0 + 44, fy1 + 14), (fx0 + 30, fy1 + 46))], 50, w=20)
     M.glare_sweep(c, fr, fx1 - 70, fy0 + 40, 54, 22, travel=140, angle=-35, length=260, w1=26, w2=12, gap=12,
                   sparks=[(fx0 + 24, fy1 - 22, 34, 56, 22)])
 
@@ -159,8 +160,8 @@ def pants(c):
     g = g.difference(band)
     slot = geo.rrect(cx - 16, 88, cx + 16, 262, 12)
     # latex stretch: squat (wide) -> pull (tall) -> jelly settle; anchor at the hem
-    s = Track([100, 100], 0).hold(16).to(30, [109, 92], "io").to(40, [93, 108], "o").to(41, [93, 108], "lin")
-    M.settle(s, 50, [100, 100], [5, -4], n=3, per=9, decay=0.5, hit="io")
+    s = Track([100, 100], 0).hold(16).to(30, [109, 92], "io").to(40, [94, 106], "o").to(41, [94, 106], "lin")
+    M.settle(s, 50, [100, 100], [4, -3], n=3, per=9, decay=0.5, hit="io")
     s.hold(120).to(150, [100, 100], "io")
     lay = c.layer("pants", [geo.shape(g, nm="pants")], p=(cx, 488), a=(cx, 488), s=s)
     # the fly slot opens behind the slider as it rides down (trim-like: hole grows from the top)
@@ -255,8 +256,8 @@ def seal(c):
     hs = Track([0, 0], 0).hold(58).to(59, [100, 100], "lin").hold(120).to(146, [100, 8], "io").loop(150, "i")
     geo.hole(wax, logo, nm="imprint", p=(cx, cy), a=(cx, cy), s=hs)
     # the press: handle from the top, descends, holds, lifts with anticipation
-    handle = geo.U(geo.rrect(cx - 44, 8, cx + 44, 124, 26), geo.rrect(cx - 130, 118, cx + 130, 156, 16))
-    hy = Track(156, 0).hold(24).to(30, 142, "io").to(44, cy - R + 6, "slam").to(48, cy - R + 6 + 2 * R * 0.14, "slam")
+    handle = geo.U(geo.rrect(cx - 44, 22, cx + 44, 124, 26), geo.rrect(cx - 130, 118, cx + 130, 156, 16))
+    hy = Track(156, 0).hold(24).to(30, 146, "io").to(44, cy - R + 6, "slam").to(48, cy - R + 6 + 2 * R * 0.14, "slam")
     hy.hold(58).to(74, 156, "o").loop(150)
     c.layer("press", [geo.shape(handle, nm="press")], p=Split(cx, hy), a=(cx, 156))
     hit_lines(c, "hit", [((cx - R - 10, cy - 60), (cx - R - 40, cy - 80)), ((cx + R + 10, cy - 60), (cx + R + 40, cy - 80)),

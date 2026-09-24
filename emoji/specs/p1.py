@@ -887,7 +887,8 @@ def headphones(c):
     px = seq(float(cx), [(roll[0], None, None)])
     jitter(px, roll[0], roll[1], float(cx), 2.0, 2)
     px.loop(OP)
-    hp = null(c, "hp", (cx, 418), p=Split(px, ypos_abs(y, 418)), s=s)
+    zoom = null(c, "zoom", (cx, 418), s=(109, 109))
+    hp = null(c, "hp", (cx, 418), p=Split(px, ypos_abs(y, 418)), s=s, parent=zoom)
     # band: springs up on each beat (scale from its base line), stretches with the cups
     arc = [(cx + cw * math.cos(math.radians(a)), by - 150 * math.sin(math.radians(a))) for a in range(0, 181, 6)]
     band = geo.line(arc, 36)
@@ -895,7 +896,9 @@ def headphones(c):
     for t, k in beats:
         bs.hold(t).to(t + 3, [100 + 5 * k, 100 - 7 * k], "o").to(t + 9, [100 - 2 * k, 100 + 8 * k], "io").to(t + 16, [100, 100], "io")
     bs.loop(OP)
-    part(c, "band", band, hp, (cx, by), s=bs)
+    band_l = part(c, "band", band, hp, (cx, by), s=bs)
+    # the drop: a latex glare runs over the headband (the pack's one matte)
+    M.glare_sweep(c, band_l, cx, by - 90, 90, 22, travel=300, angle=-35, parent=hp, length=520, w1=26, w2=12, gap=12)
     # cups: shell with the logo X cut out + cushion, eyelet hinge; pump outward on each beat
     for sd, sg in (("L", -1), ("R", 1)):
         x0 = cx + sg * cw
@@ -910,4 +913,4 @@ def headphones(c):
         cxs.loop(OP)
         cs.loop(OP)
         part(c, f"cup{sd}", cup, hp, (x0, cy), p=Split(cxs, float(cy)), s=cs)
-    M.twinkle(c, "tw", cx + 100, 112, 42, 92, 24, parent=hp)
+    M.twinkle(c, "tw", cx + 104, 150, 40, 92, 24, parent=hp)

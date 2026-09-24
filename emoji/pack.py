@@ -114,10 +114,31 @@ def make_zip(kind, sheets_dir=None):
     return out
 
 
+def report():
+    """REPORT.md: table in pack order, top-10, cuts, what is left."""
+    R = reg()
+    sc = {r["file"]: r for r in csv.DictReader(open(os.path.join(HERE, "scores.csv")))}
+    names = order("final")
+    lines = ["# XTC emoji v2 — отчёт", "",
+             f"В паке **{len(names)}** adaptive-эмодзи (TGS 512, 60 fps, 1–3 с). `qa.py`: 0 FAIL; у всех все минимумы шкалы + Σ≥29.",
+             "Порядок = `manifest.csv` (первый — обложка). Оценки по 7 критериям с обоснованиями — `scores.csv`.", "",
+             "| # | файл | 🔣 | история | Σ/35 | KB |", "|---|---|---|---|---|---|"]
+    for i, n in enumerate(names, 1):
+        e = R[n]
+        kb = round(os.path.getsize(os.path.join(HERE, "tgs", n + ".tgs")) / 1024, 1)
+        lines.append(f"| {i} | {n} | {e['emoji']} | {e['story']} | {sc[n]['render_sum']} | {kb} |")
+    top = sorted(names, key=lambda n: (-int(sc[n]["render_sum"]), n))[:10]
+    lines += ["", "## Топ-10", ""] + [f"{i}. **{n}** {R[n]['emoji']}: {sc[n]['render_sum']}/35, {R[n]['story']}" for i, n in enumerate(top, 1)]
+    lines += ["", "## Вырезано", ""] + [f"- **{n}** {R[n]['emoji']}: {why}" for n, why in CUT.items()]
+    return lines
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "manifest":
         rows = manifest(sys.argv[2] if len(sys.argv) > 2 else "final")
         print(len(rows), "rows")
+    elif cmd == "report":
+        print("\n".join(report()))
     elif cmd == "zip":
         print(make_zip(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None))

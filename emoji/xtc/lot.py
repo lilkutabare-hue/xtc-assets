@@ -320,6 +320,6 @@ class Comp:
 
     def save(self, path):
         data = json.dumps(self.json(), separators=(",", ":"))
-        with gzip.open(path, "wb", compresslevel=9) as f:
-            f.write(data.encode())
+        with open(path, "wb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", compresslevel=9, mtime=0) as f:
+            f.write(data.encode())       # mtime=0: identical input -> identical .tgs (clean git diffs)
         return path

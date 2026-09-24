@@ -216,15 +216,17 @@ def heart(x, y, s, res=48):
     return fit_box(g, x - s / 2, y - s / 2 * (b[3] - b[1]) / (b[2] - b[0]), x + s / 2, y + s / 2 * (b[3] - b[1]) / (b[2] - b[0]))
 
 
-def spark(x, y, r, pinch=0.26, rotdeg=0, n=4):
-    """✦ latex glare: n-point star with concave sides."""
+def spark(x, y, r, pinch=0.3, rotdeg=0):
+    """✦ latex glare: 4 tips joined by concave quadratic sides; pinch = radius at 45° / r."""
+    c = (math.sqrt(2) * pinch - 0.5) * r
+    tips = [(0, -r), (r, 0), (0, r), (-r, 0)]
+    ctl = [(c, -c), (c, c), (-c, c), (-c, -c)]
+    ca, sa = math.cos(math.radians(rotdeg)), math.sin(math.radians(rotdeg))
+    R = lambda p: (x + p[0] * ca - p[1] * sa, y + p[0] * sa + p[1] * ca)
+    tips, ctl = [R(p) for p in tips], [R(p) for p in ctl]
     pts = []
-    for i in range(n * 8):
-        a = math.radians(rotdeg - 90 + 360 * i / (n * 8))
-        ph = (i % 8) / 8
-        # radius dips between the points (concave astroid-like)
-        rr = r * (pinch + (1 - pinch) * abs(math.cos(math.pi * ph)) ** 3)
-        pts.append((x + rr * math.cos(a), y + rr * math.sin(a)))
+    for j in range(4):
+        pts += quad(tips[j], ctl[j], tips[(j + 1) % 4], 12)[:-1]
     return Polygon(pts).buffer(0)
 
 

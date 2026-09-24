@@ -130,7 +130,7 @@ def particle(comp, nm, g, t0, life, p0, p1, apex=None, parent=None, s_peak=100, 
     return lay
 
 
-def twinkle(comp, nm, x, y, r, t0, dur=16, parent=None, spin=45, pinch=0.24):
+def twinkle(comp, nm, x, y, r, t0, dur=16, parent=None, spin=45, pinch=0.36):
     """✦ latex glint: pops to 120%, settles, spins a bit, pinches out."""
     g = geo.spark(x, y, r, pinch)
     s = Track([0, 0], t0).to(t0 + dur * 0.3, [118, 118], "ox").to(t0 + dur * 0.55, [100, 100], "io").to(t0 + dur, [0, 0], "i")

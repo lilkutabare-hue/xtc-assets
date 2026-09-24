@@ -289,7 +289,7 @@ def _affine(sx, tx, ty, sk):
 
 
 @emoji("85-hundred", "💯", "сто, 100, точно, в точку, топ, база", "100, hundred, perfect, facts, exactly",
-       "«100» откидывается и бьёт штампом, подчёркивания втягиваются и хлёстко дописываются кистью, цифры скачут волной, нули-люверсы подмигивают",
+       "подчёркивания втягиваются, по «100» прокатывается волна прыжков 1-0-0, каждая черта хлёстко дописывается кистью на приземлении, нули-люверсы подмигивают",
        op=120, series=SERIES)
 def hundred(c):
     OP = 120
@@ -310,27 +310,28 @@ def hundred(c):
     u1, u2 = [pt(p) for p in u1], [pt(p) for p in u2]
     z1c, z2c = pt(z1c), pt(z2c)
     base = pt((256, 400))
-    s = seq([100, 100], [(8, None, None), (20, [96, 104], "io"), (25, [106, 94], "slam"), (26, [106, 94], "lin"),
-                         (31, [98, 102], "io"), (36, [101, 99], "io"), (41, [100, 100], "io")])
+    # the mark leans with the wave and gets a kick from each finished underline
+    s = seq([100, 100], [(36, None, None), (38, [101.5, 98.5], "o"), (43, [100, 100], "io"), (46, None, None),
+                         (48, [102, 98], "o"), (54, [99.5, 100.5], "io"), (60, [100, 100], "io")])
     breathe(s, 60, 120, [100, 100], 0.8, 30)
     s.loop(OP)
-    r = seq(0, [(8, None, None), (20, -6, "io"), (25, 2.5, "slam"), (31, -1, "io"), (37, 0, "io")], op=OP)
-    px = seq(base[0], [(26, None, None)])
-    M.shake(px, 26, 40, 5, base[0], step=2, decay=0.8)
-    px.loop(OP)
-    root = rig(c, "mark", base, p=Split(px, base[1]), s=s, r=r)
+    r = seq(0, [(14, None, None), (24, -3, "io"), (36, 2.5, "io"), (46, -1, "io"), (56, 0, "io")], op=OP)
+    root = rig(c, "mark", base, s=s, r=r)
+    # a hop wave rolls through the digits (antic squash -> stretch up -> land squash), 5f apart
     for i, (nm, g, anc) in enumerate((("one", one, pt((150, 312))), ("zero1", z1, z1c), ("zero2", z2, z2c))):
-        t0 = 27 + 4 * i
-        ds = seq([100, 100], [(t0, None, None), (t0 + 4, [94, 107], "o"), (t0 + 11, [104, 96], "io"),
-                              (t0 + 17, [100, 100], "io")])
+        t0 = 16 + 5 * i
+        ds = seq([100, 100], [(t0, None, None), (t0 + 4, [106, 94], "io"), (t0 + 9, [93, 107], "decel"),
+                              (t0 + 15, [98, 102], "i"), (t0 + 17, [110, 91], "o"), (t0 + 22, [97, 103], "io"),
+                              (t0 + 28, [100, 100], "io")])
         if i:
             M.blink(ds, 82 + 7 * (i - 1), dur=8, closed=10)
         ds.loop(OP)
-        y = seq(anc[1], [(t0, None, None), (t0 + 5, anc[1] - 16, "decel"), (t0 + 11, anc[1], "i"),
-                         (t0 + 15, anc[1] - 4, "o"), (t0 + 19, anc[1], "i")], op=OP)
+        y = seq(anc[1], [(t0 + 4, None, None), (t0 + 10, anc[1] - 24, "decel"), (t0 + 16, anc[1], "i"),
+                         (t0 + 21, anc[1] - 5, "o"), (t0 + 25, anc[1], "i")], op=OP)
         part(c, nm, g, root, anc, p=Split(anc[0], y), s=ds)
-    for j, (u, t_in) in enumerate(((u1, 27), (u2, 33))):
-        e = seq(100, [(10 + 2 * j, None, None), (20 + 2 * j, 0, "i"), (t_in, None, None),
+    # underlines: sucked back into their start, then whipped out as the first / last digit lands
+    for j, (u, t_in) in enumerate(((u1, 28), (u2, 38))):
+        e = seq(100, [(8 + 2 * j, None, None), (18 + 2 * j, 0, "i"), (t_in, None, None),
                       (t_in + 9, 100, (0.2, 0.0, 0.1, 1.0))], op=OP, loop_ease="lin")
         c.layer(f"under{j}", [stroke_line(u, W, nm=f"under{j}", e=e)], parent=root, p=(0, 0), a=(0, 0))
 
@@ -339,33 +340,45 @@ def hundred(c):
 
 
 @emoji("86-check", "✅", "готово, да, сделано, принято, ок, чек", "done, check, yes, approved, ok, complete",
-       "плашку засасывает в точку, кисть одним росчерком рисует галочку, плашка прыгает обратно 108→92→100 и галочка выворачивается в вырез, по углу ✦-блик",
+       "кисть одним росчерком закрашивает галочку, плашка проваливается в точку, жирная галочка остаётся одна и раздувается — плашка прыгает обратно 108→92→100 и галочка выворачивается в вырез, по углу ✦-блик",
        op=120, series=SERIES)
 def check(c):
     OP = 120
     box = geo.rrect(30, 30, 482, 482, 116)
     ck = [(140, 262), (222, 344), (378, 166)]
     cw = 72
-    boxg = box.difference(geo.line(ck, cw, "round", "round"))
-    s = seq([100, 100], [(12, None, None), (20, [106, 94], "io"), (27, [0, 0], "i"), (42, None, None),
-                         (47, [108, 108], "snap"), (53, [92, 93], "io"), (60, [103, 102], "io"), (67, [99.5, 100], "io"),
-                         (74, [100, 100], "io")])
-    breathe(s, 74, 120, [100, 100], 0.7, 23)
+    holed = box.difference(geo.line(ck, cw, "round", "round"))
+    s = seq([100, 100], [(20, None, None), (26, [106, 94], "io"), (33, [0, 0], "i"), (44, None, None),
+                         (49, [108, 108], "snap"), (55, [92, 93], "io"), (62, [103, 102], "io"), (69, [99.5, 100], "io"),
+                         (76, [100, 100], "io")])
+    breathe(s, 76, 120, [100, 100], 0.7, 22)
     s.loop(OP)
-    r = seq(0, [(12, None, None), (20, 3, "io"), (27, -35, "i"), (42, None, None), (47, 0, "snap"), (53, 2, "io"),
-                (60, -1, "io"), (67, 0, "io")], op=OP)
-    t_swap = t_cross(42, 47, 0, 108, "snap", 100)
-    boxl = part(c, "box", boxg, None, (256, 256), s=s, r=r)
+    r = seq(0, [(20, None, None), (26, 3, "io"), (33, -35, "i"), (44, None, None), (49, 0, "snap"), (55, 2, "io"),
+                (62, -1, "io"), (69, 0, "io")], op=OP)
+    t_swap = t_cross(44, 49, 0, 108, "snap", 100)
+    ts = int(math.ceil(t_swap))
+    plate = rig(c, "plate", (256, 256), s=s, r=r)
+    # the plate is holed at rest; solid while the black tick covers the check (no slivers), holed again at the swap
+    oh, osd = Track(100, 0), Track(0, 0)
+    # rlottie still draws a layer on its op frame, so the plate flips one frame after the tick's op
+    for tr_, seq_ in ((oh, ((20, 0), (ts + 1, 100))), (osd, ((20, 100), (ts + 1, 0)))):
+        for t, v in seq_:
+            tr_.k[-1][2] = "hold"
+            tr_.k.append([t, v, None])
+        tr_.loop(OP, "lin")
+    boxl = part(c, "box", holed, plate, (256, 256), o=oh)
+    part(c, "solid", box, plate, (256, 256), o=osd)
     gx, gy = 128, 128
-    gs = seq([0, 0], [(56, None, None), (61, [120, 120], "ox"), (67, [100, 100], "io"), (76, [0, 0], "i"),
-                      (96, None, None), (101, [84, 84], "ox"), (106, [70, 70], "io"), (113, [0, 0], "i")], op=OP, loop_ease="lin")
-    gr = seq(-14, [(56, None, None), (76, 14, "os"), (96, None, None), (113, 40, "os")], op=OP, loop_ease="lin")
+    gs = seq([0, 0], [(58, None, None), (63, [120, 120], "ox"), (69, [100, 100], "io"), (78, [0, 0], "i"),
+                      (98, None, None), (103, [84, 84], "ox"), (108, [70, 70], "io"), (115, [0, 0], "i")], op=OP, loop_ease="lin")
+    gr = seq(-14, [(58, None, None), (78, 14, "os"), (98, None, None), (115, 40, "os")], op=OP, loop_ease="lin")
     geo.hole(boxl, spark_g(gx, gy, 50, 0.3), nm="glare", p=(gx, gy), a=(gx, gy), s=gs, r=gr)
-    e = seq(0, [(22, None, None), (32, 100, (0.3, 0.0, 0.2, 1.0))])
-    cs = Track([100, 100], 0).hold(31).to(35, [132, 112], "o").to(39, [118, 128], "io").to(t_swap, [100, 100], "i")
-    cy = seq(256, [(33, None, None), (38, 240, "decel"), (44, 256, "i")])
-    c.layer("tick", [stroke_line(ck, cw, nm="tick", e=e)], p=Split(256, cy), a=(256, 256), s=cs,
-            ip=21, op=int(math.floor(t_swap)) + 1)
+    # the brush inks the white check (slightly wider than the hole), stays alone, swells, sinks back at the swap
+    e = seq(0, [(8, None, None), (19, 100, (0.3, 0.0, 0.2, 1.0))])
+    cs = Track([100, 100], 0).hold(33).to(37, [132, 112], "o").to(41, [118, 128], "io").to(t_swap, [100, 100], "i")
+    cy = seq(256, [(34, None, None), (39, 240, "decel"), (45, 256, "i")])
+    c.layer("tick", [stroke_line(ck, cw + 6, nm="tick", e=e)], p=Split(256, cy), a=(256, 256), s=cs,
+            ip=8, op=ts)
 
 
 # ================================================================ 87 ❌
@@ -424,7 +437,7 @@ def cross(c):
 
 
 @emoji("88-heart", "❤️", "сердце, люблю, love, лайк, обожаю", "heart, love, like, adore, <3",
-       "лаковое сердце набирает воздух и тянется вверх — лаб-даб, на втором ударе с лопастей отлетают две ✦-искры, досадка затухает",
+       "лаковое сердце набирает воздух и тянется вверх — лаб-даб, на втором ударе блик вспыхивает ✦ и с боков отлетают две ✦-искры, досадка затухает",
        op=120, series=SERIES)
 def heart(c):
     OP = 120
@@ -434,9 +447,8 @@ def heart(c):
     tip = (hx, by1)
     k = hw / 404
     gl = lambda p: (hx + (p[0] - hx) * k, hy + (p[1] - hy) * k)
-    gloss = U(geo.brush([gl(p) for p in geo.arc(178, 196, 66, 196, 258, 14)], 36, taper=(0.7, 0.9), smooth=False),
-              geo.disc(*gl((214, 124)), 17))
-    heart_g = g.difference(gloss)
+    streak = geo.brush([gl(p) for p in geo.arc(178, 196, 66, 196, 258, 14)], 36, taper=(0.7, 0.9), smooth=False)
+    heart_g = g.difference(streak)
     bs = seq([100, 100], [(8, None, None), (32, [94, 109], "io"), (37, [100, 100], "i")])
     breathe(bs, 92, 120, [100, 100], 1.0, 28)
     bs.loop(OP)
@@ -447,7 +459,11 @@ def heart(c):
                          (87, [100, 100], "io")], op=OP)
     rr = seq(0, [(47, None, None), (51, -3, "o"), (58, 2, "io"), (66, 0, "io")], op=OP)
     beat = rig(c, "beat", (hx, hy + 20), parent=base, s=s, r=rr)
-    part(c, "heart", heart_g, beat, (hx, hy + 20))
+    hl = part(c, "heart", heart_g, beat, (hx, hy + 20))
+    # the lacquer catch-light flashes into a ✦ on the dub, then melts back into a dot
+    dx_, dy_ = gl((206, 150))
+    rnd, star = spark4(dx_, dy_, 17, 0.98), spark4(dx_, dy_, 40, 0.3)
+    hole_path(hl, Track(rnd, 0).hold(47).to(52, star, "ox").hold(60).to(70, rnd, "io").loop(OP), nm="catch")
     for j, (x0, y0, x1, y1) in enumerate([(118, 322, 62, 428), (394, 322, 450, 428)]):
         sp = spark_g(x0, y0, 46, 0.36)
         M.particle(c, f"spark{j}", sp, 47 + 2 * j, 34, (x0, y0), (x1, y1), None, anchor=(x0, y0),
@@ -475,7 +491,7 @@ def broken(c):
     kk = hw / 404
     gl = lambda p: (hx + (p[0] - 256) * kk, hy + (p[1] - 262) * kk)
     gloss = U(geo.brush([gl(p) for p in geo.arc(178, 196, 66, 196, 258, 14)], 34, taper=(0.7, 0.9), smooth=False),
-              geo.disc(*gl((214, 124)), 16))
+              geo.disc(*gl((206, 150)), 16))
     left = left.difference(gloss)
     g = g.difference(gloss)
     ws = seq([100, 100], [(8, None, None), (12, [106, 96], "snap"), (20, [100, 100], "io"), (41, None, None),
@@ -563,7 +579,7 @@ def zap(c):
     OP = 120
     top = (288, 22)
     g = geo.poly(BOLT).buffer(10, join_style=1).buffer(-10, join_style=1)
-    s = seq([100, 100], [(4, [101, 99.4], "io"), (9, [100, 100], "io"), (12, None, None), (22, [92, 3], "i5"),
+    s = seq([100, 100], [(4, [101, 99.4], "io"), (9, [100, 100], "io"), (12, None, None), (23, [92, 3], "i"),
                          (31, None, None), (35, [94, 105], "snap"),
                          (38, [110, 93], "slam"), (44, [97, 103], "io"), (50, [101, 99], "io"), (56, [100, 100], "io")])
     breathe(s, 60, 84, [100, 100], 0.9, 12)
@@ -575,7 +591,7 @@ def zap(c):
     M.shake(px, 86, 96, 4, float(top[0]), step=2, decay=0.8)
     px.loop(OP)
     o = Track(100, 0)
-    for t, v in ((21, 0), (31, 100), (41, 30), (43, 100), (47, 45), (49, 100), (88, 55), (90, 100)):
+    for t, v in ((23, 0), (31, 100), (41, 30), (43, 100), (47, 45), (49, 100), (88, 55), (90, 100)):
         o.k[-1][2] = "hold"
         o.k.append([t, v, None])
     o.loop(OP)
@@ -657,7 +673,7 @@ def question(c):
 
 
 @emoji("93-exclaim", "❗", "важно, внимание, восклицание, ого, срочно", "important, attention, exclamation, alert, urgent",
-       "«!» приседает, вздёргивается вверх и молотом бьёт по точке-люверсу: точка сплющивается, удар расходится веером линий, всё дрожит басом",
+       "«!» приседает, вздёргивается вверх и молотом бьёт по точке-люверсу: точка сплющивается и звенит дыркой, удар расходится веером линий, ✦-блик, позже эхо-тап",
        op=120, series=SERIES)
 def exclaim(c):
     OP = 120
@@ -675,10 +691,7 @@ def exclaim(c):
                     (84, None, None), (90, bb[1] - 8, "io"), (93, bb[1] + 14, "slam"), (100, bb[1] - 2, "o"),
                     (106, bb[1], "io")], op=OP)
     r = seq(0, [(22, None, None), (33, -5, "io"), (39, 1.5, "slam"), (47, -1, "io"), (55, 0, "io")], op=OP)
-    root_x = seq(256.0, [(40, None, None)])
-    M.shake(root_x, 40, 54, 5, 256.0, step=2, decay=0.8)
-    root_x.loop(OP)
-    root = rig(c, "all", (256, 256), p=Split(root_x, 256))
+    root = rig(c, "all", (256, 256))
     bl = rig(c, "bar", bb, parent=root, p=Split(bb[0], y), s=s, r=r)
     part(c, "barg", bar, bl, bb)
     db = (dcx, dcy + dro)

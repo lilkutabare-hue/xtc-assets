@@ -169,6 +169,18 @@ def brand_letter(ch, x, y, lh, lw, bold):
     return g
 
 
+def brand_word(word, cx, cy, lh, total_w, bold=10, gap=0.2):
+    """a word in the logo letters (per-letter so every C keeps its aperture)."""
+    n = len(word)
+    lw = total_w / (n + (n - 1) * gap)
+    parts = []
+    for i, ch in enumerate(word):
+        x = cx - total_w / 2 + lw / 2 + i * lw * (1 + gap)
+        if ch != " ":
+            parts.append(brand_letter(ch, x, cy, lh, lw, bold))
+    return geo.U(*parts)
+
+
 def cross_letters(cx=256, cy=256, lh=84, lw=136, dx=158, dy=124, bold=14):
     """the XTC cross logo: X on top, X T C across, C below (T shared)."""
     L = {}
@@ -268,3 +280,141 @@ def eyelets(c):
     M.twinkle(c, "tw1", 150 + 54, 166 - 54, 30, 18, 18)
     M.twinkle(c, "tw2", 362 + 54, 166 - 54, 30, 28, 18)
     M.twinkle(c, "tw3", 256 + 74, 340 - 74, 38, 42, 22)
+
+
+def longsleeve(cx=256, top=128):
+    """XTC longsleeve silhouette on a hanger (logo as holes)."""
+    y = top
+    pts = [(cx - 50, y), (cx - 116, y + 18), (cx - 170, y + 70), (cx - 198, y + 276), (cx - 156, y + 288),
+           (cx - 130, y + 116), (cx - 122, y + 330), (cx + 122, y + 330), (cx + 130, y + 116), (cx + 156, y + 288),
+           (cx + 198, y + 276), (cx + 170, y + 70), (cx + 116, y + 18), (cx + 50, y), (cx, y + 26)]
+    tee = geo.poly(pts).buffer(12).buffer(-6)
+    logo = brand_word("XTC", cx, y + 112, 42, 180, bold=9)
+    tee = tee.difference(logo)
+    hook = geo.brush(geo.arc(cx + 16, y - 52, 28, 180, 450, 20)[::-1] + [(cx, y - 6)], 22, taper=(0.9, 1.0), smooth=False)
+    return geo.U(tee, hook), (cx, y - 70)
+
+
+@emoji("50-soldout-tee", "🔥", "sold out, раскупили, нет в наличии, дроп, горит", "sold out, gone, hot drop, xtc, fire",
+       "лонгслив XTC покачивается на вешалке — сверху бьёт штамп SOLD OUT, вещь дёргается, из-под штампа пыхает дым",
+       op=180, series="drop")
+def soldout(c):
+    tee, hook = longsleeve(256, 132)
+    import math as m
+    r = Track(0, 0).to(20, 2, "io").to(44, -1.5, "io").to(52, 0, "io").to(56, 4.5, "snap")
+    M.settle(r, 60, 0, -3, n=3, per=16, decay=0.5, hit="io")
+    r.to(150, 1.5, "io").to(180, 0, "io")
+    tl = c.layer("tee", [geo.shape(tee, nm="tee")], p=hook, a=hook, r=r)
+    # the stamp: plate with letter + border-line holes; the same holes cut the tee through the matte
+    sx, sy = 256, 300
+    f = brand_font()
+    letters = geo.U(geo.text("SOLD", f, sx, sy - 38, 54, bold=9, width=236), geo.text("OUT", f, sx, sy + 40, 54, bold=9, width=180))
+    plate = geo.rrect(sx - 162, sy - 102, sx + 162, sy + 102, 30)
+    border = plate.buffer(-16).difference(plate.buffer(-30))
+    cut = geo.U(letters, border)
+    stamp_s = Track([118, 118], 0).hold(44).to(52, [100, 100], "slam").to(53, [96, 104], "lin").to(60, [102, 98], "io").to(66, [100, 100], "io")
+    stamp_s.hold(152).to(166, [114, 114], "i").to(180, [118, 118], "lin")
+    stamp_r = Track(-24, 0).hold(44).to(52, -12, "slam").hold(152).to(166, -20, "i").to(180, -24, "lin")
+    so = Track(0, 0).hold(44).to(46, 100, "lin").hold(156).to(164, 0, "lin").loop(180, "lin")
+    stamp = c.null("stamp", parent=tl, p=(sx, sy), a=(sx, sy), s=stamp_s, r=stamp_r)
+    mt = c.matte(tl, "stampcut", [geo.shape(cut, nm="cut")], parent=stamp, p=(sx, sy), a=(sx, sy))
+    # the matte cuts only once the stamp has landed
+    mt.o = Track(0, 0).hold(44).to(46, 100, "lin").hold(160).to(162, 0, "lin").loop(180, "lin")
+    c.layer("plate", [geo.shape(plate.difference(cut), nm="plate")], parent=stamp, p=(sx, sy), a=(sx, sy), o=so)
+    # smoke puffs from under the plate corners on impact
+    for k, (x0, y0, d) in enumerate(((sx - 150, sy + 90, -1), (sx + 150, sy + 60, 1), (sx - 140, sy - 80, -1))):
+        M.particle(c, f"smoke{k}", K_steam(x0, y0, 70, -d), 53 + k * 2, 30, (x0, y0), (x0 + d * 26, y0 - 50), None,
+                   anchor=(x0, y0), pop=0.15, fade=0.5, fall="decel")
+    for k, (p0, p1) in enumerate((((60, 150), (34, 124)), ((452, 150), (478, 124)), ((60, 440), (34, 466)), ((452, 440), (478, 466)))):
+        ee = Track(0, 0).hold(52).to(59, 100, "o").hold(180)
+        s0 = Track(0, 0).hold(54).to(62, 100, "i").hold(180)
+        c.layer(f"hit{k}", [geo.stroked([p0, p1], 22, e=ee, s=s0)], p=(0, 0), a=(0, 0), ip=52, op=63)
+
+
+def K_steam(x, y, s, d):
+    from xtc import kao
+    return kao.steam(x, y, s, d=d)
+
+
+@emoji("51-latex-heart", "🖤", "латекс, чёрное сердце, люблю, глянец, xtc", "latex, black heart, love, gloss, xtc",
+       "глянцевое сердце медленно вдыхает, на пике по латексу бегут два блика, резиновый отскок, ✦ на кромке",
+       op=150, series="drop")
+def latex_heart(c):
+    cx, cy = 256, 262
+    g = geo.heart(cx, cy, 440)
+    # static gloss: crescent highlight in the upper-left lobe (a hole)
+    hi = geo.ellipse(cx - 104, cy - 96, 58, 30).difference(geo.ellipse(cx - 94, cy - 80, 58, 30))
+    hi = geo.rot(hi, -35, (cx - 104, cy - 96))
+    g = g.difference(hi)
+    s = Track([100, 100], 0).hold(10).to(56, [106, 106], "is").to(62, [103, 109], "io").to(70, [108, 101], "io")
+    s.to(78, [100, 104], "io").to(88, [102, 100], "io").to(98, [99.5, 100.5], "io").to(108, [100, 100], "io").loop(150)
+    heart = c.layer("heart", [geo.shape(g, nm="heart")], p=(cx, cy + 180), a=(cx, cy + 180), s=s)
+    M.glare_sweep(c, heart, cx, cy - 10, 50, 30, travel=300, sparks=[(cx + 120, cy - 118, 42, 70, 30)])
+
+
+@emoji("52-psp", "🎮", "играю, залипаю, геймер, psp, мини-апп", "gaming, playing, psp, gamer, mini app",
+       "PSP в руках: кнопки жмутся комбо, корпус кренится за нажатиями, экран мигает XTC — вибро-отдача и ✦",
+       op=150, series="drop")
+def psp(c):
+    cx, cy = 256, 262
+    body = geo.rrect(22, cy - 112, 490, cy + 112, 104)
+    body = body.difference(geo.rrect(146, cy - 84, 366, cy + 72, 12))            # screen window
+    body = body.difference(geo.rrect(208, cy + 84, 304, cy + 96, 6))              # logo slot
+    lay_rot = Track(0, 0).hold(14)
+    combo = [(16, "up"), (24, "up"), (32, "down"), (42, "b1"), (50, "b2"), (58, "b0")]
+    for t, k in combo:
+        lay_rot.to(t + 3, (-3 if k in ("up", "down") else 3), "snap").to(t + 8, 0, "io")
+    lay_rot.hold(66)
+    jx = Track(cx, 0).hold(66)
+    for k in range(9):
+        jx.to(68 + k * 2, cx + (5 if k % 2 == 0 else -5), "aelin")
+    jx.to(88, cx, "io").loop(150)
+    root = c.null("root", p=Split(jx, cy + 112), a=(cx, cy + 112), r=lay_rot.loop(150))
+    lay = c.layer("body", [geo.shape(body, nm="body")], parent=root, p=(cx, cy), a=(cx, cy))
+    # d-pad (plus-shaped hole) nudges toward the pressed direction
+    dp = geo.U(geo.rrect(58, cy - 44, 124, cy - 20, 8), geo.rrect(79, cy - 66, 103, cy + 2, 8))
+    dpp = Track([0, 0], 0).hold(14)
+    for t, k in combo[:3]:
+        dpp.to(t + 2, [0, -8 if k == "up" else 8], "snap").to(t + 7, [0, 0], "io")
+    geo.hole(lay, dp, nm="dpad", p=dpp.loop(150))
+    geo.hole(lay, geo.disc(91, cy + 50, 20), nm="nub")
+    # face buttons: ring holes that shrink when pressed
+    bts = [(418, cy - 58), (380, cy - 24), (456, cy - 24), (418, cy + 10)]
+    for j, (bx, by) in enumerate(bts):
+        s = Track([100, 100], 0)
+        for t, k in combo[3:]:
+            if k == f"b{j}":
+                s.hold(t).to(t + 2, [45, 45], "snap").to(t + 8, [100, 100], "o")
+        geo.hole(lay, geo.disc(bx, by, 19), nm=f"btn{j}", p=(bx, by), a=(bx, by), s=s.loop(150))
+    # screen content: the logo, flickers like a CRT after the combo, then pulses
+    logo = brand_word("XTC", cx, cy - 6, 50, 170, bold=9)
+    so = Track(100, 0).hold(60)
+    for k in range(6):
+        so.k[-1][2] = "hold"
+        so.k.append([62 + k * 3, 0 if k % 2 == 0 else 100, None])
+    so.hold(150)
+    ss = Track([100, 100], 0).hold(78).to(84, [120, 120], "snap").to(92, [96, 96], "io").to(100, [100, 100], "io").loop(150)
+    c.layer("screen", [geo.shape(logo, nm="logo")], parent=root, p=(cx, cy - 6), a=(cx, cy - 6), s=ss, o=so)
+    M.twinkle(c, "tw", 330, cy - 60, 30, 82, 22, parent=root)
+
+
+@emoji("53-bag-xtc", "👜", "сумка, шоппинг, xtc, покупка, мерч", "bag, shopping, xtc, merch, purchase",
+       "сумка XTC подпрыгивает и делает тяжёлый 360 с толщиной, приземляется с отскоком и ловит ✦ на молнии",
+       op=150, series="drop")
+def bag(c):
+    cx, cy = 256, 296
+    body = geo.poly([(cx - 150, cy - 110), (cx + 150, cy - 110), (cx + 180, cy + 140), (cx - 180, cy + 140)]).buffer(28).buffer(-8)
+    handle = geo.brush(geo.arc(cx, cy - 132, 90, 180, 360, 24), 36, taper=(1, 1), smooth=False)
+    zipper = geo.rrect(cx - 132, cy - 104, cx + 132, cy - 90, 7)
+    tab = geo.rrect(cx + 108, cy - 94, cx + 136, cy - 40, 10).difference(geo.rrect(cx + 116, cy - 70, cx + 128, cy - 50, 5))
+    logo = brand_word("XTC", cx, cy + 34, 64, 230, bold=10)
+    front = geo.U(body.difference(zipper).difference(logo), handle).difference(tab.buffer(6)).union(tab)
+    back = geo.U(body.difference(zipper), handle)
+    gy = cy + 160
+    y = Track(gy, 0).hold(24).to(44, gy - 26, "o").to(70, gy - 30, "io").to(96, gy, "i5").to(104, gy - 10, "o").to(112, gy, "i").loop(150)
+    s = Track([100, 100], 0).hold(14).to(24, [106, 93], "io").to(32, [97, 103], "o").to(48, [100, 100], "io").hold(94)
+    s.to(97, [108, 92], "slam").to(98, [108, 92], "lin").to(106, [97, 103], "io").to(114, [100, 100], "io").loop(150)
+    root = c.null("root", p=Split(cx, y), a=(cx, gy), s=s)
+    segs = [(14, 26, 0, -20, "io"), (26, 104, -20, 374, (0.3, 0.0, 0.14, 1.0)), (104, 118, 374, 360, "io")]
+    M.spin3d(c, "bag", front, back, cx, cy, segs, thick=64, lip=26, parent=root)
+    M.twinkle(c, "tw", cx - 120, cy - 100, 40, 112, 26, parent=root)

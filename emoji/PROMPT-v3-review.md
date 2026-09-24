@@ -1,6 +1,6 @@
 # XTC emoji: ревью и доводка до v3 · промпт для Fable 5.1 (effort: high) · для /goal
 
-Репо `xtc-assets`, ветка `claude/adoring-pascal-kp5dtb`, папка `emoji/`. Копируй всё ниже черты.
+Репо `xtc-assets`. Вся работа v2 лежит в ветке `claude/adoring-pascal-kp5dtb`, папка `emoji/`. Копируй всё ниже черты. Больше ничего прикладывать не нужно.
 
 ---
 
@@ -25,7 +25,19 @@
 4. `python3 qa.py tgs/` → 0 FAIL по всем файлам пака, каждый WARN разобран.
 5. Новая планка шкалы (см. ниже) пройдена каждым эмодзи пака, `scores.csv` переписан под v3.
 6. Сделано минимум **6 новых эмодзи-«вау»** из раздела ИННОВАЦИИ и бренд-предметки.
-7. Выдача `emoji/XTC-emoji-v3.zip`: всё из раздела ВЫДАЧА, закоммичено и запушено в ветку.
+7. Выдача `emoji/XTC-emoji-v3.zip`: всё из раздела ВЫДАЧА, закоммичено и запушено в рабочую ветку.
+
+## ШАГ 0: ОКРУЖЕНИЕ (5 минут)
+
+```bash
+git fetch origin claude/adoring-pascal-kp5dtb && git merge --no-edit origin/claude/adoring-pascal-kp5dtb   # в свою рабочую ветку
+pip install rlottie-python pillow shapely fonttools svgpathtools
+SETUPTOOLS_USE_DISTUTILS=stdlib pip install lottie      # обычный `pip install lottie` падает на новом setuptools
+apt-get install -y potrace                              # для build.py --svg и trace.py
+cd emoji && python3 build.py 01 --view && python3 qa.py tgs/ | tail -1   # проверка, что всё собирается
+```
+
+Настоящий 3D (опционально): `pip install "bpy==4.5.*"` (Python 3.11, рендер Cycles CPU).
 
 ## С ЧЕГО НАЧАТЬ (прочитай всё, прежде чем трогать код)
 
@@ -98,7 +110,7 @@
 ## РЕЖИМ
 
 - Порядок работы: STYLE.md → REVIEW-v3.md → вырез в `pack.CUT` → REDO → новые вау-эмодзи → QA + шкала → арт-дир проход по всему паку подряд глазами клиента (переделай нижние 20%) → выдача.
-- Коммить и пушь в ветку `claude/adoring-pascal-kp5dtb` после каждого этапа. Сообщения коммитов на английском.
+- Коммить и пушь в свою рабочую ветку после каждого этапа. Сообщения коммитов на английском.
 - Можно взять **одного** агента-помощника под параллельную сборку, со строгим разделением файлов. Коммитишь только ты.
 - Отчёт без воды: факты, цифры, номера кадров. Не пиши «проверил», если не запускал.
 

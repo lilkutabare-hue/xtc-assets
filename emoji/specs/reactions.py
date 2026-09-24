@@ -261,10 +261,9 @@ def fire(c):
     s.loop(OP)
     c.layer("flame", [grp], p=(256, 494), a=(256, 494), s=s)
     # embers = little flames tearing off the tips: burst on the flare (stagger 2-3f) + stragglers
-    em = [(55, 262, 92, 292, 58, 30, 16), (57, 136, 170, 84, 110, 32, 15), (59, 400, 196, 452, 136, 30, 15),
-          (62, 214, 140, 176, 76, 28, 13), (65, 322, 150, 372, 92, 28, 13),
-          (8, 300, 118, 330, 66, 34, 12), (28, 142, 180, 104, 116, 34, 12), (94, 392, 200, 438, 140, 34, 12),
-          (108, 236, 110, 214, 58, 32, 12)]
+    em = [(55, 262, 92, 292, 52, 30, 22), (57, 136, 170, 84, 106, 32, 20), (59, 400, 196, 452, 132, 30, 20),
+          (63, 214, 140, 172, 72, 28, 18), (66, 322, 150, 376, 88, 28, 18),
+          (14, 300, 118, 330, 62, 34, 18), (100, 142, 180, 104, 112, 34, 18)]
     for k, (t0, x0, y0, x1, y1, life, r) in enumerate(em):
         g = geo.drop(x0, y0, r, r * 2.8)
         M.particle(c, f"ember{k}", g, t0, life, (x0, y0), (x1, y1), None, anchor=(x0, y0),
@@ -289,98 +288,72 @@ def _affine(sx, tx, ty, sk):
 
 
 @emoji("85-hundred", "💯", "сто, 100, точно, в точку, топ, база", "100, hundred, perfect, facts, exactly",
-       "подчёркивания втягиваются, по «100» прокатывается волна прыжков 1-0-0, каждая черта хлёстко дописывается кистью на приземлении, нули-люверсы подмигивают",
+       "«100» шрифтом лого: нули — люверсы, которые пресс пробивает по очереди (удар, кольцо-волна), единица падает бруском последней, две черты подчёркивания выхлёстываются кистью, ✦ на хроме нуля",
        op=120, series=SERIES)
 def hundred(c):
     OP = 120
-    one = geo.line([(92, 122), (150, 58), (150, 312)], 60, "round", "round")
-    z1c, z2c = (252, 186), (404, 186)
-    z1 = geo.ellipse(*z1c, 74, 128, 24).difference(geo.ellipse(*z1c, 24, 80, 24))
-    z2 = geo.ellipse(*z2c, 74, 128, 24).difference(geo.ellipse(*z2c, 24, 80, 24))
-    u1 = [(78, 380), (250, 370), (474, 354)]
-    u2 = [(120, 446), (300, 438), (430, 428)]
-    raw = U(one, z1, z2, geo.line(u1, W), geo.line(u2, W))
-    gm, pt = _affine(1, 0, 0, 12)
-    b = gm(raw).bounds
-    sc = min((478 - 34) / (b[2] - b[0]), (470 - 50) / (b[3] - b[1]))
-    tx = 256 - (b[0] + b[2]) / 2 * sc
-    ty = 260 - (b[1] + b[3]) / 2 * sc
-    gm, pt = _affine(sc, tx, ty, 12)
-    one, z1, z2 = gm(one), gm(z1), gm(z2)
-    u1, u2 = [pt(p) for p in u1], [pt(p) for p in u2]
-    z1c, z2c = pt(z1c), pt(z2c)
-    base = pt((256, 400))
-    # the mark leans with the wave and gets a kick from each finished underline
-    s = seq([100, 100], [(36, None, None), (38, [101.5, 98.5], "o"), (43, [100, 100], "io"), (46, None, None),
-                         (48, [102, 98], "o"), (54, [99.5, 100.5], "io"), (60, [100, 100], "io")])
-    breathe(s, 60, 120, [100, 100], 0.8, 30)
-    s.loop(OP)
-    r = seq(0, [(14, None, None), (24, -3, "io"), (36, 2.5, "io"), (46, -1, "io"), (56, 0, "io")], op=OP)
-    root = rig(c, "mark", base, s=s, r=r)
-    # a hop wave rolls through the digits (antic squash -> stretch up -> land squash), 5f apart
-    for i, (nm, g, anc) in enumerate((("one", one, pt((150, 312))), ("zero1", z1, z1c), ("zero2", z2, z2c))):
-        t0 = 16 + 5 * i
-        ds = seq([100, 100], [(t0, None, None), (t0 + 4, [106, 94], "io"), (t0 + 9, [93, 107], "decel"),
-                              (t0 + 15, [98, 102], "i"), (t0 + 17, [110, 91], "o"), (t0 + 22, [97, 103], "io"),
-                              (t0 + 28, [100, 100], "io")])
-        if i:
-            M.blink(ds, 82 + 7 * (i - 1), dur=8, closed=10)
-        ds.loop(OP)
-        y = seq(anc[1], [(t0 + 4, None, None), (t0 + 10, anc[1] - 24, "decel"), (t0 + 16, anc[1], "i"),
-                         (t0 + 21, anc[1] - 5, "o"), (t0 + 25, anc[1], "i")], op=OP)
-        part(c, nm, g, root, anc, p=Split(anc[0], y), s=ds)
-    # underlines: sucked back into their start, then whipped out as the first / last digit lands
-    for j, (u, t_in) in enumerate(((u1, 28), (u2, 38))):
-        e = seq(100, [(8 + 2 * j, None, None), (18 + 2 * j, 0, "i"), (t_in, None, None),
-                      (t_in + 9, 100, (0.2, 0.0, 0.1, 1.0))], op=OP, loop_ease="lin")
+    from specs.drop import brand_font
+    one = geo.text("1", brand_font(), 96, 186, 150, bold=12)
+    one = geo.fit_box(one, 36, 96, 132, 276, keep=False)
+    zc = [(232, 186), (412, 186)]
+    root = rig(c, "mark", (256, 300))
+    # the 1: drops in as a bar from above and slams, 1f squash
+    oy = seq(186.0, [(4, None, None), (6, 150.0, "io"), (14, 186.0, "slam")], op=OP)
+    os_ = seq([100, 100], [(13, None, None), (14, [112, 88], "slam"), (15, [112, 88], "lin"), (21, [97, 103], "io"), (27, [100, 100], "io")], op=OP)
+    oo = Track(0, 0)
+    oo.k[-1][2] = "hold"
+    oo.k.append([4, 100, None])
+    oo.hold(112)
+    oo.k[-1][2] = "hold"
+    oo.k.append([113, 0, None])
+    oo.loop(OP, "lin")
+    part(c, "one", one, root, (84, 276), p=Split(84, oy), s=os_, o=oo)
+    # the zeros: eyelets punched by a press, 12f apart (click + shock ring), ✦ on the chrome of the second
+    for k, (x, y) in enumerate(zc):
+        t = 24 + k * 14
+        ring = geo.ring(x, y, 84, 42, 24)
+        zs = seq([0, 0], [(t, None, None), (t + 3, [118, 82], "slam"), (t + 4, [118, 82], "lin"), (t + 11, [94, 106], "o"),
+                          (t + 18, [102, 98], "io"), (t + 25, [100, 100], "io"), (108, None, None), (113, [0, 0], "i")], op=OP, loop_ease="lin")
+        part(c, f"zero{k}", ring, root, (x, y), s=zs)
+        from specs.faces import lot_ring
+        rs = Track([100, 100], 0).hold(t + 2).to(t + 14, [136, 136], "ring").hold(OP)
+        rw = Track(22, 0).hold(t + 2).to(t + 14, 4, "ring").to(t + 18, 0, "i").hold(OP)
+        c.layer(f"z{k}-ring", [lot_ring(x, y, 92, rw)], parent=root, p=(x, y), a=(x, y), s=rs, ip=t + 2, op=t + 19)
+    # whole mark answers the punches
+    root.s = seq([100, 100], [(27, None, None), (30, [102, 98], "o"), (36, [100, 100], "io"), (41, None, None),
+                              (44, [102, 98], "o"), (50, [100, 100], "io")], op=OP)
+    # underlines whip out after the second punch, retract at the end of the loop
+    for j, (u, t_in) in enumerate((([(52, 340), (256, 332), (470, 322)], 48), ([(96, 412), (300, 404), (440, 396)], 56))):
+        e = seq(0, [(t_in, None, None), (t_in + 9, 100, (0.2, 0.0, 0.1, 1.0)), (100 + 2 * j, None, None), (110 + 2 * j, 0, "i")], op=OP, loop_ease="lin")
         c.layer(f"under{j}", [stroke_line(u, W, nm=f"under{j}", e=e)], parent=root, p=(0, 0), a=(0, 0))
+    M.twinkle(c, "tw", 412 + 62, 186 - 62, 34, 66, 22, parent=root)
 
 
 # ================================================================ 86 ✅
 
 
 @emoji("86-check", "✅", "готово, да, сделано, принято, ок, чек", "done, check, yes, approved, ok, complete",
-       "плашка-бирка на люверсе: кисть одним росчерком закрашивает галочку, бирка крутнувшись схлопывается в свой люверс, жирная галочка остаётся одна и раздувается — бирка выстреливает из люверса обратно 108→92→100, покачивается на нём, галочка выворачивается в вырез, с кромки люверса ✦",
+       "бирка на люверсе: галочка прорезается одним росчерком насквозь (матт-вырез), бирка дёргается от прореза и качается на люверсе, ✦ с кромки; к концу лупа прорез затягивается",
        op=120, series=SERIES)
 def check(c):
     OP = 120
-    box = geo.rrect(30, 30, 482, 482, 116)
+    ex, ey = 126, 126
+    box = geo.rrect(30, 30, 482, 482, 116).difference(geo.ring(ex, ey, 34, 15, 20))
     ck = [(140, 262), (222, 344), (378, 166)]
-    cw = 72
-    ex, ey = 126, 126                                   # the hang-tag grommet: the plate hangs and spins on it
-    box = box.difference(geo.ring(ex, ey, 34, 15, 20))
-    holed = box.difference(geo.line(ck, cw, "round", "round"))
-    s = seq([100, 100], [(20, None, None), (26, [106, 94], "io"), (33, [0, 0], "i"), (44, None, None),
-                         (49, [105, 105], "snap"), (55, [95, 95], "io"), (62, [102, 101.5], "io"), (69, [99.5, 100], "io"),
-                         (76, [100, 100], "io")])
-    breathe(s, 76, 120, [100, 100], 0.7, 22)
+    s = seq([100, 100], [(30, None, None), (33, [106, 95], "o"), (40, [98, 102], "io"), (47, [100.5, 99.7], "io"), (54, [100, 100], "io")])
+    breathe(s, 60, 120, [100, 100], 0.6, 30)
     s.loop(OP)
-    r = seq(0, [(20, None, None), (26, 3, "io"), (33, -35, "i"), (44, None, None), (49, 0, "snap"), (55, 2, "io"),
-                (62, -1, "io"), (69, 0, "io")], op=OP)
-    t_swap = t_cross(44, 49, 0, 105, "snap", 100)
-    ts = int(math.ceil(t_swap))
+    r = seq(0, [(30, None, None), (34, 5, "o"), (46, -3, "io"), (58, 1.5, "io"), (70, 0, "io")], op=OP)
     plate = rig(c, "plate", (ex, ey), s=s, r=r)
-    # the plate is holed at rest; solid while the black tick covers the check (no slivers), holed again at the swap
-    oh, osd = Track(100, 0), Track(0, 0)
-    # rlottie still draws a layer on its op frame, so the plate flips one frame after the tick's op
-    for tr_, seq_ in ((oh, ((20, 0), (ts + 1, 100))), (osd, ((20, 100), (ts + 1, 0)))):
-        for t, v in seq_:
-            tr_.k[-1][2] = "hold"
-            tr_.k.append([t, v, None])
-        tr_.loop(OP, "lin")
-    boxl = part(c, "box", holed, plate, (256, 256), o=oh)
-    part(c, "solid", box, plate, (256, 256), o=osd)
-    gx, gy = 186, 88                                    # the glint pops off the grommet's rim
-    gs = seq([0, 0], [(58, None, None), (63, [120, 120], "ox"), (69, [100, 100], "io"), (78, [0, 0], "i"),
-                      (98, None, None), (103, [84, 84], "ox"), (108, [70, 70], "io"), (115, [0, 0], "i")], op=OP, loop_ease="lin")
-    gr = seq(-14, [(58, None, None), (78, 14, "os"), (98, None, None), (115, 40, "os")], op=OP, loop_ease="lin")
-    geo.hole(boxl, spark_g(gx, gy, 42, 0.3), nm="glare", p=(gx, gy), a=(gx, gy), s=gs, r=gr)
-    # the brush inks the white check (slightly wider than the hole), stays alone, swells, sinks back at the swap
-    e = seq(0, [(8, None, None), (19, 100, (0.3, 0.0, 0.2, 1.0))])
-    cs = Track([100, 100], 0).hold(33).to(37, [132, 112], "o").to(41, [118, 128], "io").to(t_swap, [100, 100], "i")
-    cy = seq(256, [(34, None, None), (39, 240, "decel"), (45, 256, "i")])
-    c.layer("tick", [stroke_line(ck, cw + 6, nm="tick", e=e)], p=Split(256, cy), a=(256, 256), s=cs,
-            ip=8, op=ts)
+    lay = part(c, "box", box, plate, (256, 256))
+    # the one matte: a stroke drawn by trim cuts the check through the plate (draw-on of a hole)
+    e = seq(0, [(12, None, None), (30, 100, (0.3, 0.0, 0.2, 1.0)), (100, None, None), (112, 0, "i")], op=OP, loop_ease="lin")
+    st = seq(0, [])
+    c.matte(lay, "cut", [stroke_line(ck, 72, nm="cut", e=e, s=st)], parent=plate, p=(0, 0), a=(0, 0))
+    gx, gy = 186, 88
+    gs = seq([0, 0], [(36, None, None), (41, [120, 120], "ox"), (47, [100, 100], "io"), (58, [0, 0], "i")], op=OP, loop_ease="lin")
+    gr = seq(-14, [(36, None, None), (58, 14, "os")], op=OP, loop_ease="lin")
+    geo.hole(lay, spark_g(gx, gy, 42, 0.3), nm="glare", p=(gx, gy), a=(gx, gy), s=gs, r=gr)
 
 
 # ================================================================ 87 ❌
@@ -466,10 +439,7 @@ def heart(c):
     dx_, dy_ = gl((206, 150))
     rnd, star = spark4(dx_, dy_, 17, 0.98), spark4(dx_, dy_, 40, 0.3)
     hole_path(hl, Track(rnd, 0).hold(47).to(52, star, "ox").hold(60).to(70, rnd, "io").loop(OP), nm="catch")
-    for j, (x0, y0, x1, y1) in enumerate([(118, 322, 62, 428), (394, 322, 450, 428)]):
-        sp = spark_g(x0, y0, 46, 0.36)
-        M.particle(c, f"spark{j}", sp, 47 + 2 * j, 34, (x0, y0), (x1, y1), None, anchor=(x0, y0),
-                   rot=(0, 40 if j else -40), pop=0.2, fade=0.4, fall="o5", xease="o5", s_peak=100)
+    M.glare_sweep(c, hl, hx, hy + 10, 50, 30, travel=300, parent=beat)
 
 
 # ================================================================ 89 💔
@@ -509,7 +479,8 @@ def broken(c):
         io.k[-1][2] = "hold"
         io.k.append([t, v, None])
     io.loop(OP, "lin")
-    part(c, "intact", g, whole, tip, o=io)
+    intact = part(c, "intact", g, whole, tip, o=io)
+    M.glare_sweep(c, intact, hx, hy, 8, 26, travel=280, parent=whole)
     fall = [(40, None, None), (42, 2.5, "snap"), (47, None, None), (49, 5.5, "snap"), (54, None, None),
             (62, 13, "i"), (70, 6.5, "io"), (78, 10, "io"), (86, 8, "io"), (94, 9, "io"), (102, 8.6, "io"),
             (122, None, None), (140, 0, "io3")]
@@ -534,39 +505,22 @@ def broken(c):
 # ================================================================ 90 ✨
 
 
-@emoji("90-sparkles", "✨", "блеск, искры, красота, вау, магия, глянец", "sparkles, shine, magic, glam, wow",
-       "большая ✦ заряжается, вспыхивает острее и поворачивается на 90°, выбрасывает микро-искры — малые ✦ отвечают по очереди 140/124, потом волна мерцания",
-       op=120, series=SERIES)
+@emoji("90-sparkles", "✨", "блеск, искры, красота, вау, магия, глянец, хром", "sparkles, shine, magic, glam, wow, chrome",
+       "хромовый люверс делает тяжёлый оборот ребром: на выходе лицом по кольцу пробегают три ✦-блика по очереди (кромка ловит свет), досадка, потом второй короткий оборот-«подмиг»",
+       op=150, series=SERIES)
 def sparkles(c):
-    OP = 120
-    B, Md, Sm = (212, 298, 150), (382, 146, 80), (410, 402, 54)
-    x, y, R = B
-    shp = Track(spark4(x, y, R, 0.38), 0).hold(24)
-    shp.to(30, spark4(x, y, R, 0.22), "snap").to(44, spark4(x, y, R, 0.38), "io").loop(OP)
-    s = seq([100, 100], [(14, None, None), (24, [86, 86], "io"), (30, [123, 123], "snap"), (37, [93, 93], "io"),
-                         (45, [104, 104], "io"), (53, [100, 100], "io"), (76, None, None), (81, [111, 111], "o"),
-                         (90, [100, 100], "io")], op=OP)
-    r = Track(0, 0).hold(14).to(24, -14, "io").to(31, 62, "snap").to(40, 96, "io").to(48, 88, "io").to(56, 90, "io")
-    c.layer("big", [lot.group([lot.sh(shp, "big"), lot.fill()], nm="big")], p=(x, y), a=(x, y), s=s, r=r)
-    for nm, (x, y, R), t0, peak, spin, tw in (("mid", Md, 32, 140, -90, 86), ("small", Sm, 40, 124, 90, 92)):
-        s = seq([100, 100], [(t0, None, None), (t0 + 4, [72, 72], "io"), (t0 + 10, [peak, peak], "snap"),
-                             (t0 + 17, [90, 90], "io"), (t0 + 24, [104, 104], "io"), (t0 + 31, [100, 100], "io"),
-                             (tw, None, None), (tw + 5, [114, 114], "o"), (tw + 14, [100, 100], "io")], op=OP)
-        r = Track(0, 0).hold(t0 + 4).to(t0 + 12, spin * 0.8, "snap").to(t0 + 24, spin * 1.04, "io").to(t0 + 31, spin, "io")
-        part(c, nm, spark_g(x, y, R, 0.38), None, (x, y), s=s, r=r)
-    x, y, R = B
-    ring = lot.group([lot.sh(smooth([(x + 120 * math.cos(a), y + 120 * math.sin(a)) for a in
-                                     [2 * math.pi * i / 8 for i in range(8)]]), "ring"),
-                      lot.stroke(seq(24, [(31, None, None), (48, 0, "ring")]))],
-                     nm="ring", p=(x, y), a=(x, y), s=seq([92, 92], [(31, None, None), (48, [146, 146], "ring")]))
-    c.layer("shine", [ring], ip=31, op=48)
-    for k, (dx, dy) in enumerate(((0, -1), (1, 0), (0, 1), (-1, 0))):
-        x0, y0 = x + dx * R * 0.7, y + dy * R * 0.7
-        x1 = min(max(x + dx * R * 1.16 - dy * 20, 40), 472)
-        y1 = min(max(y + dy * R * 1.16 + dx * 20, 40), 472)
-        M.particle(c, f"micro{k}", spark_g(x0, y0, 24, 0.38), 30 + k, 20, (x0, y0), (x1, y1), None,
-                   anchor=(x0, y0), rot=(0, 45), fall="o5", xease="o5", pop=0.15, fade=0.5)
-    twinkle(c, "late", 92, 96, 30, 96, dur=18, spin=50)
+    OP = 150
+    cx, cy = 256, 262
+    ring = geo.ring(cx, cy, 196, 104, 32)
+    ss = seq([100, 100], [(8, None, None), (18, [94, 106], "io"), (26, [100, 100], "o"), (74, None, None), (78, [104, 97], "o"),
+                          (86, [99, 101], "io"), (94, [100, 100], "io")], op=OP)
+    body = rig(c, "body", (cx, cy + 196), s=ss)
+    segs = [(18, 74, 0, 360, (0.35, 0.0, 0.14, 1.0)), (110, 136, 360, 720, (0.4, 0.0, 0.2, 1.0))]
+    root, th, fr, bk = M.spin3d(c, "eyelet", ring, ring, cx, cy, segs, thick=46, lip=30, parent=body)
+    for k, (ang, t0, r) in enumerate(((-60, 70, 64), (30, 80, 48), (150, 90, 40))):
+        a = math.radians(ang)
+        M.twinkle(c, f"tw{k}", cx + 150 * math.cos(a), cy + 150 * math.sin(a), r, t0, 30, parent=root, spin=30)
+    M.twinkle(c, "tw3", cx + 150 * math.cos(math.radians(-60)), cy + 150 * math.sin(math.radians(-60)), 50, 136, 14, parent=root)
 
 
 # ================================================================ 91 ⚡

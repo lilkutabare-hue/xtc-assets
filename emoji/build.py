@@ -64,7 +64,8 @@ def main():
     ap.add_argument("--svg", action="store_true")
     ap.add_argument("--multi", action="store_true", help="one combined review image for all built")
     a = ap.parse_args()
-    names = sorted(n for n in REG if not a.names or any(x in n for x in a.names))
+    from pack import CUT
+    names = sorted(n for n in REG if (any(x in n for x in a.names) if a.names else n not in CUT))
     for n in names:
         out = build(n)
         print(f"{n:34} {os.path.getsize(out) / 1024:5.1f}KB")

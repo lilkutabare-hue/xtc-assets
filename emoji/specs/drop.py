@@ -141,7 +141,7 @@ def payme(c):
     for t in times:
         board_push(bs, t + 10)
     board = c.null("board", p=(256, cy + h / 2), a=(256, cy + h / 2), s=bs.loop(180))
-    board_row(c, "t", board, ["XTC", "PAY", "ME*"], times, cy, w, h, gap=16)
+    board_row(c, "t", board, ["XTC", "PAY", "ME "], times, cy, w, h, gap=16)
 
 
 @emoji("49-board-dropnow", "🚀", "дроп, сейчас, старт, погнали, drop now", "drop now, launch, go, live, drop",
@@ -230,38 +230,6 @@ def cross(c):
         l.ip, l.op = 30, 150
     for k, (x, y) in enumerate(((cx + 112, cy - 104), (cx - 112, cy + 104), (cx - 116, cy - 100), (cx + 116, cy + 100))):
         M.twinkle(c, f"tw{k}", x, y, 40, 124 + k * 5, 24)
-
-
-@emoji("45-buckle-lock", "🔒", "застегнись, договорились, замок, закрыто, ремень", "lock, deal, locked, belt, buckle",
-       "ремень с люверсами захлёстывается дугой-дужкой в массивную пряжку, язычок щёлкает — замок закрыт, ✦ по хрому",
-       op=150, series="drop")
-def buckle(c):
-    import math as m
-    bx, by, bw, bh, fr = 256, 356, 300, 196, 50
-    body = geo.rrect(bx - bw / 2, by - bh / 2, bx + bw / 2, by + bh / 2, 46).difference(
-        geo.rrect(bx - bw / 2 + fr, by - bh / 2 + fr, bx + bw / 2 - fr, by + bh / 2 - fr, 16))
-    # the belt shackle: arch from the left leg over the top into the right leg
-    lx, rx, top = bx - 84, bx + 84, 64
-    arch = [(lx, by - 10), (lx, 200)] + geo.arc(bx, 200, 84, 180, 360, 24)[1:] + [(rx, by - 30)]
-    e = Track(22, 0).hold(10).to(40, 100, (0.5, 0.0, 0.2, 1.0)).hold(120).to(146, 22, "io").loop(150)
-    ss = Track([100, 100], 0).hold(40).to(42, [108, 92], "slam").to(43, [108, 92], "lin").to(50, [97, 104], "io").to(58, [101, 99], "io").to(64, [100, 100], "io").loop(150)
-    root = c.null("root", p=(bx, by + bh / 2), a=(bx, by + bh / 2), s=ss)
-    strap = c.layer("strap", [geo.stroked(arch, 66, e=e, cap=2)], parent=root, p=(0, 0), a=(0, 0))
-    # eyelets punched through the strap (the one matte): along the arch
-    holes = [geo.disc(lx, 240, 17), geo.disc(bx - 60, 142, 17), geo.disc(bx, 118, 17), geo.disc(bx + 60, 142, 17), geo.disc(rx, 240, 17)]
-    c.matte(strap, "eyelets", [geo.shape(geo.U(*holes), nm="holes")], parent=root, p=(0, 0), a=(0, 0))
-    c.layer("body", [geo.shape(body, nm="body")], parent=root, p=(bx, by), a=(bx, by))
-    # prong: bar across the opening, flips up while the strap comes, slams down at 40
-    prong = geo.rrect(bx - 80, by - 14, bx + 62, by + 14, 14)
-    pr = Track(0, 0).hold(12).to(26, -34, "io").hold(36).to(41, 4, "slam").to(46, -3, "io").to(52, 0, "io").loop(150)
-    c.layer("prong", [geo.shape(prong, nm="prong")], parent=root, p=(bx - 80, by), a=(bx - 80, by), r=pr)
-    speed = [((bx - 180, by - 80), (bx - 214, by - 102)), ((bx + 180, by - 80), (bx + 214, by - 102)),
-             ((bx - 180, by + 40), (bx - 218, by + 52)), ((bx + 180, by + 40), (bx + 218, by + 52))]
-    for k, (p0, p1) in enumerate(speed):
-        ee = Track(0, 0).hold(40).to(47, 100, "o").hold(150)
-        s0 = Track(0, 0).hold(42).to(50, 100, "i").hold(150)
-        c.layer(f"hit{k}", [geo.stroked([p0, p1], 22, e=ee, s=s0)], p=(0, 0), a=(0, 0), ip=40, op=51)
-    M.twinkle(c, "tw", bx + bw / 2 - 20, by - bh / 2 + 16, 40, 50, 24, parent=root)
 
 
 @emoji("46-eyelets-wow", "😮", "вау, ого, офигеть, люверсы, о", "wow, whoa, oh, eyelets, surprised",
@@ -357,52 +325,6 @@ def latex_heart(c):
     s.to(78, [100, 104], "io").to(88, [102, 100], "io").to(98, [99.5, 100.5], "io").to(108, [100, 100], "io").loop(150)
     heart = c.layer("heart", [geo.shape(g, nm="heart")], p=(cx, cy + 180), a=(cx, cy + 180), s=s)
     M.glare_sweep(c, heart, cx, cy - 10, 50, 30, travel=300, sparks=[(cx + 120, cy - 118, 42, 70, 30)])
-
-
-@emoji("52-psp", "🎮", "играю, залипаю, геймер, psp, мини-апп", "gaming, playing, psp, gamer, mini app",
-       "PSP в руках: кнопки жмутся комбо, корпус кренится за нажатиями, экран мигает XTC — вибро-отдача и ✦",
-       op=150, series="drop")
-def psp(c):
-    cx, cy = 256, 262
-    body = geo.rrect(22, cy - 112, 490, cy + 112, 104)
-    body = body.difference(geo.rrect(146, cy - 84, 366, cy + 72, 12))            # screen window
-    body = body.difference(geo.rrect(208, cy + 84, 304, cy + 96, 6))              # logo slot
-    lay_rot = Track(0, 0).hold(14)
-    combo = [(16, "up"), (24, "up"), (32, "down"), (42, "b1"), (50, "b2"), (58, "b0")]
-    for t, k in combo:
-        lay_rot.to(t + 3, (-3 if k in ("up", "down") else 3), "snap").to(t + 8, 0, "io")
-    lay_rot.hold(66)
-    jx = Track(cx, 0).hold(66)
-    for k in range(9):
-        jx.to(68 + k * 2, cx + (5 if k % 2 == 0 else -5), "aelin")
-    jx.to(88, cx, "io").loop(150)
-    root = c.null("root", p=Split(jx, cy + 112), a=(cx, cy + 112), r=lay_rot.loop(150))
-    lay = c.layer("body", [geo.shape(body, nm="body")], parent=root, p=(cx, cy), a=(cx, cy))
-    # d-pad (plus-shaped hole) nudges toward the pressed direction
-    dp = geo.U(geo.rrect(58, cy - 44, 124, cy - 20, 8), geo.rrect(79, cy - 66, 103, cy + 2, 8))
-    dpp = Track([0, 0], 0).hold(14)
-    for t, k in combo[:3]:
-        dpp.to(t + 2, [0, -8 if k == "up" else 8], "snap").to(t + 7, [0, 0], "io")
-    geo.hole(lay, dp, nm="dpad", p=dpp.loop(150))
-    geo.hole(lay, geo.disc(91, cy + 50, 20), nm="nub")
-    # face buttons: ring holes that shrink when pressed
-    bts = [(418, cy - 58), (380, cy - 24), (456, cy - 24), (418, cy + 10)]
-    for j, (bx, by) in enumerate(bts):
-        s = Track([100, 100], 0)
-        for t, k in combo[3:]:
-            if k == f"b{j}":
-                s.hold(t).to(t + 2, [45, 45], "snap").to(t + 8, [100, 100], "o")
-        geo.hole(lay, geo.disc(bx, by, 19), nm=f"btn{j}", p=(bx, by), a=(bx, by), s=s.loop(150))
-    # screen content: the logo, flickers like a CRT after the combo, then pulses
-    logo = brand_word("XTC", cx, cy - 6, 50, 170, bold=9)
-    so = Track(100, 0).hold(60)
-    for k in range(6):
-        so.k[-1][2] = "hold"
-        so.k.append([62 + k * 3, 0 if k % 2 == 0 else 100, None])
-    so.hold(150)
-    ss = Track([100, 100], 0).hold(78).to(84, [120, 120], "snap").to(92, [96, 96], "io").to(100, [100, 100], "io").loop(150)
-    c.layer("screen", [geo.shape(logo, nm="logo")], parent=root, p=(cx, cy - 6), a=(cx, cy - 6), s=ss, o=so)
-    M.twinkle(c, "tw", 330, cy - 60, 30, 82, 22, parent=root)
 
 
 @emoji("53-bag-xtc", "👜", "сумка, шоппинг, xtc, покупка, мерч", "bag, shopping, xtc, merch, purchase",

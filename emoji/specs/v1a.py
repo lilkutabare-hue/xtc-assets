@@ -447,6 +447,7 @@ def dagger_heart(c):
     OP = 120
     hc = (256, 286)
     heart = geo.heart(256, 296, 360)
+    heart = heart.difference(geo.rot(geo.ellipse(150, 230, 46, 22).difference(geo.ellipse(158, 244, 46, 22)), -35, (150, 230)))
     dg = _dagger(top=30)
     dg = affinity.scale(dg, 0.86, 0.86, origin=(256, 256))
     dg = geo.rot(dg, 30, (256, 256))
@@ -797,8 +798,8 @@ def less3(c):
     thump.k[1][2] = "hold"
     thump.k[-3][2] = "hold"
     thump.loop(OP, "lin")
-    part(c, "kiss", heart, None, (256, 262), s=thump, ip=67, op=97)
-    M.twinkle(c, "tw", 256, 62, 32, 72, 22)
+    kiss = part(c, "kiss", heart, None, (256, 262), s=thump, ip=67, op=97)
+    M.glare_sweep(c, kiss, 256, 262, 70, 22, travel=300)
 
 
 # ================================================================ 23 🌟

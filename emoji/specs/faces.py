@@ -57,9 +57,9 @@ def laugh(c):
     # corners of the canvas and land beside the mouth; the tip trails the velocity
     for side, d in enumerate((-1, 1)):
         x0 = CX + d * 150
-        for k in range(5):
-            t0 = 16 + k * 13 + side * 5
-            M.particle(c, f"tear{side}{k}", K.tear(x0, 170, 24), t0, 34,
+        for k in range(4):
+            t0 = 16 + k * 16 + side * 6
+            M.particle(c, f"tear{side}{k}", K.tear(x0, 170, 30), t0, 34,
                        (x0, 170), (CX + d * (212 - 8 * (k % 2)), 372 - 18 * (k % 3)), apex=58 + 14 * (k % 2),
                        parent=face, rot=(-d * 163, -d * 8), anchor=(x0, 170), s_peak=100 - 8 * (k % 2))
 
@@ -202,7 +202,10 @@ def heart_eyes(c):
         es.to(66 + t0, [92, 92], "io").to(74 + t0, [103, 103], "io").to(82 + t0, [100, 100], "io")
         es.hold(98).to(103, [110, 110], "snap").to(112, [100, 100], "io").loop(120)
         rr = Track(0, 0).hold(27 + t0).to(40 + t0, (-1) ** i * 8, "io").to(56 + t0, (-1) ** (i + 1) * 6, "io").to(70 + t0, 0, "io").loop(120)
-        part(c, f"eye{i}", K.heye(x, 208, 150), face, (x, 216), s=es, r=rr)
+        hg = K.heye(x, 208, 150)
+        gloss = geo.rot(geo.ellipse(x - 34, 176, 22, 11).difference(geo.ellipse(x - 30, 182, 22, 11)), -35, (x - 34, 176))
+        part(c, f"eye{i}", hg.difference(gloss), face, (x, 216), s=es, r=rr)
+        M.twinkle(c, f"tw{i}", x + 62, 150, 30, 27 + t0, 18, parent=face)
     ms = Track([100, 100], 0).hold(26).to(34, [112, 124], "snap").hold(56).to(68, [100, 100], "io").loop(120)
     part(c, "mouth", K.m_w(CX, 372, 170, 50), face, (CX, 360), s=ms)
 
@@ -225,6 +228,7 @@ def kiss(c):
     # the heart: shoots out of the lips with a 140% vertical stretch (M25), arcs up-right, beats once, pops
     hx, hy = CX + 70, 330
     g = geo.heart(hx, hy, 150)
+    g = g.difference(geo.rot(geo.ellipse(hx - 34, hy - 30, 22, 11).difference(geo.ellipse(hx - 30, hy - 24, 22, 11)), -35, (hx - 34, hy - 30)))
     p = Split(Track(hx, 0).hold(34).to(80, 392, "os"), Track(hy, 0).hold(34).to(80, 118, "decel"))
     s = Track([0, 0], 0).hold(34).to(40, [70, 140], "snapo").to(50, [104, 96], "io").to(58, [100, 100], "io")
     s.hold(70).to(75, [118, 118], "snap").to(80, [126, 126], "io").to(84, [0, 0], "i5").loop(120, "lin")
@@ -262,7 +266,11 @@ def rage(c):
         vs.to(t + dt * 0.35, [a, a], "snap").to(t + dt, [a - 16, a - 16], "io")
         t += dt
     vs.to(t + 6, [124, 124], "snap").hold(100).to(114, [100, 100], "io").hold(132).to(142, [0, 0], "i").loop(150, "lin")
-    part(c, "vein", K.vein(vx, vy, 92, 24), face, (vx, vy), s=vs)
+    part(c, "vein", geo.xmark(vx, vy, 84, 30), face, (vx, vy), s=vs)
+    for d in (-1, 1):
+        ex = CX + d * 178
+        er = Track([100, 100], 0).hold(70).to(76, [124, 124], "snap").to(84, [96, 96], "io").to(92, [100, 100], "io").loop(150)
+        part(c, f"ear{d}", geo.eyelet(ex, 300, 40, 20), face, (ex, 300), s=er)
     # peak: impact lines burst around the head (M8)
     for k, (p0, p1) in enumerate((((96, 96), (64, 64)), ((416, 96), (448, 64)), ((70, 420), (40, 446)), ((442, 420), (472, 446)))):
         e = Track(0, 0).hold(76).to(83, 100, "o").hold(150)
@@ -272,7 +280,7 @@ def rage(c):
     for side, d in enumerate((-1, 1)):
         for k in range(3):
             t0 = 76 + k * 5 + side * 2
-            x0 = CX + d * 172
+            x0 = CX + d * 178
             M.particle(c, f"steam{side}{k}", K.steam(x0, 300, 76 - k * 12, d=-d), t0, 30,
                        (x0, 300), (x0 + d * 10, 120 - k * 30), None, parent=face, anchor=(x0, 300),
                        pop=0.15, fade=0.5, fall="decel", s_peak=100 - k * 10)
@@ -624,7 +632,8 @@ def skull(c):
     face = rig(c, p=(cx, 300), s=s, r=rr)
     face.a = (cx, 300)
     cran = geo.U(geo.disc(cx, 200, 166, 24), geo.rrect(cx - 116, 220, cx + 116, 356, 40))
-    cran = cran.difference(geo.ellipse(cx - 70, 222, 50, 58)).difference(geo.ellipse(cx + 70, 222, 50, 58))
+    cran = cran.difference(geo.ellipse(cx - 70, 222, 52, 56)).difference(geo.ellipse(cx + 70, 222, 52, 56))
+    cran = geo.U(cran, geo.disc(cx - 70, 226, 24), geo.disc(cx + 70, 226, 24))
     cran = cran.difference(geo.poly([(cx, 276), (cx - 24, 318), (cx + 24, 318)]).buffer(6))
     for k in range(3):
         tx = cx - 56 + k * 56

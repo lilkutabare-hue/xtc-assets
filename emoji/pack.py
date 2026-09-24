@@ -17,27 +17,31 @@ sys.path.insert(0, HERE)
 # pack order: cover -> brand & DROP -> faces (joy -> anger -> shock -> sadness) -> reactions -> symbols -> badges
 ORDER = """
 01-pill-x
-44-cross-amen 50-soldout-tee 47-flipclock 48-board-payme 49-board-dropnow 112-box-drop 45-buckle-lock 51-latex-heart
-52-psp 53-bag-xtc 109-bills 46-eyelets-wow 29-drip-xtc 20-split-pill 16-heart-pill
-54-laugh 55-rofl 35-kao-happy 58-heart-eyes 59-kiss 104-drool 108-yum 107-hug 39-kao-wink 66-smirk 68-cool 105-nerd
-70-party 71-devil 81-angel 42-kao-tongue 02-acid-xx 38-kao-tear 80-salute 64-think 101-raised-brow 79-moai 67-unamused
-65-eyeroll 37-kao-meh 102-zipper-mouth 103-yawn 76-sleep 63-flushed 69-peek 77-grimace 78-clown
-60-rage 100-huff 61-swear 34-kao-squeeze
-62-scream 40-kao-shock 75-mind-blown
-57-plead 36-kao-cry 56-sob 73-melt 74-dizzy 106-woozy 82-nausea 33-kao-xx 72-skull
-83-eyes 84-fire 85-hundred 86-check 87-cross 88-heart 89-broken-heart 90-sparkles 91-zap 92-question 93-exclaim
-110-popper 111-siren 113-cocktail 114-headphones
-126-thumbs-up 127-thumbs-down 128-victory 129-rock 130-wave
-14-barbed-heart 15-dagger-heart 26-tribal-heart 22-kiss-less3 04-tramp-stamp 10-club-key 13-dagger-cross
-18-spike-collar 19-thorn-star 23-dot-star 28-tribal-cross 27-tribal-eye 24-print-scan 25-mask-glyphs
-21-teddy-skull 03-sigil-x 43-scorpion-sigil 31-cyber-butterfly 32-swallow 17-winged-x 41-patch-x 30-club-banner
-94-lol 95-omg 96-wtf 97-ok 98-no 99-yes 115-gm 116-gn 117-xoxo 118-soon 119-sold-out 120-new 121-xtc
+44-cross-amen 138-seal 50-soldout-tee 137-tee-daynight 134-louverse-tank 135-latexx-pants 45-buckle-lock 136-flash
+47-flipclock 48-board-payme 49-board-dropnow 131-tile-x 132-tile-t 133-tile-c 112-box-drop 109-bills
+51-latex-heart 52-psp 53-bag-xtc 29-drip-xtc 20-split-pill 16-heart-pill
+54-laugh 58-heart-eyes 59-kiss 68-cool 02-acid-xx 61-swear 60-rage 102-zipper-mouth
+75-mind-blown 57-plead 56-sob 73-melt 72-skull 83-eyes
+84-fire 85-hundred 86-check 87-cross 88-heart 89-broken-heart 90-sparkles 111-siren 113-cocktail 114-headphones
+14-barbed-heart 15-dagger-heart 22-kiss-less3 13-dagger-cross 19-thorn-star 41-patch-x 32-swallow 25-mask-glyphs
+94-lol 95-omg 96-wtf 97-ok 98-no 99-yes 115-gm 116-gn 117-xoxo 118-soon 120-new 121-xtc
 """.split()
-# failed the scale after 2 attempts -> not in the pack (reasons also in scores.csv / REPORT.md)
-CUT = {
+# not in v3 (reasons: REVIEW-v3.md)
+CUT_V2 = {
     "119-sold-out": "7 букв на 512 не читаются на 24px; SOLD OUT уже закрыт эмодзи 50",
     "127-thumbs-down": "2 попытки, Σ27: перевёрнутый 👍 на 24px читается буквой F",
 }
+CUT_V3 = """
+46-eyelets-wow 55-rofl 62-scream 63-flushed 64-think 65-eyeroll 66-smirk 67-unamused 69-peek 70-party 71-devil
+74-dizzy 76-sleep 77-grimace 78-clown 79-moai 80-salute 81-angel 82-nausea 100-huff 101-raised-brow 103-yawn
+104-drool 105-nerd 106-woozy 107-hug 108-yum 33-kao-xx 34-kao-squeeze 35-kao-happy 36-kao-cry 37-kao-meh
+38-kao-tear 39-kao-wink 40-kao-shock 42-kao-tongue
+91-zap 92-question 93-exclaim 110-popper 126-thumbs-up 128-victory 129-rock 130-wave
+03-sigil-x 04-tramp-stamp 10-club-key 17-winged-x 18-spike-collar 21-teddy-skull 23-dot-star 24-print-scan
+26-tribal-heart 27-tribal-eye 28-tribal-cross 30-club-banner 31-cyber-butterfly 43-scorpion-sigil
+""".split()
+CUT = dict(CUT_V2)
+CUT.update({n: "см. REVIEW-v3.md" for n in CUT_V3})
 
 
 def reg():
@@ -84,9 +88,9 @@ def manifest(kind="final"):
 
 def make_zip(kind, sheets_dir=None):
     names = order(kind)
-    out = os.path.join(HERE, "XTC-emoji-v2-P0.zip" if kind == "P0" else "XTC-emoji-v2.zip")
+    out = os.path.join(HERE, "XTC-emoji-v3-P0.zip" if kind == "P0" else "XTC-emoji-v3.zip")
     files = ["build.py", "qa.py", "pack.py", "upload.py", "trace.py", "moodboard.md", "concepts.md", "scores.csv",
-             "manifest.csv", "upload.md", "REPORT.md"]
+             "manifest.csv", "upload.md", "REPORT.md", "STYLE.md", "REVIEW-v3.md"]
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         for f in files:
             p = os.path.join(HERE, f)
@@ -119,8 +123,8 @@ def report():
     R = reg()
     sc = {r["file"]: r for r in csv.DictReader(open(os.path.join(HERE, "scores.csv")))}
     names = order("final")
-    lines = ["# XTC emoji v2 — отчёт", "",
-             f"В паке **{len(names)}** adaptive-эмодзи (TGS 512, 60 fps, 1–3 с). `qa.py`: 0 FAIL; у всех все минимумы шкалы + Σ≥29.",
+    lines = ["# XTC emoji v3 — отчёт", "",
+             f"В паке **{len(names)}** adaptive-эмодзи (TGS 512, 60 fps, 1–3 с). `qa.py`: 0 FAIL; у всех каждый критерий ≥4, плавность/луп 5, Σ≥31, свэг-тест STYLE.md.",
              "Порядок = `manifest.csv` (первый — обложка). Оценки по 7 критериям с обоснованиями — `scores.csv`.", "",
              "| # | файл | 🔣 | история | Σ/35 | KB |", "|---|---|---|---|---|---|"]
     for i, n in enumerate(names, 1):

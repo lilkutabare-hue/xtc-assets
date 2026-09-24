@@ -910,15 +910,4 @@ def headphones(c):
         cxs.loop(OP)
         cs.loop(OP)
         part(c, f"cup{sd}", cup, hp, (x0, cy), p=Split(cxs, float(cy)), s=cs)
-        # sound arcs: drawn out from their middle, then swept outward and trimmed away
-        for t, k in beats:
-            for j, r in enumerate((68, 96)):
-                a0 = 0 if sg == 1 else 180
-                pts = [(x0 + r * math.cos(math.radians(a0 + d)), cy - r * math.sin(math.radians(a0 + d))) for d in range(-48, 49, 4)]
-                t0 = t + 1 + 3 * j
-                e = Track(50, t0).to(t0 + 5, 97, "o").hold(t0 + 7).to(t0 + 16, 50, "i")
-                st = Track(50, t0).to(t0 + 5, 3, "o").hold(t0 + 7).to(t0 + 16, 50, "i")
-                sc = Track([92, 92], t0).to(t0 + 16, [104, 104], "o")
-                c.layer(f"wave{sd}{t}{j}", [geo.stroked(pts, 18 if k < 1.5 else 24, nm="w", e=e, s=st)], parent=hp,
-                        p=(x0, cy), a=(x0, cy), s=sc, ip=t0, op=t0 + 16)
     M.twinkle(c, "tw", cx + 100, 112, 42, 92, 24, parent=hp)

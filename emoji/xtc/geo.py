@@ -361,12 +361,44 @@ def text(s, fnt, x, y, h, tracking=0.06, bold=0.0, width=None, anchor="c"):
 # ---------------------------------------------------------------- svg (v1 geometry)
 
 
+def _svg_transform(t):
+    """parse translate/scale/matrix into an affine (a, b, c, d, e, f): x' = a x + c y + e, y' = b x + d y + f."""
+    import re
+    m = [1, 0, 0, 1, 0, 0]
+
+    def mul(p, q):
+        a1, b1, c1, d1, e1, f1 = p
+        a2, b2, c2, d2, e2, f2 = q
+        return [a1 * a2 + c1 * b2, b1 * a2 + d1 * b2, a1 * c2 + c1 * d2, b1 * c2 + d1 * d2,
+                a1 * e2 + c1 * f2 + e1, b1 * e2 + d1 * f2 + f1]
+    for name, args in re.findall(r"(\w+)\(([^)]*)\)", t or ""):
+        v = [float(x) for x in re.split(r"[ ,]+", args.strip()) if x]
+        if name == "translate":
+            q = [1, 0, 0, 1, v[0], v[1] if len(v) > 1 else 0]
+        elif name == "scale":
+            q = [v[0], 0, 0, v[1] if len(v) > 1 else v[0], 0, 0]
+        elif name == "matrix":
+            q = v
+        else:
+            continue
+        m = mul(m, q)
+    return m
+
+
 def svg(path):
+    """SVG paths -> shapely (evenodd), honouring group transforms (potrace output uses them)."""
     import xml.etree.ElementTree as ET
     from svgpathtools import parse_path
     root = ET.parse(path).getroot()
     g = Polygon()
-    for el in root.iter():
+
+    def walk(el, m):
+        nonlocal g
+        t = _svg_transform(el.get("transform"))
+        a1, b1, c1, d1, e1, f1 = m
+        a2, b2, c2, d2, e2, f2 = t
+        m = [a1 * a2 + c1 * b2, b1 * a2 + d1 * b2, a1 * c2 + c1 * d2, b1 * c2 + d1 * d2,
+             a1 * e2 + c1 * f2 + e1, b1 * e2 + d1 * f2 + f1]
         if el.tag.endswith("path"):
             p = parse_path(el.get("d"))
             for sub in p.continuous_subpaths():
@@ -375,9 +407,13 @@ def svg(path):
                     n = 1 if seg.__class__.__name__ == "Line" else 12
                     for i in range(n):
                         z = seg.point(i / n)
-                        pts.append((z.real, z.imag))
+                        x, y = z.real, z.imag
+                        pts.append((m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]))
                 if len(pts) >= 3:
                     g = g.symmetric_difference(Polygon(pts).buffer(0))
+        for ch in el:
+            walk(ch, m)
+    walk(root, [1, 0, 0, 1, 0, 0])
     return g
 
 

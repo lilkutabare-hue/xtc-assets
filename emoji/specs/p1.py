@@ -89,6 +89,13 @@ def ypos(tr):
     return out
 
 
+def ypos_abs(tr, y0):
+    """a 1D y-offset track as absolute y (for Split positions)."""
+    out = Track(y0 + tr.k[0][1], 0)
+    out.k = [[t, y0 + v, e] for t, v, e in tr.k]
+    return out
+
+
 def hole_path(layer, path, nm="hole", **t):
     layer.shapes[0]["it"].insert(0, lot.group([lot.sh(path, nm)], nm=nm, **t))
     return layer
@@ -543,3 +550,364 @@ def bills(c):
         r = seq(0, [(t0 + 6, -4, "o"), (t0 + 30, float(bank), "io"), (t0 + 46, bank * 1.6, "io")])
         c.layer(f"bill{k}", [grp(R, thR, "R"), grp(L, thL, "L")], p=Split(px, py), a=(cx, ys), s=s, r=r,
                 ip=t0, op=t0 + 47)
+
+
+# ================================================================ 110 🎉
+
+
+@emoji("110-popper", "🎉", "ура, празднуем, поздравляю, бах, вечеринка, успех", "party popper, congrats, hooray, celebrate, bang, tada",
+       "хлопушка взводится (шнур с люверсом натягивается, конус сжимается и дрожит) — БАХ: отдача назад, из раструба вылетают серпантины-завитки и конфетти ✦/X, которые, кувыркаясь, планируют вниз",
+       op=150, series=SERIES)
+def popper(c):
+    OP, TB = 150, 34                                  # TB = bang
+    tip, ang = (118, 414), 45                          # cone tip (world) and tilt (local up -> up-right)
+    lc = (256, 370)                                    # tip in the cone's local drawing
+    cone = geo.poly([(256 - 90, 150), (256 + 90, 150), (256 + 12, 372), (256 - 12, 372)]).buffer(6)
+    cone = U(cone, geo.ellipse(256, 150, 98, 34, 24))
+    cone = cone.difference(geo.ellipse(256, 150, 74, 17, 20))
+    for yb in (228, 298):
+        cone = cone.difference(geo.rot(geo.rect(100, yb - 8, 412, yb + 8), -14, (256, yb)))
+    # windup: squash along the axis, lean back, tremble; bang: stretch + kick back along the axis; settle
+    s = seq([100, 100], [(8, None, None), (26, [108, 90], "io"), (TB - 1, None, None), (TB + 2, [88, 118], "ox"),
+                         (TB + 10, [104, 96], "io"), (TB + 20, [99, 101], "io"), (TB + 30, [100, 100], "io")])
+    breathe(s, 120, 150, [100, 100], 0.8, 30)
+    s.loop(OP)
+    r = seq(float(ang), [(8, None, None), (26, ang + 7.0, "io"), (TB - 1, None, None), (TB + 3, ang - 9.0, "ox"),
+                         (TB + 16, ang + 3.0, "io"), (TB + 28, float(ang), "io")], op=OP)
+    kx = seq(0.0, [(TB - 1, None, None), (TB + 3, -22.0, "ox"), (TB + 18, 3.0, "io"), (TB + 28, 0.0, "io")], op=OP)
+    tx = seq(float(tip[0]), [(18, None, None)], f=float)
+    jitter(tx, 18, TB - 1, float(tip[0]), 1.8, 2)
+    tx.to(TB + 3, tip[0] - 22.0, "ox").to(TB + 18, tip[0] + 3.0, "io").to(TB + 28, float(tip[0]), "io").loop(OP)
+    ty = seq(float(tip[1]), [(TB - 1, None, None), (TB + 3, tip[1] + 22.0, "ox"), (TB + 18, tip[1] - 3.0, "io"),
+                             (TB + 28, float(tip[1]), "io")], op=OP)
+    body = c.layer("cone", [geo.shape(cone, nm="cone")], p=Split(tx, ty), a=lc, s=s, r=r)
+    # pull string with an eyelet: tugged down-left during the windup, whips back on the bang
+    e0, e1 = (76, 460), (60, 478)
+    ex = seq(float(e0[0]), [(8, None, None), (26, float(e1[0]), "io"), (TB - 1, None, None), (TB + 2, e0[0] + 14.0, "ox"),
+                            (TB + 12, e0[0] - 4.0, "io"), (TB + 24, float(e0[0]), "io")], op=OP)
+    ey = seq(float(e0[1]), [(8, None, None), (26, float(e1[1]), "io"), (TB - 1, None, None), (TB + 2, e0[1] - 18.0, "ox"),
+                            (TB + 12, e0[1] + 4.0, "io"), (TB + 24, float(e0[1]), "io")], op=OP)
+    str_path = Track(poly_path([tip, e0]), 0)
+    for t in sorted({k[0] for k in ex.k}):
+        if t == 0:
+            continue
+        str_path.to(t, poly_path([(tx.at(t), ty.at(t)), (ex.at(t), ey.at(t))]), "io")
+    c.layer("string", [lot.group([lot.sh(str_path), lot.stroke(12)], nm="string")], p=(0, 0), a=(0, 0))
+    c.layer("eyelet", [geo.shape(geo.eyelet(e0[0], e0[1], 22, 10), nm="eyelet")], p=Split(ex, ey), a=e0)
+    # bang flash: a fan of rays around the mouth, 9 frames
+    mouth = (tip[0] + 220 * math.sin(math.radians(ang)), tip[1] - 220 * math.cos(math.radians(ang)))
+    rays = U(*[geo.brush([(mouth[0] + 112 * math.cos(math.radians(a)), mouth[1] + 112 * math.sin(math.radians(a))),
+                          (mouth[0] + 160 * math.cos(math.radians(a)), mouth[1] + 160 * math.sin(math.radians(a)))], 22, (0.4, 0.9))
+               for a in (-150, -110, -72, -34, 4, 42)])
+    rs = Track([40, 40], TB).to(TB + 5, [104, 104], "ox").to(TB + 10, [120, 120], "o")
+    c.layer("rays", [geo.shape(rays, nm="rays")], p=mouth, a=mouth, s=rs, ip=TB, op=TB + 10)
+    # streamers: three serpentine ribbons shot out on trim paths, then the tail whips through
+    for k, (a, L, amp, nw) in enumerate(((-86, 168, 24, 2.0), (-46, 196, 28, 2.5), (-12, 150, 22, 1.5))):
+        d = (math.cos(math.radians(a)), math.sin(math.radians(a)))
+        n = (-d[1], d[0])
+        pts = []
+        for i in range(41):
+            u = i / 40
+            w = amp * math.sin(2 * math.pi * nw * u) * min(1, u * 3)
+            pts.append((mouth[0] + d[0] * (40 + L * u) + n[0] * w, mouth[1] + d[1] * (40 + L * u) + n[1] * w))
+        t0 = TB + 1 + k
+        e = Track(0, 0).hold(t0).to(t0 + 12, 100, "o5").hold(OP)
+        st = Track(0, 0).hold(t0 + 16).to(t0 + 46, 100, "io").hold(OP)
+        dp = Track([0, 0], 0).hold(t0 + 12).to(t0 + 46, [d[0] * 18, 34], "io").hold(OP)
+        c.layer(f"streamer{k}", [geo.stroked(pts, 16, nm=f"s{k}", e=e, s=st)], p=dp, a=(0, 0), ip=t0, op=t0 + 47)
+    # confetti: ✦, logo X, bars and eyelets fly out in a fan, then flutter down (sway + tumble)
+    kinds = [lambda x, y: geo.spark(x, y, 38, 0.36), lambda x, y: brand_x(x, y, 58, 44, bold=10),
+             lambda x, y: geo.rrect(x - 28, y - 12, x + 28, y + 12, 6), lambda x, y: geo.eyelet(x, y, 24, 10)]
+    flights = [((300, 62), (346, 296)), ((366, 56), (398, 284)), ((436, 86), (444, 330)), ((440, 172), (446, 446)),
+               ((394, 130), (414, 404)), ((328, 118), (372, 446)), ((244, 72), (300, 214)), ((418, 240), (428, 452)),
+               ((360, 188), (384, 452)), ((188, 104), (226, 156))]
+    for i, ((xa, ya), (xe, ye)) in enumerate(flights):
+        t0 = TB + 1 + (i % 5) * 0.8
+        ta = t0 + 11 + (i % 3) * 2
+        te = 94 + (i * 7) % 18
+        g = affinity.translate(kinds[i % 4](0, 0), 256, 256)
+        per = 26 + (i % 3) * 4
+        px = Track(mouth[0], t0).to(ta, float(xa), "o5")
+        n = int((te - ta) // (per / 2))
+        for j in range(n):
+            u = (j + 1) / n
+            px.to(ta + (j + 1) * per / 2, xa + (xe - xa) * u + (12 if j % 2 == 0 else -12), "swing")
+        py = Track(mouth[1], t0).to(ta, float(ya), "o5").to(te, float(ye), "lin")
+        sp = Track([0, 0], t0).to(t0 + 5, [115, 115], "ox").to(t0 + 10, [100, 100], "io")
+        if i % 4 in (1, 2):
+            cyc(sp, ta, te, [22, 100], [100, 100], 16 + (i % 2) * 4)
+        sp.to(te + 8, [0, 0], "i")
+        rr = Track((i * 47) % 90 - 45, t0).to(te + 8, (i * 47) % 90 - 45 + (160 if i % 2 else -160), "os")
+        c.layer(f"conf{i}", [geo.shape(g, nm="c")], p=Split(px, py), a=(256, 256), s=sp, r=rr, ip=int(t0), op=int(te + 8))
+
+
+# ================================================================ 111 🚨
+
+
+@emoji("111-siren", "🚨", "тревога, срочно, внимание, алерт, полиция, шухер", "siren, alert, urgent, alarm, emergency, police",
+       "глянцевый купол ловит ✦-блик — и мигалка врубается: X-отражатель внутри крутится (fake-3D), лучи бьют то слева, то справа точно в такт его оборотам, корпус подпрыгивает на каждой вспышке",
+       op=120, series=SERIES)
+def siren(c):
+    OP = 120
+    cx, dc, R = 256, 296, 128                  # dome centre (top half-disc) and radius
+    beats = [26 + 12 * k for k in range(6)]     # L, R, L, R ... flashes
+    base_y = 452
+    # hop on every flash: up quick, drop with a squash on landing
+    y = Track(0.0, 0).hold(beats[0] - 1)
+    s = Track([100, 100], 0).hold(beats[0] - 1)
+    for t in beats:
+        y.to(t + 3, -9.0, "o").to(t + 8, 0.0, "slam")
+        s.to(t + 3, [97, 104], "o").to(t + 8, [105, 95], "slam").to(t + 11, [100, 100], "io")
+    y.loop(OP)
+    breathe(s, 96, 120, [100, 100], 0.6, 12)
+    s.loop(OP)
+    body = null(c, "body", (cx, base_y), p=Split(cx, ypos_abs(y, base_y)), s=s)
+    base = U(geo.rrect(cx - 180, 400, cx + 180, base_y, 22), geo.rrect(cx - 150, 386, cx + 150, 404, 10))
+    part(c, "base", base.difference(geo.rect(cx - 150, 398, cx + 150, 404)), body, (cx, base_y))
+    dome = U(geo.disc(cx, dc, R, 32).intersection(geo.rect(0, 0, 512, dc)), geo.rect(cx - R, dc - 1, cx + R, 392))
+    dl = part(c, "dome", dome, body, (cx, base_y))
+    # the X reflector: spins about the vertical axis; face-on (±100) exactly on each flash
+    sx = Track([100, 100], 0).hold(beats[0] - 6)
+    for k, t in enumerate(beats):
+        sx.to(t, [100 if k % 2 == 0 else -100, 100], "io")
+    sx.to(beats[-1] + 14, [100, 100], "o").loop(OP)
+    geo.hole(dl, brand_x(cx, 312, 150, 112, bold=14), nm="x", a=(cx, 312), p=(cx, 312), s=sx)
+    # rays: three per side, pulse outward from the dome on alternate beats
+    for side, angs in (("L", (192, 224, 256)), ("R", (348, 316, 284))):
+        rays = U(*[geo.line([(cx + 164 * math.cos(math.radians(a)), dc + 164 * math.sin(math.radians(a))),
+                             (cx + 204 * math.cos(math.radians(a)), dc + 204 * math.sin(math.radians(a)))], 30)
+                   for a in angs])
+        mine = [t for k, t in enumerate(beats) if (k % 2 == 0) == (side == "L")]
+        rs = Track([0, 0], 0)
+        for t in mine:
+            rs.hold(t - 1)
+            rs.k[-1][2] = "hold"
+            rs.k.append([t, [76, 76], None])
+            rs.to(t + 3, [100, 100], "ox").to(t + 9, [106, 106], "o")
+            rs.k[-1][2] = "hold"
+            rs.k.append([t + 10, [0, 0], None])
+        rs.hold(OP)
+        part(c, f"rays{side}", rays, body, (cx, dc), s=rs)
+    M.glare_sweep(c, dl, cx, 270, 0, 26, travel=240, parent=body, w1=30, w2=14, gap=14,
+                  sparks=[(cx + 118, 176, 34, 10, 26)])
+
+
+# ================================================================ 112 📦
+
+
+@emoji("112-box-drop", "📦", "дроп, посылка, распаковка, доставка, сюрприз, пришло", "drop, package, unboxing, delivery, surprise, arrived",
+       "коробка с X подпрыгивает — внутри что-то рвётся наружу; створки распахиваются, и на пружине выстреливает XTC (джек-из-коробки), раскачивается, ловит ✦, пружина утягивает его обратно — створки захлопываются",
+       op=150, series=SERIES)
+def box_drop(c):
+    OP = 150
+    cx, top, bot, half = 256, 310, 476, 176
+    TO, TJ = 36, 38                     # flaps burst open, jack fires
+    TB, TS = 96, 110                    # pull back, flaps slam
+    # the box: two rattling hops, recoil when the jack fires, squash on the slam
+    y = seq(0.0, [(10, None, None), (14, -14.0, "o"), (20, 0.0, "slam"), (22, None, None), (27, -24.0, "o"), (33, 0.0, "slam"),
+                  (TJ, None, None), (TJ + 3, 8.0, "o"), (TJ + 12, 0.0, "io"), (TS, None, None), (TS + 3, 6.0, "o"), (TS + 10, 0.0, "io")], op=OP)
+    s = seq([100, 100], [(10, None, None), (14, [96, 104], "o"), (20, [106, 94], "slam"), (24, [100, 100], "io"),
+                         (27, [95, 106], "o"), (33, [107, 93], "slam"), (TJ, [100, 100], "io"), (TJ + 3, [106, 92], "o"),
+                         (TJ + 14, [100, 100], "io"), (TS, None, None), (TS + 3, [106, 92], "o"), (TS + 12, [100, 100], "io")])
+    breathe(s, 124, 150, [100, 100], 0.7, 26)
+    s.loop(OP)
+    box = null(c, "box", (cx, bot), p=Split(cx, ypos_abs(y, bot)), s=s)
+    # jack: spring + XTC plate on a pivot at the box mouth (sways as a whole); shown only while out
+    L = 150                                      # spring length at full extension
+    ext = seq(0.0, [(TJ, None, None), (TJ + 7, 108.0, "ox"), (TJ + 15, 90.0, "io"), (TJ + 23, 104.0, "io"), (TJ + 31, 97.0, "io"),
+                    (TJ + 40, 100.0, "io"), (TB, None, None), (TB + 8, 92.0, "io"), (TS - 1, 0.0, "i5")], op=OP)
+    sway = seq(0.0, [(TJ + 4, None, None), (TJ + 12, -12.0, "io"), (TJ + 22, 9.0, "io"), (TJ + 32, -5.0, "io"),
+                     (TJ + 42, 2.0, "io"), (TJ + 50, 0.0, "io"), (TB, None, None), (TB + 6, 3.0, "io"), (TS - 1, 0.0, "io")], op=OP)
+    base = top - 2
+    jack = null(c, "jack", (cx, base), parent=box, r=sway)
+    coil = []
+    n = 6
+    for i in range(n * 2 + 1):
+        yy = base - L * i / (n * 2)
+        xx = cx + (0 if i in (0, n * 2) else (44 if i % 2 else -44))
+        coil.append((xx, yy))
+    sp_s = Track([100, ext.k[0][1]], 0)
+    sp_s.k = [[t, [100, v], e] for t, v, e in ext.k]
+    c.layer("spring", [geo.stroked(coil, 16, nm="coil")], parent=jack, p=(cx, base), a=(cx, base), s=sp_s, ip=TJ, op=TS)
+    py = Track(base - L * ext.k[0][1] / 100, 0)
+    py.k = [[t, base - L * v / 100, e] for t, v, e in ext.k]
+    plate = U(brand_word("XTC", cx, 0, 80, 270, bold=12), geo.rrect(cx - 56, 50, cx + 56, 68, 9))
+    ws = seq([100, 100], [(TJ, None, None), (TJ + 7, [92, 112], "ox"), (TJ + 14, [104, 96], "io"), (TJ + 22, [100, 100], "io")], op=OP)
+    c.layer("xtc", [geo.shape(plate, nm="xtc")], parent=jack, p=Split(cx, py), a=(cx, 68), s=ws, ip=TJ, op=TS - 1)
+    M.twinkle(c, "tw", cx + 146, base - L - 94, 40, TJ + 22, 26)
+    # body: box with the logo X cut out and a tape strip; drawn over the spring base
+    body = geo.rrect(cx - half, top, cx + half, bot, 18)
+    body = body.difference(brand_x(cx, 404, 124, 90, bold=12)).difference(geo.rect(cx - 16, top, cx + 16, 350))
+    part(c, "body", body, box, (cx, bot))
+    # flaps hinge on the outer top corners: rattle, burst open with overshoot, sway, slam shut
+    for side, sg in (("L", -1), ("R", 1)):
+        hx = cx + sg * half
+        g = geo.rrect(hx, top - 34, hx + half - 2, top - 6, 12) if sg == -1 else geo.rrect(hx - half + 2, top - 34, hx, top - 6, 12)
+        a = seq(0.0, [(12, None, None), (15, 14.0, "o"), (20, 0.0, "slam"), (25, None, None), (28, 22.0, "o"), (33, 0.0, "slam"),
+                      (TO - 1, None, None), (TO + 5, 104.0, "ox"), (TO + 13, 91.0, "io"), (TO + 22, 98.0, "io"), (TB + 6, None, None),
+                      (TS, 0.0, "i5"), (TS + 3, 8.0, "o"), (TS + 7, 0.0, "slam")], op=OP, f=lambda v, sg=sg: sg * v)
+        part(c, f"flap{side}", g, box, (hx, top - 20), r=a)
+
+
+# ================================================================ 113 🍸
+
+
+def _slosh(th, t_end, dt=0.25, per=18.0, zeta=0.16, gain=1.2):
+    """surface tilt (deg, relative to world level) of liquid in a glass turning by th(t): damped
+    oscillator driven by the glass's angular acceleration. Returns f(t)."""
+    w = 2 * math.pi / per
+    phi, v, out = 0.0, 0.0, {}
+    t = 0.0
+    acc = lambda t: (th.at(t + dt) - 2 * th.at(t) + th.at(t - dt)) / dt / dt if t >= dt else 0.0
+    while t <= t_end + 1e-9:
+        out[round(t, 2)] = phi
+        a = -w * w * phi - 2 * zeta * w * v + gain * acc(t)
+        v += a * dt
+        phi += v * dt
+        t += dt
+    return lambda t: out[round(round(t / dt) * dt, 2)]
+
+
+@emoji("113-cocktail", "🍸", "за нас, чин-чин, выпьем, пятница, отдыхаю, тост", "cheers, drinks, friday, toast, cocktail, party",
+       "мартини поднимается и кренится «чин-чин» — дзынь ✦ о край, бокал дёргается назад, жидкость плещет волной и перехлёстывает через край подтёком, который набухает и срывается каплей; оливка-люверс ныряет и выныривает",
+       op=120, series=SERIES)
+def cocktail(c):
+    OP = 120
+    cx, rim, apex, rw = 256, 142, 330, 196
+    TC = 29                                             # clink
+    th = seq(0.0, [(8, None, None), (24, -10.0, "io"), (TC - 1, -11.0, "io"), (TC + 2, -4.0, "o5"), (TC + 12, 3.0, "io"), (TC + 22, 0.0, "io")], op=OP)
+    gy = seq(0.0, [(8, None, None), (24, -18.0, "io"), (TC - 1, None, None), (TC + 2, -10.0, "o5"), (TC + 14, 2.0, "io"), (TC + 22, 0.0, "io")], op=OP)
+    gs = seq([100, 100], [(8, None, None), (24, [106, 106], "io"), (TC - 1, None, None), (TC + 2, [103, 103], "o5"), (TC + 16, [100, 100], "io")])
+    breathe(gs, 96, 120, [100, 100], 0.7, 24)
+    gs.loop(OP)
+    piv = (cx, 236)
+    glass = null(c, "glass", piv, p=Split(cx, ypos_abs(gy, piv[1])), s=gs, r=th)
+    phi = _slosh(th, OP)
+
+    def surf(t, x):
+        tilt = -th.at(t) + phi(t)
+        a = min(1.0, abs(phi(t)) / 6)
+        return 206 + math.tan(math.radians(tilt)) * (x - cx) + 7 * a * math.sin((x - cx) / 38 + t * 0.5)
+
+    def wall(x):
+        return apex - (apex - rim) * abs(x - cx) / rw
+
+    def meet(t, sgn):
+        lo, hi = 0.0, float(rw)                       # distance from the axis
+        if surf(t, cx + sgn * hi) < rim:              # over the rim: spilling
+            return cx + sgn * hi
+        for _ in range(40):
+            m = (lo + hi) / 2
+            if surf(t, cx + sgn * m) - wall(cx + sgn * m) < 0:
+                lo = m
+            else:
+                hi = m
+        return cx + sgn * (lo + hi) / 2
+
+    def liquid(t):
+        xl, xr = meet(t, -1), meet(t, 1)
+        pts = [(xl + (xr - xl) * i / 23, max(rim, surf(t, xl + (xr - xl) * i / 23))) for i in range(24)]
+        return poly_path(pts + [(cx, apex)])
+
+    lt = Track(liquid(0), 0)
+    for t in range(8, 97, 2):
+        lt.to(t, liquid(t), "lin")
+    lt.loop(OP, "io")
+    c.layer("liquid", [lot.group([lot.sh(lt, "l"), lot.fill()], nm="liquid")], parent=glass, p=piv, a=piv)
+    outer = geo.poly([(cx - rw, rim), (cx + rw, rim), (cx, apex)])
+    inner = geo.poly([(cx - rw + 30, rim - 30), (cx + rw - 30, rim - 30), (cx, apex - 36)])
+    bowl = outer.difference(inner).buffer(3).buffer(-3)
+    stand = U(geo.rect(cx - 12, apex - 20, cx + 12, 446), geo.rrect(cx - 96, 440, cx + 96, 470, 14))
+    part(c, "bowl", U(bowl, stand), glass, piv)
+    # olive (eyelet) on a pick, riding the surface; dives on the clink and pops back
+    ox = cx + 58
+    dive = seq(0.0, [(TC + 1, None, None), (TC + 7, 50.0, "o"), (TC + 13, None, None), (TC + 19, -16.0, "o5"),
+                     (TC + 26, 4.0, "io"), (TC + 32, 0.0, "io")])
+    oy = Track(surf(0, ox) - 14, 0)
+    orr = Track(0.0, 0)
+    for t in range(4, 97, 4):
+        oy.to(t, surf(t, ox) - 14 + dive.at(t), "io")
+        orr.to(t, (-th.at(t) + phi(t)) * 0.7, "io")
+    oy.loop(OP)
+    orr.loop(OP)
+    olive = U(geo.eyelet(ox, 0, 32, 13), geo.line([(ox, 0), (ox + 76, -138)], 14), geo.disc(ox + 76, -138, 13))
+    olive = olive.difference(geo.disc(ox, 0, 13))
+    part(c, "olive", olive, glass, (ox, 0), p=Split(float(ox), oy), r=orr)
+    # the spill: a drip swells on the right rim corner, stretches, lets go as a drop, splats on the table
+    dx, d0 = cx + rw - 4, rim - 6
+    dg = drip_shape(dx, d0, d0 + 96, 26, 22)
+    ds = seq([100, 0], [(TC + 6, None, None), (TC + 14, [100, 46], "o"), (TC + 30, [100, 88], "io"), (TC + 38, [96, 100], "i"),
+                        (TC + 41, [70, 30], "o5"), (TC + 50, [100, 0], "io")], op=OP)
+    c.layer("drip", [geo.shape(dg, nm="drip")], parent=glass, p=(dx, d0), a=(dx, d0), s=ds)
+    tf = TC + 39
+    drop = geo.drop(dx, d0 + 74, 20, 44)
+    dpy = Track(d0 + 74.0, tf).to(tf + 12, 452.0, "i")
+    dps = Track([100, 100], tf).to(tf + 12, [84, 120], "i")
+    c.layer("drop", [geo.shape(drop, nm="drop")], parent=glass, p=Split(float(dx), dpy), a=(dx, d0 + 74), s=dps, ip=tf, op=tf + 12)
+    spl = geo.ellipse(dx, 462, 34, 10, 16)
+    sps = Track([0, 0], tf + 12).to(tf + 15, [120, 120], "ox").to(tf + 26, [0, 0], "i")
+    c.layer("splat", [geo.shape(spl, nm="splat")], parent=glass, p=(dx, 468), a=(dx, 468), s=sps, ip=tf + 12, op=tf + 27)
+    M.twinkle(c, "clink", cx - rw + 22, rim - 24, 36, TC, 22, parent=glass)
+
+
+# ================================================================ 114 🎧
+
+
+@emoji("114-headphones", "🎧", "музыка, слушаю, трек, бас, качает, в наушниках", "music, listening, track, bass, vibing, headphones",
+       "наушники качает бас: на каждую долю чашки с X пружинят наружу, оголовье подскакивает, из чашек бьют звуковые дуги; подводка — дрожь, и на дропе большой удар: всё сжимается и выстреливает, ✦",
+       op=150, series=SERIES)
+def headphones(c):
+    OP = 150
+    cx, by, cy, cw = 256, 250, 334, 132              # band base line, cup centre y, cup offset
+    beats = [(12, 1.0), (36, 1.0), (60, 1.0), (88, 1.9)]  # (time, strength); 88 = the drop
+    roll = (70, 84)                                   # build-up tremble before the drop
+    # whole set: thump down on each beat (vertical squash only: the waves need the side room)
+    y = Track(0.0, 0)
+    s = Track([100, 100], 0)
+    for t, k in beats:
+        if t == 88:
+            y.hold(roll[0]).to(roll[1], -10.0, "io")
+            s.hold(roll[0]).to(roll[1], [100, 104], "io")
+        y.hold(t).to(t + 2, 7.0 * k, "o").to(t + 10, -2.0 * k, "io").to(t + 18, 0.0, "io")
+        s.hold(t).to(t + 2, [100, 100 - 4 * k], "o").to(t + 10, [100, 101], "io").to(t + 18, [100, 100], "io")
+    breathe(s, 120, 150, [100, 100], 0.7, 30)
+    y.loop(OP)
+    s.loop(OP)
+    px = seq(float(cx), [(roll[0], None, None)])
+    jitter(px, roll[0], roll[1], float(cx), 2.0, 2)
+    px.loop(OP)
+    hp = null(c, "hp", (cx, 418), p=Split(px, ypos_abs(y, 418)), s=s)
+    # band: springs up on each beat (scale from its base line), stretches with the cups
+    arc = [(cx + cw * math.cos(math.radians(a)), by - 150 * math.sin(math.radians(a))) for a in range(0, 181, 6)]
+    band = geo.line(arc, 36)
+    bs = Track([100, 100], 0)
+    for t, k in beats:
+        bs.hold(t).to(t + 3, [100 + 5 * k, 100 - 7 * k], "o").to(t + 9, [100 - 2 * k, 100 + 8 * k], "io").to(t + 16, [100, 100], "io")
+    bs.loop(OP)
+    part(c, "band", band, hp, (cx, by), s=bs)
+    # cups: shell with the logo X cut out + cushion, eyelet hinge; pump outward on each beat
+    for sd, sg in (("L", -1), ("R", 1)):
+        x0 = cx + sg * cw
+        shell = geo.rrect(x0 - 44, by + 4, x0 + 44, 418, 40).difference(brand_x(x0, cy + 4, 56, 70, bold=10))
+        cush = geo.rrect(min(x0 - sg * 48, x0 - sg * 78), by + 18, max(x0 - sg * 48, x0 - sg * 78), 404, 14)
+        cup = U(shell, cush, geo.eyelet(x0, by - 4, 22, 9))
+        cxs = Track(float(x0), 0)
+        cs = Track([100, 100], 0)
+        for t, k in beats:
+            cxs.hold(t).to(t + 2, x0 + sg * 5.0 * k, "ox").to(t + 10, x0 - sg * 1.5 * k, "io").to(t + 18, float(x0), "io")
+            cs.hold(t).to(t + 2, [100 + 6 * k, 100 + 6 * k], "ox").to(t + 10, [98, 98], "io").to(t + 18, [100, 100], "io")
+        cxs.loop(OP)
+        cs.loop(OP)
+        part(c, f"cup{sd}", cup, hp, (x0, cy), p=Split(cxs, float(cy)), s=cs)
+        # sound arcs: drawn out from their middle, then swept outward and trimmed away
+        for t, k in beats:
+            for j, r in enumerate((68, 96)):
+                a0 = 0 if sg == 1 else 180
+                pts = [(x0 + r * math.cos(math.radians(a0 + d)), cy - r * math.sin(math.radians(a0 + d))) for d in range(-48, 49, 4)]
+                t0 = t + 1 + 3 * j
+                e = Track(50, t0).to(t0 + 5, 97, "o").hold(t0 + 7).to(t0 + 16, 50, "i")
+                st = Track(50, t0).to(t0 + 5, 3, "o").hold(t0 + 7).to(t0 + 16, 50, "i")
+                sc = Track([92, 92], t0).to(t0 + 16, [104, 104], "o")
+                c.layer(f"wave{sd}{t}{j}", [geo.stroked(pts, 18 if k < 1.5 else 24, nm="w", e=e, s=st)], parent=hp,
+                        p=(x0, cy), a=(x0, cy), s=sc, ip=t0, op=t0 + 16)
+    M.twinkle(c, "tw", cx + 100, 112, 42, 92, 24, parent=hp)

@@ -360,6 +360,10 @@ def flip_tile(comp, nm, parent, x, y, w, h, glyphs, times, dur=12, gap=10, r=22,
             else:
                 bs.hold(t2).to(t2 + half, [100, 0], "o").to(t2 + half + 3, [100, bounce], "io").to(t2 + half + 7, [100, 0], "io")
                 by.hold(t2).to(t2 + half, y + hh, "o").to(t2 + half + 3, y + hh * (1 - bounce / 100), "io").to(t2 + half + 7, y + hh, "io")
+                # park the (zero-height) half back on the hinge: rlottie draws scale-0 shapes as a hairline,
+                # and a hairline at the tile bottom would differ from frame 0 (loop seam)
+                by.k[-1][2] = "hold"
+                by.k.append([t2 + half + 7.01, y, None])
         bs.hold(comp.op)
         by.hold(comp.op)
         lb = comp.layer(f"{nm}-b{k}", [geo.shape(B_, nm="b")], parent=parent, p=Split(x, by), a=(x, y), s=bs)

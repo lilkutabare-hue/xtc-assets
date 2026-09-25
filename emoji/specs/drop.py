@@ -146,25 +146,40 @@ def payme(c):
     board_row(c, "t", board, ["XTC", "PAY", "ME "], times, cy, w, h, gap=16)
 
 
-@emoji("49-board-dropnow", "🚀", "дроп, сейчас, старт, погнали, drop now", "drop now, launch, go, live, drop",
-       "табло DROP перещёлкивается в NOW!, дрожит от нагрузки и рвётся вверх с растяжкой, приземляется с отскоком",
+@emoji("49-board-drop", "📦", "дроп, релиз, вышло, drop, новый дроп", "drop, release, out now, new drop, launch",
+       "табло DROP: плитки перещёлкиваются из пустых в DR / OP волной, табло толкается на каждой, держит, тяжёлый удар «дроп» — приседает и садится; в конце плитки гаснут обратно",
        op=180, series="drop")
-def dropnow(c):
+def board_drop(c):
     w, h, gap = 188, 176, 18
-    rows = [(160, ["DR", "NO"]), (160 + h + gap, ["OP", "W!"])]
-    times = [30, 138]
+    rows = [(160, ["  ", "DR"]), (160 + h + gap, ["  ", "OP"])]
+    times = [16, 138]
+    ss = Track([100, 100], 0)
+    board_push(ss, 24)
+    ss.hold(84).to(90, [104, 94], "io").to(98, [97, 103], "o").to(106, [101, 99], "io").to(114, [100, 100], "io")
+    board_push(ss, 144)
+    board = c.null("board", p=(256, 456), a=(256, 456), s=ss.loop(180))
+    for r, (cy, words) in enumerate(rows):
+        board_row(c, f"r{r}", board, words, [t + r * 8 for t in times], cy, w, h, gap=gap)
+
+
+@emoji("162-board-now", "🚀", "сейчас, now, старт, погнали, live", "now, right now, go, live, launch",
+       "табло NOW!: плитки перещёлкиваются из пустых, табло дрожит от нагрузки и рвётся вверх с растяжкой, приземляется с отскоком; в конце плитки гаснут обратно",
+       op=180, series="drop")
+def board_now(c):
+    w, h, gap = 188, 176, 18
+    rows = [(160, ["  ", "NO"]), (160 + h + gap, ["  ", "W!"])]
+    times = [14, 138]
     ys = Track(456, 0).hold(66)
-    # strain (M13 jitter) -> launch with stretch (M25) -> land, squash, settle
     jit = Track(256, 0).hold(62)
     for k in range(10):
         jit.to(64 + k * 2, 256 + (4 if k % 2 == 0 else -4), "aelin")
     jit.to(86, 256, "io").loop(180)
     ys.hold(84).to(96, 432, "decel").to(106, 456, "slam").to(114, 446, "o").to(122, 456, "i").loop(180)
     ss = Track([100, 100], 0)
-    board_push(ss, 36)
+    board_push(ss, 22)
     ss.hold(78).to(84, [105, 93], "io").to(92, [94, 108], "snap").to(104, [100, 100], "io")
     ss.to(106, [110, 90], "slam").to(107, [110, 90], "lin").to(114, [97, 104], "io").to(122, [100, 100], "io")
-    board_push(ss, 146)
+    board_push(ss, 144)
     board = c.null("board", p=Split(jit, ys), a=(256, 456), s=ss.loop(180))
     for r, (cy, words) in enumerate(rows):
         board_row(c, f"r{r}", board, words, [t + r * 8 for t in times], cy, w, h, gap=gap)

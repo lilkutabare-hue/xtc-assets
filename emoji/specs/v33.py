@@ -269,20 +269,19 @@ def yes_money(c):
 
 @emoji("160-chrome-x", "❎", "x, хром, xtc records, лого, металл", "x, chrome, xtc records, logo, metal",
        "хромовый X из пака Records: тяжёлый оборот вокруг вертикали с торцом (0.35,0,0.14,1), по лицу бежит блик-вырез на выходе, досадка, покой",
-       op=150, series=SER)
+       op=180, series=SER)
 def chrome_x(c):
-    OP = 150
+    OP = 180
     g = rec("chromex")
     b_ = g.bounds
     cx, cy = (b_[0] + b_[2]) / 2, (b_[1] + b_[3]) / 2
     # a chrome plate: floats, then one heavy flip about its horizontal axis (scaleY = cos, min 5% = the
     # plate's thickness; the X is symmetric so no back design is needed), slight perspective grow at the
     # edge, overshoot and settle. No extra layers, nothing to leave artefacts.
-    sy = seq([92, 92], [(20, None, None), (34, [90, 96], "io"), (58, [98, 5], (0.5, 0.0, 0.3, 1.0)), (59, [98, -5], "lin"), (84, [90, -96], (0.7, 0.0, 0.5, 1.0)),
-                        (94, [92, -90], "io"), (104, [92, -92], "io")])
-    sy.hold(OP - 0.01)                       # -92 == 92 for the symmetric X: jump back at the loop point
-    sy.k[-1][2] = "hold"
-    sy.k.append([OP, [92, 92], None])
-    y = seq(float(cy), [(20, None, None), (58, cy - 10.0, "io"), (104, float(cy), "io"), (126, cy - 4.0, "io"), (150, float(cy), "io")])
+    # one full heavy turn (the X has a 3D top face, so it must come all the way round): 92 -> edge -> -92 -> edge -> 92
+    sy = seq([92, 92], [(20, None, None), (34, [90, 96], "io"), (58, [98, 5], (0.5, 0.0, 0.3, 1.0)), (59, [98, -5], "lin"),
+                        (84, [102, -96], "io"), (108, [98, -5], "io"), (109, [98, 5], "lin"), (134, [90, 96], (0.7, 0.0, 0.5, 1.0)),
+                        (146, [92, 91], "io"), (156, [92, 92], "io")], op=OP)
+    y = seq(float(cy), [(20, None, None), (84, cy - 12.0, "io"), (156, float(cy), "io")], op=OP)
     body = rig(c, "body", (cx, cy), p=Split(cx, y), s=sy)
     part(c, "x", g, body, (cx, cy))

@@ -17,8 +17,8 @@ sys.path.insert(0, HERE)
 # pack order: cover -> brand & DROP -> faces (joy -> anger -> shock -> sadness) -> reactions -> symbols -> badges
 ORDER = """
 01-pill-x
-44-cross-amen 146-cross-xtc 144-cross-pendant 28-tribal-cross 136-flash 50-soldout-tee 134-louverse-tank 47-flipclock 49-board-dropnow
-131-tile-x 132-tile-t 133-tile-c 121-xtc 112-box-drop 109-bills 52-psp 152-lego-head 53-bag-xtc 29-drip-xtc 20-split-pill 16-heart-pill 148-broken-heart
+44-cross-amen 146-cross-xtc 144-cross-pendant 28-tribal-cross 136-flash 50-soldout-tee 134-louverse-tank 47-flipclock 49-board-drop 162-board-now
+131-tile-x 132-tile-t 133-tile-c 121-xtc 112-box-drop 109-bills 52-psp 152-lego-head 53-bag-xtc 20-split-pill 16-heart-pill 148-broken-heart
 33-kao-xx
 150-xtc-turn 84-fire 111-siren
 153-lips 154-100xtc 155-star-ring 156-star 157-star-flake 158-clef 159-yes-money 160-chrome-x
@@ -35,7 +35,7 @@ CUT_V3 = """
 74-dizzy 76-sleep 77-grimace 78-clown 79-moai 80-salute 81-angel 82-nausea 100-huff 101-raised-brow 103-yawn
 104-drool 105-nerd 106-woozy 107-hug 108-yum 34-kao-squeeze 35-kao-happy 36-kao-cry 37-kao-meh
 38-kao-tear 39-kao-wink 40-kao-shock 42-kao-tongue
-02-acid-xx 139-xx 140-laugh 141-cry 142-cool 143-melt 114-headphones 14-barbed-heart 15-dagger-heart 13-dagger-cross 32-swallow 51-latex-heart 145-iron-cross 138-seal 56-sob 87-cross 90-sparkles 149-opium
+02-acid-xx 139-xx 140-laugh 141-cry 142-cool 143-melt 114-headphones 14-barbed-heart 15-dagger-heart 13-dagger-cross 32-swallow 51-latex-heart 145-iron-cross 138-seal 56-sob 87-cross 90-sparkles 149-opium 29-drip-xtc 49-board-dropnow
 54-laugh 57-plead 58-heart-eyes 59-kiss 60-rage 61-swear 68-cool 72-skull 73-melt 75-mind-blown 83-eyes 102-zipper-mouth
 91-zap 92-question 93-exclaim 110-popper 126-thumbs-up 128-victory 129-rock 130-wave
 85-hundred 86-check 88-heart 89-broken-heart 113-cocktail

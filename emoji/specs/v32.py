@@ -1,5 +1,6 @@
 """v3.2: crosses (client: «добавил бы разных крестов») in the logo language."""
 import math
+import os
 
 from xtc import geo, logo, motion as M
 from xtc.lot import Split, Track
@@ -540,40 +541,29 @@ def _sh2(tr, d):
 # ================================================================ 25 🎭 hockey mask (rebuilt clean)
 
 
-def hockey_mask(cx=256, cy=262):
-    """Jason: oval shell, two eye holes, a triangular nose vent, the classic vent pattern (rows of holes
-    under the eyes and along the chin), the logo X on the forehead."""
-    face = geo.ellipse(cx, cy, 176, 226, 48)
-    face = geo.U(face, geo.rrect(cx - 150, cy - 40, cx + 150, cy + 150, 60)).intersection(geo.ellipse(cx, cy + 10, 180, 236, 48))
-    face = face.buffer(-8, join_style=1).buffer(8, join_style=1)
-    eyes = geo.U(geo.ellipse(cx - 72, cy - 44, 46, 30, 24), geo.ellipse(cx + 72, cy - 44, 46, 30, 24))
-    nose = geo.U(geo.rrect(cx - 12, cy + 8, cx + 12, cy + 62, 10), geo.disc(cx - 22, cy + 62, 11), geo.disc(cx + 22, cy + 62, 11))
-    vents = []
-    for (x, y) in ((cx - 118, cy + 10), (cx + 118, cy + 10), (cx - 112, cy + 66), (cx + 112, cy + 66), (cx - 94, cy + 118), (cx + 94, cy + 118),
-                   (cx - 56, cy + 150), (cx + 56, cy + 150), (cx - 18, cy + 174), (cx + 18, cy + 174),
-                   (cx - 66, cy + 100), (cx + 66, cy + 100), (cx - 40, cy + 126), (cx + 40, cy + 126), (cx, cy + 110)):
-        vents.append(geo.disc(x, y, 13, 12))
-    holes = geo.U(eyes, nose, *vents)
-    x = brand_x(cx, cy - 152, 112, 54, bold=8)
-    return face.difference(x), holes, eyes
-
-
 @emoji("25-mask-glyphs", "🎭", "маска, хоррор, маньяк, пятница, джейсон, xtc", "mask, horror, slasher, creepy, jason, xtc",
-       "хоккейная маска с логотипным X на лбу медленно поворачивается к тебе (параллакс прорезей), в глазницах загораются глаза и косятся, по маске бежит блик",
+       "хоккейная маска (оригинальный арт v1, X на лбу сдвинут вправо к центру) медленно поворачивается к тебе (параллакс прорезей), в глазницах загораются глаза и косятся, моргают",
        op=180, series="v1")
 def mask(c):
     OP = 180
-    shell, holes, eyes = hockey_mask()
-    cx, cy = 256, 262
+    V1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "v1", "tg")
+    g = geo.svg(os.path.join(V1, "25-mask-glyphs.svg"))
+    shell = geo.U(*[geo.Polygon(p.exterior) for p in geo._polys(g)])
+    holes = shell.difference(g)
+    cx, cy = 256, 255
+    # the forehead X of the original sits a touch left: move the top holes right by 12px
+    top = geo.U(*[h for h in geo._polys(holes) if h.centroid.y < 150])
+    rest = geo.U(*[h for h in geo._polys(holes) if h.centroid.y >= 150])
+    holes = geo.U(geo.move(top, 12, 0), rest)
     sx = Track([95, 100], 0).hold(20).to(60, [100, 100], "io").hold(140).to(176, [95, 100], "io").loop(OP)
     base = c.layer("mask", [geo.shape(shell, nm="shell")], p=(cx, cy), a=(cx, cy), s=sx)
     hx = Track([-10, 0], 0).hold(20).to(60, [0, 0], "io").hold(140).to(176, [-10, 0], "io").loop(OP)
     geo.hole(base, holes, nm="holes", p=hx)
+    eyes = sorted([e for e in geo._polys(holes) if e.area > 4000 and e.centroid.y > 150], key=lambda e: e.centroid.x)[:2]
     off = c.null("eyes", p=Split(Track(256, 0).hold(20).to(60, 266, "io").hold(140).to(176, 256, "io").loop(OP), 256), a=(256, 256))
-    for k, e in enumerate(sorted(geo._polys(eyes), key=lambda e: e.centroid.x)):
+    for k, e in enumerate(eyes):
         ex, ey = e.centroid.x - 10, e.centroid.y
         es = Track([0, 0], 0).hold(64 + k * 3).to(72 + k * 3, [118, 118], "snap").to(78 + k * 3, [100, 100], "io")
         es.hold(128).to(132, [110, 10], "i").to(136, [0, 0], "lin").loop(OP, "lin")
         ep = Track([ex, ey], 0).hold(86).to(94, [ex + 14, ey], "snap").hold(104).to(112, [ex - 12, ey + 2], "snap").hold(120).to(126, [ex, ey], "io").loop(OP)
-        c.layer(f"eye{k}", [geo.shape(geo.disc(ex, ey, 20), nm="eye")], parent=off, p=ep, a=(ex, ey), s=es)
-    M.glare_sweep(c, base, cx, cy, 96, 30, travel=420, angle=-35, length=700, w1=30, w2=12, gap=14)
+        c.layer(f"eye{k}", [geo.shape(geo.disc(ex, ey, 21), nm="eye")], parent=off, p=ep, a=(ex, ey), s=es)

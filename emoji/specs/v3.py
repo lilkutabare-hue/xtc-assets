@@ -126,10 +126,10 @@ def tank(c):
     body = geo.svg(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "v1", "rec", "tank.svg"))
     b_ = body.bounds
     tw = b_[2] - b_[0]
-    pitch = tw * 0.40 / 10.5
-    r = pitch * 0.36
+    pitch = tw * 0.62 / 10.5           # the photo: the print spans ~46% of the chest = ~62% of the widest hem
+    r = pitch * 0.40
     x0 = 256 - 5 * pitch
-    y0 = b_[1] + (b_[3] - b_[1]) * 0.40
+    y0 = b_[1] + (b_[3] - b_[1]) * 0.36
     cols = {}
     col = 0
     for ch in "XTC":

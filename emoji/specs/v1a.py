@@ -173,22 +173,21 @@ def acid(c):
 # ================================================================ 03 🕷️
 
 
-def _leg(root, knee, tip, w=34):
-    return geo.brush([root, knee, tip], w, taper=(1.0, 0.55), smooth=True, n=8)
+def _leg(root, knee, tip, w=22):
+    return geo.brush([root, knee, tip], w, taper=(1.0, 0.6), smooth=True, n=8)
 
 
-def spider_parts(cx=256, cy=300):
-    """a real spider: round abdomen with the logo X as its back pattern, smaller head, 8 jointed legs."""
-    abd = geo.ellipse(cx, cy + 46, 104, 116, 32)
-    abd = abd.difference(brand_x(cx, cy + 50, 150, 70, bold=10))
-    head = geo.disc(cx, cy - 92, 50, 24)
-    neck = geo.rrect(cx - 34, cy - 70, cx + 34, cy - 40, 12)
+def spider_parts(cx=256, cy=270):
+    """a plain little spider (top view): round abdomen with the logo X, small head, 8 thin legs."""
+    abd = geo.ellipse(cx, cy + 34, 78, 88, 32)
+    abd = abd.difference(brand_x(cx, cy + 38, 104, 48, bold=6))
+    head = geo.disc(cx, cy - 74, 36, 24)
+    neck = geo.rrect(cx - 26, cy - 62, cx + 26, cy - 36, 10)
     body = U(abd, head, neck)
-    # legs: (root on the head side, knee, tip), mirrored for the left side
-    L = [((cx + 36, cy - 118), (cx + 130, cy - 178), (cx + 210, cy - 112)),
-         ((cx + 44, cy - 96), (cx + 156, cy - 130), (cx + 236, cy - 20)),
-         ((cx + 44, cy - 74), (cx + 160, cy - 44), (cx + 226, cy + 84)),
-         ((cx + 36, cy - 54), (cx + 132, cy + 30), (cx + 188, cy + 168))]
+    L = [((cx + 26, cy - 92), (cx + 96, cy - 160), (cx + 156, cy - 106)),
+         ((cx + 32, cy - 76), (cx + 116, cy - 104), (cx + 178, cy - 24)),
+         ((cx + 32, cy - 58), (cx + 118, cy - 36), (cx + 170, cy + 66)),
+         ((cx + 26, cy - 42), (cx + 100, cy + 24), (cx + 140, cy + 132))]
     legs = []
     for root, knee, tip in L:
         legs.append((root, _leg(root, knee, tip)))
@@ -197,41 +196,37 @@ def spider_parts(cx=256, cy=300):
     return body, legs
 
 
-@emoji("03-sigil-x", "🕷️", "паук, x, xtc, жуть, свисаю, готика", "spider, x, xtc, creepy, hanging, goth",
-       "паук с логотипным X на спинке висит на нити: подтягивается тремя рывками, поджимает лапы — срывается вниз, пружинит на нити, лапы раскидываются с перелётом, качается маятником, лапы подёргиваются по очереди",
-       op=150, series=SERIES)
+@emoji("03-sigil-x", "🕷️", "паук, x, xtc, ползёт, жуть, готика", "spider, x, xtc, crawl, creepy, goth",
+       "маленький паук с логотипным X на брюшке ходит: лапы шагают двумя тройками попеременно (120 BPM), тело покачивается и чуть подаётся вперёд на каждом шаге, останавливается, оглядывается и идёт дальше",
+       op=120, series=SERIES)
 def sigil(c):
-    OP = 150
-    top = (256, 22)
-    cx, cy = 256, 300
+    OP = 120
+    cx, cy = 256, 270
     body, legs = spider_parts(cx, cy)
-    pr = seq(-3, [(10, 3, "io"), (20, 0, "io"), (86, None, None), (98, 6, "io"), (110, -4.5, "io"), (122, 3.2, "io"),
-                  (134, -1.8, "io"), (144, -3, "io")], op=OP)
-    fit_ = rig(c, "fit", (256, 22), s=(84, 84), p=(256, 34))
-    pend = rig(c, "pendulum", top, parent=fit_, r=pr)
-    dy = [(18, None, None), (24, -28, "o"), (27, None, None), (33, -50, "o"), (36, None, None), (42, -66, "o"),
-          (54, None, None), (62, 22, "i5"), (69, -30, "o"), (76, 10, "io"), (82, -8, "io"), (88, 0, "io")]
-    y = seq(0.0, dy, f=lambda v: cy + v)
-    y.loop(OP)
-    ss = seq([100, 100], [(18, None, None), (24, [95, 106], "o"), (27, [100, 100], "io"), (33, [95, 106], "o"),
-                          (36, [100, 100], "io"), (42, [95, 106], "o"), (46, [100, 100], "io"),
-                          (54, None, None), (60, [90, 112], "i"), (62, [112, 88], "o"), (69, [95, 106], "io"),
-                          (76, [102, 98], "io"), (84, [100, 100], "io")], op=OP)
-    spider = rig(c, "spider", (cx, cy), parent=pend, p=Split(cx, y), s=ss)
-    # legs: tuck up on every pull and on the drop (rotate about the root), splay with overshoot on the bounce,
-    # then twitch one after another while it hangs
-    for k, (root, g) in enumerate(legs):
-        sgn = 1 if root[0] > cx else -1
-        up = -sgn * 22
-        r = seq(0, [(18, None, None), (24, up * 0.5, "o"), (30, 0, "io"), (33, up * 0.5, "o"), (39, 0, "io"), (42, up * 0.5, "o"), (48, 0, "io"),
-                    (54, None, None), (60, up, "i"), (64, -up * 0.6, "o"), (72, up * 0.25, "io"), (80, 0, "io"),
-                    (96 + k * 5, None, None), (100 + k * 5, -sgn * 5, "io"), (106 + k * 5, 0, "io")], op=OP)
-        part(c, f"leg{k}", g, spider, root, r=r)
-    part(c, "body", body, spider, (cx, cy))
-    L = cy - 92 - 50 - top[1]
-    e = seq(100.0, dy, f=lambda v: 100.0 * (L + v) / L)
-    e.loop(OP)
-    c.layer("thread", [stroke_line([top, (256, cy - 142)], 24, nm="thread", e=e)], parent=pend, p=top, a=top)
+    fit_ = rig(c, "fit", (256, 256), s=(96, 96), p=(256, 250))
+    # walking: body bobs on every step (10f), a small forward push, then a pause with a look-around
+    by = Track(float(cy), 0)
+    br = Track(0, 0)
+    for t in range(0, 80, 10):
+        by.to(t + 5, cy - 4.0, "io").to(t + 10, float(cy), "io")
+    by.hold(96).to(104, cy + 3.0, "io").to(112, float(cy), "io").loop(OP)
+    br.hold(84).to(94, -6, "io").to(108, 5, "io").to(120, 0, "io")
+    root = rig(c, "spider", (cx, cy), parent=fit_, p=Split(cx, by), r=br)
+    # legs: tripod gait — legs 0,2 right + 1,3 left swing together, the others the next beat;
+    # swing = rotate forward about the root (12°) then back (stance), 10f per step
+    for k, (r_, g) in enumerate(legs):
+        side = 1 if r_[0] > cx else -1
+        idx = k // 2
+        group = (idx + (0 if side > 0 else 1)) % 2
+        rr = Track(0, 0)
+        for s in range(8):
+            t = s * 10
+            if s % 2 == group:
+                rr.hold(t).to(t + 5, -side * 12, "o").to(t + 10, 0, "i")
+        rr.hold(OP)
+        rr.k[-1][2] = None
+        part(c, f"leg{k}", g, root, r_, r=rr)
+    part(c, "body", body, root, (cx, cy))
 
 
 # ================================================================ 04 💝

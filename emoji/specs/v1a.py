@@ -1,6 +1,7 @@
 """v1 remakes (02, 03, 04, 10, 13-23): the v1 silhouettes redrawn bold for 24px (pack weight W=46,
 min detail 28px) and animated from scratch in XTC MOTION. Techniques M# = moodboard.md."""
 import math
+import os
 
 from shapely import affinity
 from shapely.geometry import LineString
@@ -184,8 +185,8 @@ def sigil(c):
     top = (256, 26)
     sc_ = (256, 292)                     # spider centre
     spine = U(geo.line([(256, 150), (256, 404)], 50, "round"), geo.line([(212, 184), (300, 184)], 36, "round"))
-    abdomen = geo.ellipse(256, 322, 60, 76, 20)
-    body = U(spine, abdomen, geo.disc(256, 238, 36)).difference(brand_x(256, 324, 70, 50, bold=10))
+    abdomen = geo.ellipse(256, 326, 86, 92, 24)
+    body = U(spine, abdomen, geo.disc(256, 238, 36)).difference(brand_x(256, 330, 118, 60, bold=10))
     legs = [((282, 246), (372, 170), (436, 214)), ((282, 288), (392, 264), (446, 322)), ((282, 330), (374, 374), (416, 440))]
     # pendulum from the anchor at the top edge: dangles, damped swing after the drop
     pr = seq(-3, [(10, 3, "io"), (20, 0, "io"), (86, None, None), (98, 6, "io"), (110, -4.5, "io"), (122, 3.2, "io"),
@@ -482,35 +483,19 @@ def dagger_heart(c):
 # ================================================================ 16 💖
 
 
-@emoji("16-heart-pill", "💖", "сердечко, мармелад, желе, мило, таблетка", "heart pill, jelly, gummy, cute, candy",
-       "сердце-таблетка приседает, подпрыгивает и шлёпается желе: 128/76, мармеладная тряска с затуханием, X на лице отстаёт, ✦ на глянце",
+@emoji("16-heart-pill", "💖", "сердце xtc, лого, крест, люблю, xtc", "xtc heart, logo, cross, love, xtc",
+       "сердце с идеальным крест-лого X·XTC·C насквозь: лаб-даб на бит (быстро вверх, вдвое медленнее вниз), микро-досадка, покой; лого на месте",
        op=120, series=SERIES)
 def heart_pill(c):
     OP = 120
-    bot = (256, 466)                          # jelly pivot: the bottom of the tablet
-    face = geo.heart(256, 258, 380)
-    side = geo.heart(256, 294, 380)
-    body = U(face, side)
-    groove = face.exterior.buffer(10).intersection(geo.rect(0, 270, 512, 512)).intersection(side.buffer(-2))
-    xg = brand_x(256, 252, 160, 70, bold=12)
-    bodyg = body.difference(groove)
-    ys = [(10, None, None), (18, 6, "io"), (30, -32, "o"), (36, -36, "io"), (46, 0, "i5")]
-    y = seq(0.0, ys, f=lambda v: bot[1] + v)
-    y.loop(OP)
-    wob = [(10, None, None), (18, [112, 88], "io"), (24, [94, 105], "o"), (36, [98, 102], "io"), (45, [95, 105], "i"),
-           (47, [128, 76], "o"), (52, [88, 114], "io"), (58, [114, 90], "io"), (64, [92, 107], "io"), (71, [106, 95], "io"),
-           (78, [97, 103], "io"), (86, [101.5, 98.5], "io"), (94, [100, 100], "io")]
-    s = seq([100, 100], wob)
-    breathe(s, 94, 120, [100, 100], 1.0, 13)
-    s.loop(OP)
-    lay = part(c, "pill", bodyg, None, bot, p=Split(bot[0], y), s=s)
-    # the X on the face jiggles 2f late with a bigger swing (overlap)
-    xs = clip_loop(seq([100, 100], [(t, None if v is None else [100 + (v[0] - 100) * 1.25, 100 + (v[1] - 100) * 1.25], e)
-                                      for t, v, e in wob], 2), OP)
-    geo.hole(lay, xg, nm="X", p=(256, 252), a=(256, 252), s=xs)
-    gs = seq([0, 0], [(62, None, None), (67, [120, 120], "ox"), (73, [100, 100], "io"), (84, [0, 0], "i")], op=OP, loop_ease="lin")
-    gr = seq(-20, [(62, None, None), (84, 25, "os")], op=OP, loop_ease="lin")
-    geo.hole(lay, geo.spark(150, 196, 40, 0.34), nm="glint", p=(150, 196), a=(150, 196), s=gs, r=gr)
+    from specs.drop import cross_letters
+    heart = geo.heart(256, 262, 420)
+    L = cross_letters(256, 262, lh=44, width=250)
+    g = heart.difference(geo.U(*[q for q, _ in L.values()]))
+    hb = heart.bounds
+    s = seq([100, 100], [(8, None, None), (13, [110, 110], "snap"), (23, [100, 100], "io"), (28, [105, 105], "snap"),
+                         (38, [99, 99], "io"), (46, [100.4, 100.4], "io"), (54, [100, 100], "io")], op=OP)
+    part(c, "heart", g, None, (256, hb[3]), s=s)
 
 
 # ================================================================ 17 🪽
@@ -707,51 +692,32 @@ def _bone(p0, p1, w=40, knob=30):
     return U(geo.line([p0, p1], w, "flat"), *ends)
 
 
-@emoji("21-teddy-skull", "🧸", "мишка, плюшевый, мило, жутко-мило, рейв", "teddy, plush, cute, creepy cute, rave",
-       "готик-мишка с глазами-X качает головой под бас: два кивка, на третьей доле хедбэнг — уши-люверсы болтаются с отставанием, глаза жмурятся, кости позади щёлкают ножницами",
+@emoji("21-teddy-skull", "🧸", "мишка, челикс, xtc, кости, наш персонаж", "teddy, mascot, xtc, crossbones, character",
+       "мишка XTC (рисунок клиента 1:1): тяжёлый кивок под бас — два кивка и хедбэнг на третьей доле с досадкой, звёзды у уха подрастают по очереди, кости стоят",
        op=120, series=SERIES)
 def teddy(c):
     OP = 120
-    hc = (256, 262)
-    head = geo.disc(256, 256, 146, 32)
-    muzzle = geo.ellipse(256, 316, 76, 56, 20)
-    nose = geo.heart(256, 300, 58)
-    nose = affinity.scale(nose, 1, -1, origin=(256, 300))          # upside-down heart nose
-    mouth = U(geo.line([(256, 318), (256, 346)], 14), geo.line([(222, 348), (256, 346), (290, 348)], 14))
-    face_paths = geo.paths(head) + geo.paths(muzzle) + geo.paths(nose) + geo.paths(mouth)
-    # rhythm (beat = 30f): nod, nod, headbang (accent), hold
+    g = geo.svg(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "v1", "rec", "teddy.svg"))
+    polys = sorted(geo._polys(g), key=lambda p: -p.area)
+    body = polys[0]
+    b_ = body.bounds
+    stars = [p for p in polys[1:] if p.centroid.x > 330 and p.centroid.y < 260]
+    rest = [p for p in polys[1:] if p not in stars]
+    ax, ay = (b_[0] + b_[2]) / 2, b_[3]
     r = seq(0, [(2, None, None), (6, 3, "o"), (18, 0, "io"), (32, None, None), (36, -3, "o"), (48, 0, "io"),
-                (58, None, None), (61, -6, "io"), (65, 11, "o5"), (74, -3, "io"), (82, 1.5, "io"), (90, 0, "io")], op=OP)
-    y = seq(0.0, [(2, None, None), (6, 12, "o"), (18, 0, "io"), (32, None, None), (36, 12, "o"), (48, 0, "io"),
-                  (58, None, None), (61, -12, "io"), (65, 10, "o5"), (74, -4, "io"), (84, 0, "io")], f=lambda v: 380 + v)
-    y.loop(OP)
+                (58, None, None), (61, -5, "io"), (65, 9, "o5"), (74, -3, "io"), (82, 1.5, "io"), (90, 0, "io")], op=OP)
     s = seq([100, 100], [(2, None, None), (6, [103, 97], "o"), (18, [100, 100], "io"), (32, None, None),
                          (36, [103, 97], "o"), (48, [100, 100], "io"), (58, None, None), (61, [97, 103], "io"),
                          (65, [106, 94], "o5"), (74, [99, 101], "io"), (84, [100, 100], "io")])
     breathe(s, 92, 120, [100, 100], 0.6, 14)
     s.loop(OP)
-    head_n = rig(c, "head", (256, 380), p=Split(256, y), s=s, r=r)
-    # crossbones behind the head (they move with it; clipped away under the face so the white muzzle stays clean)
-    for j, sgn in enumerate((-1, 1)):
-        a0 = (256 - sgn * 186, 424)
-        a1 = (256 + sgn * 166, 230)
-        bone = _bone(a0, a1).difference(geo.disc(256, 256, 132, 24))
-        br = seq(0, [(60, None, None), (65, sgn * 9, "o5"), (70, -sgn * 3, "io"), (78, 0, "io")], op=OP)
-        part(c, f"bone{j}", bone, head_n, (256, 372), r=br)
-    # ears = eyelets, flopping 4f behind the head
-    for j, sgn in enumerate((-1, 1)):
-        ec = (256 + sgn * 118, 136)
-        ear = geo.ring(*ec, 62, 26, 20)
-        er = seq(0, [(6, None, None), (10, sgn * 8, "o"), (22, 0, "io"), (36, None, None), (40, sgn * 8, "o"), (52, 0, "io"),
-                     (64, None, None), (68, -sgn * 18, "o"), (76, sgn * 10, "io"), (84, -sgn * 5, "io"), (92, 0, "io")], op=OP)
-        base = (256 + sgn * 84, 184)
-        part(c, f"ear{j}", ear, head_n, base, r=er)
-    face = c.layer("face", [lot.group(face_paths + [lot.fill()], nm="face")], parent=head_n, p=hc, a=hc)
-    # X eyes (cut-outs) squeeze flat on the accent
-    es = seq([100, 100], [(62, None, None), (65, [118, 26], "o"), (74, [104, 70], "io"), (80, [100, 100], "io")], op=OP)
-    for k, x in enumerate((190, 322)):
-        ex = brand_x(x, 223, 78, 50, bold=12)                     # logo X eyes
-        face.shapes[0]["it"].insert(0, lot.group(geo.paths(ex), nm=f"eye{k}", p=(x, 223), a=(x, 223), s=es))
+    head = rig(c, "head", (ax, ay), s=s, r=r)
+    part(c, "body", geo.U(body, *rest), head, (ax, ay))
+    for k, p in enumerate(stars):
+        cx_, cy_ = p.centroid.x, p.centroid.y
+        t0 = 8 + k * 30
+        ss = seq([100, 100], [(t0, None, None), (t0 + 8, [122, 122], "o"), (t0 + 24, [100, 100], "io"), (t0 + 60, None, None), (t0 + 68, [118, 118], "o"), (t0 + 84, [100, 100], "io")], op=OP)
+        part(c, f"star{k}", p, head, (cx_, cy_), s=ss)
 
 
 # ================================================================ 22 💕

@@ -189,7 +189,7 @@ def raven(c):
 
 
 @emoji("148-broken-heart", "💔", "разбитое сердце, больно, расстался, эх, xtc", "broken heart, heartbreak, hurt, breakup, xtc",
-       "лаковое сердце с логотипным X: два удара, дрожь, трещина щёлкает раз, два — половинки отваливаются на шарнире-кончике и качаются, X рвётся пополам, из разлома капает латекс; срастаются обратно",
+       "лаковое сердце с логотипным X: два удара, дрожь, трещина щёлкает раз, два — половинки отваливаются на шарнире-кончике и качаются, X рвётся пополам; срастаются обратно",
        op=150, series="react")
 def broken_x(c):
     from shapely.geometry import LineString
@@ -230,10 +230,7 @@ def broken_x(c):
         r = _clip_loop(seq(0, fall, j, f=lambda v: sgn * v * amp), OP)
         py = _clip_loop(seq(0, sag, j, f=lambda v: tip[1] + v), OP)
         part(c, f"half{nm}", geom, whole, tip, p=Split(tip[0], py), r=r)
-    # latex drips off the crack lips: two drops fall from the dip, one stretches from the lower lip
-    for k, (t0, x0, y0) in enumerate(((58, hx - 10, by0 + d * 1.2), (66, hx + 14, by0 + d * 2.6), (96, hx - 12, by0 + d * 1.6))):
-        M.particle(c, f"drop{k}", geo.drop(x0, y0, 15, 36), t0, 30, (x0, y0), (x0 + (-18 if k % 2 == 0 else 18), by1 + 30), None,
-                   anchor=(x0, y0), fall="i5", pop=0.25, fade=0.25, s_end=60)
+
 
 
 # ================================================================ 149 opium face

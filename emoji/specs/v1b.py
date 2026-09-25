@@ -46,32 +46,6 @@ def print_scan(c):
     M.twinkle(c, "tw", cx + 150, cy - 150, 42, 82, 26)
 
 
-@emoji("25-mask-glyphs", "🎭", "маска, хоррор, маньяк, пятница, джейсон", "mask, horror, slasher, creepy, jason",
-       "хоккейная маска медленно поворачивается к тебе (параллакс прорезей), в прорезях вспыхивают глаза и косятся, по кромке — блик ножа ✦",
-       op=180, series="v1")
-def mask(c):
-    g = geo.svg(os.path.join(V1, "25-mask-glyphs.svg"))
-    shell = geo.U(*[geo.Polygon(p.exterior) for p in geo._polys(g)])
-    holes = shell.difference(g)
-    cx, cy = 256, 255
-    # yaw: the shell narrows a little while the holes slide the other way (parallax = fake 3D); the
-    # holes never leave the shell (shift 10px inside a 20px rim)
-    sx = Track([95, 100], 0).hold(20).to(60, [100, 100], "io").hold(140).to(176, [95, 100], "io").loop(180)
-    base = c.layer("mask", [geo.shape(shell, nm="shell")], p=(cx, cy), a=(cx, cy), s=sx)
-    hx = Track([-10, 0], 0).hold(20).to(60, [0, 0], "io").hold(140).to(176, [-10, 0], "io").loop(180)
-    geo.hole(base, holes, nm="holes", p=hx)
-    # eyes light up inside the two eye slots: pop in, glance right, glance left, blink out
-    eyes = sorted([e for e in geo._polys(holes) if e.area > 4000 and e.centroid.y > 150], key=lambda e: e.centroid.x)[:2]
-    off = c.null("eyes", p=Split(Track(256, 0).hold(20).to(60, 266, "io").hold(140).to(176, 256, "io").loop(180), 256), a=(256, 256))
-    for k, e in enumerate(eyes):
-        ex, ey = e.centroid.x - 10, e.centroid.y
-        es = Track([0, 0], 0).hold(64 + k * 3).to(72 + k * 3, [118, 118], "snap").to(78 + k * 3, [100, 100], "io")
-        es.hold(128).to(132, [110, 10], "i").to(136, [0, 0], "lin").loop(180, "lin")
-        ep = Track([ex, ey], 0).hold(86).to(94, [ex + 14, ey], "snap").hold(104).to(112, [ex - 12, ey + 2], "snap").hold(120).to(126, [ex, ey], "io").loop(180)
-        c.layer(f"eye{k}", [geo.shape(geo.disc(ex, ey, 21), nm="eye")], parent=off, p=ep, a=(ex, ey), s=es)
-    M.twinkle(c, "tw", 392, 96, 40, 104, 26)
-
-
 @emoji("26-tribal-heart", "❤️‍🔥", "горю, страсть, огонь, люблю, трайбл", "on fire, passion, burning love, tribal, heart",
        "трайбл-сердце загорается: рога-завитки лижут вверх как языки пламени вразнобой, из макушки летят угли",
        op=120, series="v1")
@@ -120,35 +94,6 @@ def tribal_eye(c):
         t0 = 128 + (k % 4) * 2
         e = Track(100, 0).hold(100).to(114, 0, "i").hold(t0).to(t0 + 8, 100, "o").loop(150)
         c.layer(f"ray{k}", [geo.stroked([p0, p1], 30, e=e)], p=(0, 0), a=(0, 0))
-
-
-@emoji("28-tribal-cross", "✝️", "крест, вера, святое, gothic, аминь", "cross, faith, holy, gothic, amen",
-       "готический крест тяжело покачивается, собирается в центр и выстреливает лучами по очереди, вспыхивает ✦",
-       op=150, series="v1")
-def tribal_cross(c):
-    cx, cy = 256, 200
-    def arm(ang, L, W):
-        a = math.radians(ang)
-        ux, uy = math.cos(a), math.sin(a)
-        nx, ny = -uy, ux
-        pts = [(cx + nx * W / 2, cy + ny * W / 2), (cx + ux * (L - W * 0.9) + nx * W / 2, cy + uy * (L - W * 0.9) + ny * W / 2),
-               (cx + ux * (L - W * 0.55) + nx * W * 0.78, cy + uy * (L - W * 0.55) + ny * W * 0.78),
-               (cx + ux * L, cy + uy * L),
-               (cx + ux * (L - W * 0.55) - nx * W * 0.78, cy + uy * (L - W * 0.55) - ny * W * 0.78),
-               (cx + ux * (L - W * 0.9) - nx * W / 2, cy + uy * (L - W * 0.9) - ny * W / 2), (cx - nx * W / 2, cy - ny * W / 2)]
-        return geo.poly(pts)
-    arms = [(-90, 162, 76), (0, 176, 70), (90, 276, 80), (180, 176, 70)]
-    core = geo.disc(cx, cy, 58).difference(geo.disc(cx, cy, 24))
-    r = Track(0, 0).to(20, 3, "io").to(44, -2.5, "io").to(62, 0, "io").hold(128).to(140, 2, "io").to(150, 0, "io")
-    root = c.null("root", p=(cx, 20), a=(cx, 20), r=r)
-    for k, (ang, L, W) in enumerate(arms):
-        t0 = 96 + k * 5
-        s = Track([100, 100], 0).hold(78).to(92, [40, 40], "is").hold(t0).to(t0 + 8, [106, 106], "snap").to(t0 + 16, [97, 97], "io").to(t0 + 24, [100, 100], "io").loop(150)
-        c.layer(f"arm{k}", [geo.shape(arm(ang, L, W), nm="arm")], parent=root, p=(cx, cy), a=(cx, cy), s=s)
-    cs = Track([100, 100], 0).hold(78).to(92, [120, 120], "is").to(98, [90, 90], "snap").to(106, [100, 100], "io").loop(150)
-    lay(c, "core", core, (cx, cy), parent=root, s=cs)
-    M.twinkle(c, "tw", cx + 110, cy - 100, 46, 112, 28)
-    M.twinkle(c, "tw2", cx - 104, cy + 126, 30, 122, 22)
 
 
 @emoji("29-drip-xtc", "💦", "капает, течёт, мокро, xtc, сочно", "dripping, wet, drip, xtc, juicy",
@@ -308,28 +253,3 @@ def brand_word_x(cx, cy):
     return brand_letter("X", cx, cy, 46, 90, 11)
 
 
-@emoji("43-scorpion-sigil", "🦂", "скорпион, ужалю, опасно, тату, яд", "scorpion, sting, danger, tattoo, venom",
-       "скорпион взводит хвост назад (антиципация) и бьёт жалом вперёд с ударом, клешни щёлкают дважды, на жале ✦",
-       op=150, series="v1")
-def scorpion(c):
-    parts = geo.tgs_geometry(os.path.join(V1, "..", "tg-anim", "43-scorpion-sigil.tgs"))
-    fat = {k: v.buffer(13).buffer(-5) for k, v in parts.items()}
-    root = c.null("root", p=(256, 322), a=(256, 300),
-                  s=Track([88, 88], 0).hold(60).to(64, [92, 84], "slam").to(72, [87, 89], "io").to(78, [88, 88], "io").loop(150))
-    lay(c, "body", fat["body"], (256, 360), parent=root)
-    tb = (384, 350)
-    tr = Track(0, 0).hold(24).to(52, 14, "io").to(60, -30, "strike").to(64, -24, "io").to(72, -28, "io").hold(96).to(120, 0, "io").loop(150)
-    tail = lay(c, "tail", fat["tail"], tb, parent=root, r=tr)
-    cr = Track(0, 0)
-    for t in (84, 96):
-        cr.hold(t).to(t + 4, -16, "snap").to(t + 9, 0, "slam")
-    cr.loop(150)
-    lay(c, "claw_up", fat["claw_up"], (150, 280), parent=root, r=cr)
-    lay(c, "claw_low", fat["claw_low"], (120, 330), parent=root,
-        r=Track(0, 0).hold(86).to(90, 12, "snap").to(95, 0, "slam").hold(98).to(102, 12, "snap").to(107, 0, "slam").loop(150))
-    M.twinkle(c, "tw", 336, 96, 36, 62, 24, parent=tail)
-    from specs.drop import speed_lines
-    for k, (p0, p1) in enumerate((((236, 110), (200, 92)), ((236, 150), (192, 146)), ((250, 72), (224, 48)))):
-        e = Track(0, 0).hold(60).to(66, 100, "o").hold(150)
-        s0 = Track(0, 0).hold(62).to(69, 100, "i").hold(150)
-        c.layer(f"hit{k}", [geo.stroked([p0, p1], 20, e=e, s=s0)], p=(0, 0), a=(0, 0), ip=60, op=70)

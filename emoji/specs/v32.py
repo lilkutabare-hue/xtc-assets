@@ -50,28 +50,6 @@ def pattee_cross(cx=256, cy=256, L=214, w0=44, w1=150):
 # ================================================================ 144 ☦️ gothic pendant
 
 
-@emoji("144-cross-pendant", "☦️", "крест, подвеска, цепь, готика, xtc", "cross, pendant, chain, gothic, xtc",
-       "готический крест-подвеска на цепи из люверсов: качается маятником с затуханием, на крайней точке разворачивается ребром и ловит ✦ на лепестке",
-       op=150, series="cross")
-def pendant(c):
-    OP = 150
-    top = (256, 14)
-    hang = 60
-    cross = fleury_cross(256, top[1] + hang + 176, 190, 50, arms=(0.62, 1.0, 0.62, 0.56))
-    back = cross.difference(brand_x(256, top[1] + hang + 176, 110, 56))
-    links = geo.U(*[geo.ring(256, top[1] + 18 + k * 30, 15, 6, 12) for k in range(2)])
-    # pendulum from the bail: big swing, damped 4 half-periods
-    pr = seq(0, [(6, None, None), (16, -13, "io"), (40, 12, "io"), (64, -8, "io"), (86, 5, "io"), (106, -2.5, "io"), (124, 1, "io"), (140, 0, "io")], op=OP)
-    pend = rig(c, "pend", top, r=pr)
-    part(c, "chain", links, pend, top)
-    body = rig(c, "body", (256, top[1] + hang), parent=pend)
-    # the cross twists edge-on at the extremes of the swing (fake-3D about its own axis)
-    segs = [(10, 40, 0, 180, "io"), (40, 64, 180, 360, "io"), (64, 86, 360, 520, "io"), (86, 106, 520, 720, "io")]
-    root, th, fr, bk = M.spin3d(c, "cross", cross, back, 256, top[1] + hang + 176, segs, thick=26, lip=18, parent=body)
-    M.glare_sweep(c, fr, 256, top[1] + hang + 176, 110, 24, travel=300, parent=root, length=520, w1=26, w2=12, gap=12,
-                  sparks=[(256 + 120, top[1] + hang + 70, 36, 112, 22)])
-
-
 # ================================================================ 145 ➕ iron cross
 
 
@@ -289,18 +267,11 @@ def xtc_turn(c):
                 hi = m
         keys.append(round((lo + hi) / 2, 2))
     keys = sorted(set(keys))
-    sx = fit(lambda t: 100 * abs(math.cos(math.radians(th(t)))), keys)
+    sx = fit(lambda t: max(4.0, 100 * abs(math.cos(math.radians(th(t))))), keys)     # never 0: rlottie would drop the frame
     st = Track([sx.k[0][1], 100], sx.k[0][0])
     for i in range(1, len(sx.k)):
         st.to(sx.k[i][0], [sx.k[i][1], 100], sx.k[i - 1][2])
     body = rig(c, "body", (cx, cy + H / 2))
-    # edge band (thickness) near edge-on
-    band = geo.rect(cx - 16, cy - H / 2 + 8, cx + 16, cy + H / 2 - 8)
-    bs = fit(lambda t: 100 * max(0.0, 1 - abs(math.cos(math.radians(th(t)))) / 0.35), keys)
-    bt = Track([bs.k[0][1], 100], bs.k[0][0])
-    for i in range(1, len(bs.k)):
-        bt.to(bs.k[i][0], [bs.k[i][1], 100], bs.k[i - 1][2])
-    c.layer("band", [geo.shape(band, nm="band")], parent=body, p=(cx, cy), a=(cx, cy), s=bt)
     # three designs, each visible for its 180° window (hold keys on opacity)
     edges = [k for k in keys if k not in (0, OP) and all(abs(k - v) > 0.01 for seg in segs for v in seg[:2])]
     for i, g in enumerate(letters):
@@ -422,3 +393,155 @@ def lego_head(c):
         g = geo.move(g, cx - ax, 0)
         grp_y = (b[1] + b[3]) / 2
         geo.hole(hl, g, nm=nm, p=Split(x, grp_y), a=(cx, grp_y), s=st)
+
+
+# ================================================================ 43 🦂 scorpion (rebuilt)
+
+
+def scorpion_parts(cx=250, cy=330):
+    """side view: body with the logo X on its back, two claws to the right, tail curling up over the back."""
+    body = geo.U(geo.ellipse(cx, cy, 128, 54, 32), geo.ellipse(cx - 100, cy - 6, 56, 40, 24))
+    body = body.difference(brand_x(cx + 6, cy - 2, 120, 56, bold=8))
+    legs = []
+    for k, x in enumerate((cx - 72, cx - 24, cx + 24, cx + 72)):
+        legs.append(geo.brush([(x, cy + 30), (x - 18, cy + 72), (x - 4, cy + 110)], 26, taper=(1.0, 0.6), smooth=True, n=6))
+    head = geo.ellipse(cx + 128, cy - 4, 46, 34, 24)
+    # claws: arm + pincer (two jaws), on the right
+    arm = geo.brush([(cx + 150, cy - 10), (cx + 200, cy - 60)], 34, taper=(1.0, 0.9), smooth=False)
+    jaw_top = geo.brush([(cx + 196, cy - 64), (cx + 236, cy - 96), (cx + 258, cy - 74)], 30, taper=(1.0, 0.5), smooth=True, n=6)
+    jaw_bot = geo.brush([(cx + 196, cy - 64), (cx + 246, cy - 48), (cx + 256, cy - 68)], 30, taper=(1.0, 0.5), smooth=True, n=6)
+    # tail: 5 segments arcing up and over the back from the rear, sting at the tip
+    pts = [(cx - 150, cy - 20), (cx - 196, cy - 80), (cx - 190, cy - 160), (cx - 130, cy - 220), (cx - 50, cy - 236), (cx + 20, cy - 214)]
+    tail = geo.brush(pts, 44, taper=(1.0, 0.7), smooth=True, n=8)
+    for k, p in enumerate(pts[1:5]):
+        tail = geo.U(tail, geo.disc(p[0], p[1], 30 - k * 2))
+    sting = geo.poly([(cx + 8, cy - 232), (cx + 40, cy - 202), (cx + 60, cy - 150), (cx + 18, cy - 196)]).buffer(6).buffer(-6)
+    return geo.U(body, *legs, head, arm), (jaw_top, jaw_bot, (cx + 196, cy - 64)), (geo.U(tail, sting), (cx - 150, cy - 20))
+
+
+@emoji("43-scorpion-sigil", "🦂", "скорпион, x, xtc, жало, удар, готика", "scorpion, x, xtc, sting, strike, goth",
+       "скорпион с логотипным X на спине: хвост взводится назад (антиципация), бьёт жалом вперёд с ударом и дрожью, клешня щёлкает дважды, тело подаётся вперёд и садится",
+       op=150, series="v1")
+def scorpion(c):
+    OP = 150
+    cx, cy = 250, 330
+    body, (jt, jb, jp), (tail, tp) = scorpion_parts(cx, cy)
+    fit_ = rig(c, "fit", (256, 256), s=(78, 78), p=(266, 262))
+    # body lunge on the strike
+    bx = seq(float(cx), [(30, None, None), (40, cx - 10.0, "io"), (46, cx + 18.0, "slam"), (47, cx + 18.0, "lin"), (58, cx - 4.0, "o"), (70, float(cx), "io")], op=OP)
+    bs = seq([100, 100], [(45, None, None), (46, [106, 94], "lin"), (54, [98, 102], "io"), (62, [100, 100], "io")], op=OP)
+    root = rig(c, "body", (cx, cy + 110), parent=fit_, p=Split(bx, cy + 110), s=bs)
+    # tail: winds back 24f, strikes forward 6f (rotation about its root), quivers, returns slowly
+    tr = seq(0, [(14, None, None), (38, -34, "io"), (44, 42, "strike"), (46, 36, "io"), (48, 44, "io"), (50, 38, "io"), (52, 42, "io"), (54, 40, "io"),
+                 (74, None, None), (100, 0, "io")], op=OP)
+    part(c, "tail", tail, root, tp, r=tr)
+    part(c, "body", body, root, (cx, cy))
+    # claw: the top jaw snaps shut twice after the strike
+    jr = seq(0, [(56, None, None), (60, 22, "decel"), (64, 0, "slam"), (68, None, None), (72, 22, "decel"), (76, 0, "slam")], op=OP)
+    part(c, "jawT", jt, root, jp, r=jr)
+    part(c, "jawB", jb, root, jp)
+
+
+# ================================================================ gothic crosses (rebuilt): tapered arms, spear tips, the logo X at the crossing
+
+
+def gothic_cross(cx=256, cy=256, L=200, w=56, arms=(0.62, 1.0, 0.62, 0.56), x_w=0.0):
+    """gothic cross: each arm narrows to a waist, flares and ends in a spear point; arms = (right, down,
+    left, up) as fractions of L. x_w > 0 cuts the logo X (that wide) through the crossing."""
+    parts = []
+    for ang, f in zip((0, 90, 180, 270), arms):
+        a = math.radians(ang)
+        ux, uy = math.cos(a), math.sin(a)
+        px, py = -uy, ux
+        L_ = L * f
+        prof = [(0.0, 0.5), (0.5, 0.36), (0.8, 0.5), (0.9, 0.95), (1.0, 0.0)]
+        side1 = [(cx + ux * L_ * s + px * w * k, cy + uy * L_ * s + py * w * k) for s, k in prof]
+        side2 = [(cx + ux * L_ * s - px * w * k, cy + uy * L_ * s - py * w * k) for s, k in prof[::-1]]
+        parts.append(geo.poly(side1 + side2))
+    g = geo.U(*parts).buffer(3, join_style=2).buffer(-3, join_style=2)
+    g = geo.U(g, geo.disc(cx, cy, w * 0.9, 24))
+    if x_w:
+        g = g.difference(brand_x(cx, cy, x_w, x_w * 0.46, bold=6))
+    return g
+
+
+@emoji("144-cross-pendant", "☦️", "крест, подвеска, цепь, готика, xtc", "cross, pendant, chain, gothic, xtc",
+       "готический крест-подвеска с логотипным X в перекрестии: висит на цепи из люверсов, тяжёлый маятник с затуханием, в крайних точках разворачивается ребром (torso), на обороте — гладкий",
+       op=150, series="cross")
+def pendant(c):
+    OP = 150
+    top = (256, 14)
+    hang = 56
+    ccx, ccy = 256, top[1] + hang + 190
+    cross = gothic_cross(ccx, ccy, 196, 50, x_w=112)
+    back = gothic_cross(ccx, ccy, 196, 50)
+    links = geo.U(*[geo.ring(256, top[1] + 16 + k * 28, 14, 6, 12) for k in range(2)])
+    pr = seq(0, [(6, None, None), (18, -12, "io"), (44, 11, "io"), (70, -7, "io"), (94, 4, "io"), (114, -2, "io"), (132, 0.8, "io"), (148, 0, "io")], op=OP)
+    pend = rig(c, "pend", top, r=pr)
+    part(c, "chain", links, pend, top)
+    body = rig(c, "body", (256, top[1] + hang), parent=pend)
+    segs = [(12, 44, 0, 180, "io"), (44, 70, 180, 360, "io"), (70, 94, 360, 520, "io"), (94, 114, 520, 720, "io")]
+    root, th, fr, bk = M.spin3d(c, "cross", cross, back, ccx, ccy, segs, thick=24, lip=16, parent=body)
+    M.glare_sweep(c, fr, ccx, ccy, 116, 22, travel=300, parent=root, length=520, w1=24, w2=10, gap=12)
+
+
+@emoji("28-tribal-cross", "✝️", "крест, вера, святое, готика, аминь, xtc", "cross, faith, holy, gothic, amen, xtc",
+       "большой готический крест с логотипным X: стоит, тяжело поднимается (антиципация) и падает, вбивается в землю — 1f удар, ударные линии, дрожь; по граням бежит блик; покой",
+       op=150, series="v1")
+def gothic_big(c):
+    OP = 150
+    cx, cy = 256, 236
+    cross = gothic_cross(cx, cy, 236, 60, arms=(0.66, 1.0, 0.66, 0.6), x_w=134)
+    y = seq(float(cy), [(20, None, None), (34, cy - 40.0, "io"), (46, cy + 8.0, "slam"), (47, cy + 8.0, "lin"), (56, cy - 4.0, "o"), (66, float(cy), "io")], op=OP)
+    s_ = seq([100, 100], [(20, None, None), (34, [96, 104], "io"), (46, [108, 92], "slam"), (47, [108, 92], "lin"), (56, [97, 103], "o"), (66, [100, 100], "io")], op=OP)
+    px = seq(256.0, [(47, None, None)])
+    M.shake(px, 47, 61, 4, 256.0, step=2, decay=0.7)
+    px.loop(OP)
+    root = rig(c, "cross", (cx, cy + 236), p=Split(px, _sh2(y, 236)), s=s_)
+    lay = part(c, "cross", cross, root, (cx, cy))
+    hit_lines(c, "hit", [((80, 470), (40, 484)), ((432, 470), (472, 484)), ((150, 486), (120, 500)), ((362, 486), (392, 500))], 46, w=20)
+    M.glare_sweep(c, lay, cx, cy, 90, 28, travel=420, angle=-35, parent=root, length=700, w1=30, w2=12, gap=14)
+
+
+def _sh2(tr, d):
+    out = Track(tr.k[0][1] + d, tr.k[0][0])
+    out.k = [[t, v + d, e] for t, v, e in tr.k]
+    return out
+
+
+# ================================================================ 25 🎭 hockey mask (rebuilt clean)
+
+
+def hockey_mask(cx=256, cy=262):
+    face = geo.ellipse(cx, cy, 176, 226, 48)
+    face = geo.U(face, geo.rrect(cx - 150, cy - 40, cx + 150, cy + 150, 60)).intersection(geo.ellipse(cx, cy + 10, 180, 236, 48))
+    face = face.buffer(-8, join_style=1).buffer(8, join_style=1)
+    eyes = geo.U(geo.ellipse(cx - 72, cy - 40, 46, 30, 24), geo.ellipse(cx + 72, cy - 40, 46, 30, 24))
+    vents = []
+    for (x, y) in ((cx - 100, cy + 30), (cx + 100, cy + 30), (cx - 110, cy + 92), (cx + 110, cy + 92), (cx - 60, cy + 120), (cx + 60, cy + 120),
+                   (cx, cy + 150), (cx - 34, cy + 178), (cx + 34, cy + 178), (cx - 70, cy + 60), (cx + 70, cy + 60), (cx, cy + 92)):
+        vents.append(geo.disc(x, y, 13, 12))
+    holes = geo.U(eyes, *vents)
+    x = brand_x(cx, cy - 150, 112, 54, bold=8)
+    return face.difference(holes).difference(x), holes, eyes
+
+
+@emoji("25-mask-glyphs", "🎭", "маска, хоррор, маньяк, пятница, джейсон, xtc", "mask, horror, slasher, creepy, jason, xtc",
+       "хоккейная маска с логотипным X на лбу медленно поворачивается к тебе (параллакс прорезей), в глазницах загораются глаза и косятся, по маске бежит блик",
+       op=180, series="v1")
+def mask(c):
+    OP = 180
+    shell, holes, eyes = hockey_mask()
+    cx, cy = 256, 262
+    sx = Track([95, 100], 0).hold(20).to(60, [100, 100], "io").hold(140).to(176, [95, 100], "io").loop(OP)
+    base = c.layer("mask", [geo.shape(shell, nm="shell")], p=(cx, cy), a=(cx, cy), s=sx)
+    hx = Track([-10, 0], 0).hold(20).to(60, [0, 0], "io").hold(140).to(176, [-10, 0], "io").loop(OP)
+    geo.hole(base, holes, nm="holes", p=hx)
+    off = c.null("eyes", p=Split(Track(256, 0).hold(20).to(60, 266, "io").hold(140).to(176, 256, "io").loop(OP), 256), a=(256, 256))
+    for k, e in enumerate(sorted(geo._polys(eyes), key=lambda e: e.centroid.x)):
+        ex, ey = e.centroid.x - 10, e.centroid.y
+        es = Track([0, 0], 0).hold(64 + k * 3).to(72 + k * 3, [118, 118], "snap").to(78 + k * 3, [100, 100], "io")
+        es.hold(128).to(132, [110, 10], "i").to(136, [0, 0], "lin").loop(OP, "lin")
+        ep = Track([ex, ey], 0).hold(86).to(94, [ex + 14, ey], "snap").hold(104).to(112, [ex - 12, ey + 2], "snap").hold(120).to(126, [ex, ey], "io").loop(OP)
+        c.layer(f"eye{k}", [geo.shape(geo.disc(ex, ey, 20), nm="eye")], parent=off, p=ep, a=(ex, ey), s=es)
+    M.glare_sweep(c, base, cx, cy, 96, 30, travel=420, angle=-35, length=700, w1=30, w2=12, gap=14)

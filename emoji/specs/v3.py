@@ -99,18 +99,17 @@ def tile_c(c):
 # ================================================================ 134 🎽 louverse tank
 
 
-def tank_shape(cx=256, top=34, bottom=490):
-    """tank top: clean symmetric silhouette (straps, round armholes, straight hem)."""
-    hw, strap, chest = 172, 46, 150
-    outer = geo.rrect(cx - hw, top + chest, cx + hw, bottom, 22)
-    torso = geo.rrect(cx - hw + 28, top + 60, cx + hw - 28, bottom, 30)
-    body = geo.U(outer, torso)
-    straps = geo.U(geo.rrect(cx - hw + 34, top, cx - hw + 34 + strap, top + 120, 14), geo.rrect(cx + hw - 34 - strap, top, cx + hw - 34, top + 120, 14))
-    body = geo.U(body, straps)
-    body = body.difference(geo.ellipse(cx, top - 60, 110, 108, 24))                       # neckline
-    body = body.difference(geo.ellipse(cx - hw - 44, top + 96, 84, 76, 24))              # armholes
-    body = body.difference(geo.ellipse(cx + hw + 44, top + 96, 84, 76, 24))
-    return body.buffer(8, join_style=1).buffer(-8, join_style=1)
+def tank_shape(cx=256, top=70, bottom=486):
+    """tank top: narrow straps, deep round armholes, U neckline, hem slightly wider than the chest."""
+    hw_chest, hw_hem, strap_w = 136, 158, 34
+    body = geo.poly([(cx - hw_chest, top + 150), (cx - hw_hem, bottom), (cx + hw_hem, bottom), (cx + hw_chest, top + 150)])
+    straps = geo.U(geo.rrect(cx - 96 - strap_w / 2, top, cx - 96 + strap_w / 2, top + 180, 14), geo.rrect(cx + 96 - strap_w / 2, top, cx + 96 + strap_w / 2, top + 180, 14))
+    yoke = geo.rect(cx - 96, top + 100, cx + 96, top + 190)
+    body = geo.U(body, straps, yoke)
+    body = body.difference(geo.ellipse(cx, top + 22, 84, 110, 24))                     # U neckline
+    body = body.difference(geo.ellipse(cx - hw_chest - 40, top + 78, 90, 100, 24))       # armholes
+    body = body.difference(geo.ellipse(cx + hw_chest + 40, top + 78, 90, 100, 24))
+    return body.buffer(10, join_style=1).buffer(-10, join_style=1)
 
 
 DOTS = {"X": ["X.X", "X.X", ".X.", "X.X", "X.X"], "T": ["XXX", ".X.", ".X.", ".X.", ".X."], "C": [".XX", "X..", "X..", "X..", ".XX"]}
@@ -120,9 +119,10 @@ DOTS = {"X": ["X.X", "X.X", ".X.", "X.X", "X.X"], "T": ["XXX", ".X.", ".X.", ".X
        "louverse tank: XTC выложено люверсами на ткани; ткань дышит, люверсы моргают волной слева направо (кольцо сжимается в щель), на выдохе хром ловит ✦",
        op=150, series="drop")
 def tank(c):
+    OP = 150
     body = tank_shape()
-    pitch, r = 30, 12
-    x0, y0 = 256 - 5 * pitch, 300 - 2 * pitch
+    pitch, r = 26, 10
+    x0, y0 = 256 - 5 * pitch, 320 - 2 * pitch
     cols = {}
     col = 0
     for ch in "XTC":
@@ -132,17 +132,20 @@ def tank(c):
                     cols.setdefault(col, []).append(geo.disc(x0 + col * pitch, y0 + i * pitch, r))
             col += 1
         col += 1
-    # fabric breathes: slow inhale/exhale around the hem
-    bs = Track([100, 100], 0).to(40, [103, 101.5], "io").to(84, [100, 100], "io").to(118, [102, 101], "io").to(150, [100, 100], "io")
-    lay = c.layer("tank", [geo.shape(body, nm="tank")], p=(256, 490), a=(256, 490), s=bs)
-    # eyelets blink as a wave: each column pinches to a slit and reopens (M3), 3f stagger
+    # the tank hangs on a hook and swings like the longsleeve: heavy pendulum with damping, a tug at 90
+    hook = geo.brush(geo.arc(256 + 14, 44, 24, 180, 450, 20)[::-1] + [(256, 74)], 20, taper=(0.9, 1.0), smooth=False)
+    rr = Track(0, 0).to(24, 3, "io").to(54, -2.4, "io").to(82, 1.6, "io").hold(90).to(96, -4, "snap")
+    M.settle(rr, 104, 0, 2.6, n=3, per=16, decay=0.5, hit="io")
+    rr.loop(OP)
+    root = c.null("root", p=(256, 22), a=(256, 22), r=rr)
+    c.layer("hook", [geo.shape(hook, nm="hook")], parent=root, p=(256, 22), a=(256, 22))
+    lay = c.layer("tank", [geo.shape(body, nm="tank")], parent=root, p=(256, 74), a=(256, 74))
     for k, g in cols.items():
         cx = x0 + k * pitch
         t = 30 + k * 3
-        s = Track([100, 100], 0).hold(t).to(t + 5, [112, 10], "i").to(t + 11, [100, 100], "o").loop(150)
-        geo.hole(lay, geo.U(*g), nm=f"col{k}", p=(cx, 300), a=(cx, 300), s=s)
-    M.glare_sweep(c, lay, 256, 300, 96, 30, travel=330, angle=-35, length=560, w1=30, w2=14, gap=14,
-                  sparks=[(x0 + 10 * pitch, y0, 30, 100, 22)])
+        s = Track([100, 100], 0).hold(t).to(t + 5, [112, 10], "i").to(t + 11, [100, 100], "o").loop(OP)
+        geo.hole(lay, geo.U(*g), nm=f"col{k}", p=(cx, 320), a=(cx, 320), s=s)
+    M.glare_sweep(c, lay, 256, 300, 100, 30, travel=360, angle=-35, parent=root, length=600, w1=30, w2=14, gap=14)
 
 
 # ================================================================ 135 👖 LATEXX pants

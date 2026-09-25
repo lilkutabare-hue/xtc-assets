@@ -54,31 +54,18 @@ def lips_e(c):
     g = rec("lips")
     b_ = g.bounds
     cx, cy = (b_[0] + b_[2]) / 2, (b_[1] + b_[3]) / 2
-    # the mouth line: split the artwork into the upper and the lower lip along the mouth's centre line
-    holes = [geo.Polygon(r) for p in geo._polys(g) for r in p.interiors]
-    mouth = max(holes, key=lambda h: h.area)
-    my = mouth.centroid.y
-    upper = g.intersection(geo.rect(0, 0, 512, my))
-    lower = g.intersection(geo.rect(0, my, 512, 512))
-    # KISS: lips pucker (narrow, taller, lips press together), push to the camera, hold, "mwah" - lips
-    # part with a 1f smack and the whole mouth recoils, settles; twice per loop with a rest between
-    root_s = Track([100, 100], 0)
-    root_r = Track(0, 0)
-    up_y = Track(0.0, 0)
-    lo_y = Track(0.0, 0)
-    for t, d in ((10, -4), (76, 3)):
-        root_s.hold(t).to(t + 14, [84, 110], "io").to(t + 20, [92, 118], "io").to(t + 24, [90, 116], "io")   # pucker, push
-        root_s.to(t + 26, [108, 96], "slam").to(t + 27, [108, 96], "lin").to(t + 35, [97, 103], "o").to(t + 43, [101, 99.5], "io").to(t + 52, [100, 100], "io")
-        root_r.hold(t).to(t + 20, d, "io").to(t + 52, 0, "io")
-        up_y.hold(t).to(t + 14, 9.0, "io").hold(t + 24).to(t + 26, -6.0, "slam").to(t + 36, 0.0, "o")        # lips press, then part
-        lo_y.hold(t).to(t + 14, -9.0, "io").hold(t + 24).to(t + 26, 6.0, "slam").to(t + 36, 0.0, "o")
-    root_s.loop(OP)
-    root_r.loop(OP)
-    up_y.loop(OP)
-    lo_y.loop(OP)
-    root = rig(c, "lips", (cx, cy), s=root_s, r=root_r)
-    part(c, "upper", upper, root, (cx, my), p=Split(cx, _sh(up_y, my)))
-    part(c, "lower", lower, root, (cx, my), p=Split(cx, _sh(lo_y, my)))
+    # KISS on the one figure: pucker (narrow + taller, 14f), push to the camera (118%, snap), hold,
+    # smack (1f wide squash) and release with a settle; twice per loop with a rest, slight tilt
+    s_ = Track([100, 100], 0)
+    r = Track(0, 0)
+    for t, d in ((10, -5), (78, 4)):
+        s_.hold(t).to(t + 14, [84, 110], "io").to(t + 19, [104, 122], "snap").hold(t + 24)
+        s_.to(t + 26, [112, 94], "slam").to(t + 27, [112, 94], "lin").to(t + 35, [96, 103], "o").to(t + 43, [101.5, 99.5], "io").to(t + 52, [100, 100], "io")
+        r.hold(t).to(t + 19, d, "io").to(t + 30, d * 0.4, "io").to(t + 52, 0, "io")
+    s_.loop(OP)
+    r.loop(OP)
+    root = rig(c, "lips", (cx, cy + 40), s=s_, r=r)
+    part(c, "lips", g, root, (cx, cy))
 
 
 # ================================================================ 154 💯 100%% XTC
@@ -115,6 +102,13 @@ def hundred_xtc(c):
         t0 = 40 + k * 34
         segs = [(t0, t0 + 28, 0, 360, (0.4, 0.0, 0.16, 1.0))]
         M.spin3d(c, f"pc{k}", pc, pc, px, py, segs, thick=22, lip=12, parent=root)
+
+
+def _mul(tr, k):
+    """scale track × k (fit the artwork into the 8px margin without touching its keys)."""
+    out = Track([v * k for v in tr.k[0][1]], tr.k[0][0])
+    out.k = [[t, [a * k for a in v], e] for t, v, e in tr.k]
+    return out
 
 
 def _sh(tr, d):
@@ -209,36 +203,37 @@ def star_flake(c):
 # ================================================================ 158 🎼 clef
 
 
-def clef(cx=256, cy=256, h=440, w=40):
-    """stylised treble clef: bottom curl, curved stem, top loop, big middle loop (spiral)."""
-    k = h / 440
-    P = lambda x, y: (cx + x * k, cy + y * k)
-    tail = geo.brush([P(-46, 196), P(-64, 172), P(-40, 152), P(-6, 168), P(-4, 130)], w * 0.9, taper=(0.55, 1.0), smooth=True, n=8)
-    stem = geo.brush([P(-4, 130), P(4, 0), P(22, -150), P(30, -214)], w, taper=(1.0, 0.9), smooth=True, n=6)
-    top = geo.brush([P(30, -214), P(54, -196), P(58, -150), P(30, -110), P(-10, -70)], w * 0.95, taper=(0.9, 0.7), smooth=True, n=8)
-    loop = []
-    for i in range(37):
-        t = i / 36
-        ang = math.radians(-100 + 330 * t)
-        r = 110 - 44 * t
-        loop.append(P(-8 + r * math.cos(ang), 56 + r * math.sin(ang) * 0.92))
-    spiral = geo.brush(loop, w * 1.05, taper=(0.8, 0.5), smooth=True, n=4)
-    return geo.U(tail, stem, top, spiral)
-
-
-@emoji("158-clef", "🎼", "скрипичный ключ, музыка, records, xtc, трек", "treble clef, music, records, xtc, track",
-       "скрипичный ключ XTC Records: качается метрономом на бит (120 BPM) с тяжёлой досадкой, на четвёртой доле удар — приседает и подпрыгивает",
+@emoji("158-clef", "🎼", "скрипичный ключ, музыка, records, xtc, трек, ноты", "treble clef, music, records, xtc, track, notes",
+       "XTC Records: скрипичный ключ качается метрономом на 120 BPM с тяжёлой досадкой, ноты-сердечки подпрыгивают на слабых долях с запаздыванием, на четвёртой доле удар — всё приседает",
        op=120, series=SER)
 def clef_e(c):
     OP = 120
-    g = clef(256, 262, 430, 42)
+    g = rec("clef")
+    polys = sorted(geo._polys(g), key=lambda p: -p.area)
+    clef, notes = polys[0], polys[1:]
+    cb = clef.bounds
     r = Track(0, 0)
     for t in (0, 30, 60):
-        r.to(t + 12, 7 if t % 60 == 0 else -7, "io").to(t + 30, 0 if t < 60 else -2, "io")
-    r.to(96, 3, "io").to(120, 0, "io")
-    s = seq([100, 100], [(88, None, None), (92, [108, 92], "slam"), (93, [108, 92], "lin"), (100, [96, 104], "o"), (108, [101, 99], "io"), (116, [100, 100], "io")], op=OP)
-    root = rig(c, "clef", (256, 470), r=r, s=s)
-    part(c, "clef", g, root, (256, 262))
+        r.to(t + 12, 6 if t % 60 == 0 else -6, "io").to(t + 30, 0 if t < 60 else -2, "io")
+    r.to(96, 2.5, "io").to(120, 0, "io")
+    s_ = seq([100, 100], [(88, None, None), (92, [108, 92], "slam"), (93, [108, 92], "lin"), (100, [96, 104], "o"), (108, [101, 99], "io"), (116, [100, 100], "io")], op=OP)
+    root = rig(c, "clef", ((cb[0] + cb[2]) / 2, cb[3]), r=r, s=s_)
+    root.s = _mul(s_, 0.92)
+    part(c, "clef", clef, root, ((cb[0] + cb[2]) / 2, cb[3]))
+    for k, p in enumerate(notes):
+        pb = p.bounds
+        ax, ay = (pb[0] + pb[2]) / 2, pb[3]
+        y = Track(0.0, 0)
+        for t in (15, 45, 75):
+            t += k * 4
+            y.hold(t).to(t + 7, -16.0, "decel").to(t + 15, 0.0, "slam").to(t + 19, -3.0, "o").to(t + 24, 0.0, "i")
+        y.loop(OP)
+        ns = Track([100, 100], 0)
+        for t in (15, 45, 75):
+            t += k * 4
+            ns.hold(t + 14).to(t + 15, [106, 92], "lin").to(t + 22, [100, 100], "o")
+        ns.loop(OP)
+        part(c, f"note{k}", p, root, (ax, ay), p=Split(ax, _sh(y, ay)), s=ns)
 
 
 # ================================================================ 159 💸 ¥€$
@@ -249,21 +244,39 @@ def clef_e(c):
        op=150, series=SER)
 def yes_money(c):
     OP = 150
-    cy = 256
-    xs = (112, 256, 400)
-    bs = seq([100, 100], [(84, None, None), (88, [103, 97], "o"), (98, [100, 100], "io")], op=OP)
-    root = rig(c, "board", (256, 420), s=bs)
-    for k, (ch, x) in enumerate(zip("¥€$", xs)):
-        if ch == "€":       # Michroma's € closes up when bolded: C + two bars
-            g = mtext("C", x + 8, cy, 230, width=132, bold=4)
-            g = geo.U(g, geo.rrect(x - 84, cy - 46, x + 20, cy - 20, 6), geo.rrect(x - 84, cy + 10, x + 20, cy + 36, 6))
-        else:
-            g = mtext(ch, x, cy, 250, bold=4)
-            b = g.bounds
-            if b[2] - b[0] > 140:
-                g = mtext(ch, x, cy, 250, width=140, bold=4)
-        t0 = 20 + k * 22
-        # vertical flip: scaleY = cos, hold-swap unnecessary (same glyph both sides), bounce at the end
-        sy = Track([100, 100], 0).hold(t0).to(t0 + 8, [100, 0], "i").to(t0 + 9, [100, 0], "lin").to(t0 + 17, [100, 100], "o")
-        sy.to(t0 + 20, [100, 90], "io").to(t0 + 25, [100, 100], "io").loop(OP)
-        part(c, f"g{k}", g, root, (x, cy), s=sy)
+    g = rec("yes")
+    b_ = g.bounds
+    cx, cy = (b_[0] + b_[2]) / 2, (b_[1] + b_[3]) / 2
+    # "cha-ching": drops in from above and slams (1f squash), bass shake, settles; then a heavy tilt-back and
+    # forward like a cash drawer, rest
+    y = seq(float(cy), [(6, None, None), (8, cy - 60.0, "io"), (20, float(cy), "slam")], op=OP)
+    s_ = seq([100, 100], [(19, None, None), (20, [110, 88], "lin"), (21, [110, 88], "lin"), (29, [96, 104], "o"), (37, [101.5, 99], "io"), (46, [100, 100], "io"),
+                          (80, None, None), (92, [100, 92], "io"), (104, [100, 104], "io"), (116, [100, 100], "io")], op=OP)
+    px = seq(float(cx), [(21, None, None)])
+    M.shake(px, 21, 37, 5, float(cx), step=2, decay=0.75)
+    px.loop(OP)
+    o = Track(0, 0)
+    o.k[-1][2] = "hold"
+    o.k.append([6, 100, None])
+    o.hold(OP)
+    o.k[-1][2] = None
+    root = rig(c, "cash", (cx, b_[3]), p=Split(px, _sh(y, b_[3] - cy)), s=_mul(s_, 0.94), o=o)
+    part(c, "yes", g, root, (cx, cy))
+
+
+# ================================================================ 160 chrome X (the records X)
+
+
+@emoji("160-chrome-x", "❎", "x, хром, xtc records, лого, металл", "x, chrome, xtc records, logo, metal",
+       "хромовый X из пака Records: тяжёлый оборот вокруг вертикали с торцом (0.35,0,0.14,1), по лицу бежит блик-вырез на выходе, досадка, покой",
+       op=150, series=SER)
+def chrome_x(c):
+    OP = 150
+    g = rec("chromex")
+    b_ = g.bounds
+    cx, cy = (b_[0] + b_[2]) / 2, (b_[1] + b_[3]) / 2
+    ss = seq([100, 100], [(8, None, None), (18, [96, 104], "io"), (26, [100, 100], "o"), (88, None, None), (92, [104, 97], "o"), (100, [99, 101], "io"), (108, [100, 100], "io")], op=OP)
+    body = rig(c, "body", (cx, cy + 120), s=_mul(ss, 0.92))
+    segs = [(18, 88, 0, 360, (0.35, 0.0, 0.14, 1.0))]
+    root, th, fr, bk = M.spin3d(c, "x", g, g, cx, cy, segs, thick=44, lip=26, parent=body, band_h=140)
+    M.glare_sweep(c, fr, cx, cy, 90, 28, travel=380, angle=-35, parent=root, length=640, w1=30, w2=12, gap=14)

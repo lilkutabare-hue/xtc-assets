@@ -185,8 +185,8 @@ def sigil(c):
     top = (256, 26)
     sc_ = (256, 292)                     # spider centre
     spine = U(geo.line([(256, 150), (256, 404)], 50, "round"), geo.line([(212, 184), (300, 184)], 36, "round"))
-    abdomen = geo.ellipse(256, 326, 86, 92, 24)
-    body = U(spine, abdomen, geo.disc(256, 238, 36)).difference(brand_x(256, 330, 118, 60, bold=10))
+    abdomen = geo.ellipse(256, 322, 62, 78, 24)
+    body = U(spine, abdomen, geo.disc(256, 238, 36))            # plain sigil: no X on the abdomen (client)
     legs = [((282, 246), (372, 170), (436, 214)), ((282, 288), (392, 264), (446, 322)), ((282, 330), (374, 374), (416, 440))]
     # pendulum from the anchor at the top edge: dangles, damped swing after the drop
     pr = seq(-3, [(10, 3, "io"), (20, 0, "io"), (86, None, None), (98, 6, "io"), (110, -4.5, "io"), (122, 3.2, "io"),

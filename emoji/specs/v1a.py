@@ -185,7 +185,7 @@ def spider_parts(cx=256, cy=300):
     neck = geo.rrect(cx - 34, cy - 70, cx + 34, cy - 40, 12)
     body = U(abd, head, neck)
     # legs: (root on the head side, knee, tip), mirrored for the left side
-    L = [((cx + 36, cy - 118), (cx + 130, cy - 196), (cx + 210, cy - 118)),
+    L = [((cx + 36, cy - 118), (cx + 130, cy - 178), (cx + 210, cy - 112)),
          ((cx + 44, cy - 96), (cx + 156, cy - 130), (cx + 236, cy - 20)),
          ((cx + 44, cy - 74), (cx + 160, cy - 44), (cx + 226, cy + 84)),
          ((cx + 36, cy - 54), (cx + 132, cy + 30), (cx + 188, cy + 168))]
@@ -207,10 +207,10 @@ def sigil(c):
     body, legs = spider_parts(cx, cy)
     pr = seq(-3, [(10, 3, "io"), (20, 0, "io"), (86, None, None), (98, 6, "io"), (110, -4.5, "io"), (122, 3.2, "io"),
                   (134, -1.8, "io"), (144, -3, "io")], op=OP)
-    fit_ = rig(c, "fit", (256, 22), s=(84, 84))
+    fit_ = rig(c, "fit", (256, 22), s=(84, 84), p=(256, 34))
     pend = rig(c, "pendulum", top, parent=fit_, r=pr)
-    dy = [(18, None, None), (24, -40, "o"), (27, None, None), (33, -72, "o"), (36, None, None), (42, -96, "o"),
-          (54, None, None), (62, 22, "i5"), (69, -34, "o"), (76, 10, "io"), (82, -8, "io"), (88, 0, "io")]
+    dy = [(18, None, None), (24, -28, "o"), (27, None, None), (33, -50, "o"), (36, None, None), (42, -66, "o"),
+          (54, None, None), (62, 22, "i5"), (69, -30, "o"), (76, 10, "io"), (82, -8, "io"), (88, 0, "io")]
     y = seq(0.0, dy, f=lambda v: cy + v)
     y.loop(OP)
     ss = seq([100, 100], [(18, None, None), (24, [95, 106], "o"), (27, [100, 100], "io"), (33, [95, 106], "o"),

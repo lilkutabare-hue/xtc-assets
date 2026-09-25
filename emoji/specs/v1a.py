@@ -207,7 +207,8 @@ def sigil(c):
     body, legs = spider_parts(cx, cy)
     pr = seq(-3, [(10, 3, "io"), (20, 0, "io"), (86, None, None), (98, 6, "io"), (110, -4.5, "io"), (122, 3.2, "io"),
                   (134, -1.8, "io"), (144, -3, "io")], op=OP)
-    pend = rig(c, "pendulum", top, r=pr)
+    fit_ = rig(c, "fit", (256, 22), s=(84, 84))
+    pend = rig(c, "pendulum", top, parent=fit_, r=pr)
     dy = [(18, None, None), (24, -40, "o"), (27, None, None), (33, -72, "o"), (36, None, None), (42, -96, "o"),
           (54, None, None), (62, 22, "i5"), (69, -34, "o"), (76, 10, "io"), (82, -8, "io"), (88, 0, "io")]
     y = seq(0.0, dy, f=lambda v: cy + v)

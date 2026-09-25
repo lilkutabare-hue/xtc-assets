@@ -711,7 +711,7 @@ def teddy(c):
                          (65, [106, 94], "o5"), (74, [99, 101], "io"), (84, [100, 100], "io")])
     breathe(s, 92, 120, [100, 100], 0.6, 14)
     s.loop(OP)
-    fit_ = rig(c, "fit", (256, 256), s=(88, 88))
+    fit_ = rig(c, "fit", (262, 256), s=(82, 82))
     head = rig(c, "head", (ax, ay), parent=fit_, s=s, r=r)
     part(c, "body", geo.U(body, *rest), head, (ax, ay))
     for k, p in enumerate(stars):

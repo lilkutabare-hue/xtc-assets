@@ -58,10 +58,10 @@ def lips_e(c):
     # smack (1f wide squash) and release with a settle; twice per loop with a rest, slight tilt
     s_ = Track([100, 100], 0)
     r = Track(0, 0)
-    for t, d in ((10, -5), (78, 4)):
-        s_.hold(t).to(t + 14, [84, 110], "io").to(t + 19, [104, 122], "snap").hold(t + 24)
-        s_.to(t + 26, [112, 94], "slam").to(t + 27, [112, 94], "lin").to(t + 35, [96, 103], "o").to(t + 43, [101.5, 99.5], "io").to(t + 52, [100, 100], "io")
-        r.hold(t).to(t + 19, d, "io").to(t + 30, d * 0.4, "io").to(t + 52, 0, "io")
+    for t, d in ((6, -5), (78, 4)):
+        s_.hold(t).to(t + 20, [86, 108], "io").to(t + 28, [102, 118], "o").hold(t + 34)
+        s_.to(t + 42, [108, 96], "io").to(t + 52, [97, 102], "io").to(t + 60, [101, 99.5], "io").to(t + 68, [100, 100], "io")
+        r.hold(t).to(t + 28, d, "io").to(t + 44, d * 0.4, "io").to(t + 68, 0, "io")
     s_.loop(OP)
     r.loop(OP)
     root = rig(c, "lips", (cx, cy + 40), s=s_, r=r)
@@ -275,8 +275,14 @@ def chrome_x(c):
     g = rec("chromex")
     b_ = g.bounds
     cx, cy = (b_[0] + b_[2]) / 2, (b_[1] + b_[3]) / 2
-    ss = seq([100, 100], [(8, None, None), (18, [96, 104], "io"), (26, [100, 100], "o"), (88, None, None), (92, [104, 97], "o"), (100, [99, 101], "io"), (108, [100, 100], "io")], op=OP)
-    body = rig(c, "body", (cx, cy + 120), s=_mul(ss, 0.92))
-    segs = [(18, 88, 0, 360, (0.35, 0.0, 0.14, 1.0))]
-    root, th, fr, bk = M.spin3d(c, "x", g, g, cx, cy, segs, thick=44, lip=26, parent=body, band_h=140)
-    M.glare_sweep(c, fr, cx, cy, 90, 28, travel=380, angle=-35, parent=root, length=640, w1=30, w2=12, gap=14)
+    # a chrome plate: floats, then one heavy flip about its horizontal axis (scaleY = cos, min 5% = the
+    # plate's thickness; the X is symmetric so no back design is needed), slight perspective grow at the
+    # edge, overshoot and settle. No extra layers, nothing to leave artefacts.
+    sy = seq([92, 92], [(20, None, None), (34, [90, 96], "io"), (58, [98, 5], (0.5, 0.0, 0.3, 1.0)), (59, [98, -5], "lin"), (84, [90, -96], (0.7, 0.0, 0.5, 1.0)),
+                        (94, [92, -90], "io"), (104, [92, -92], "io")])
+    sy.hold(OP - 0.01)                       # -92 == 92 for the symmetric X: jump back at the loop point
+    sy.k[-1][2] = "hold"
+    sy.k.append([OP, [92, 92], None])
+    y = seq(float(cy), [(20, None, None), (58, cy - 10.0, "io"), (104, float(cy), "io"), (126, cy - 4.0, "io"), (150, float(cy), "io")])
+    body = rig(c, "body", (cx, cy), p=Split(cx, y), s=sy)
+    part(c, "x", g, body, (cx, cy))

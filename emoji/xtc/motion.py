@@ -130,7 +130,8 @@ def particle(comp, nm, g, t0, life, p0, p1, apex=None, parent=None, s_peak=100, 
     return lay
 
 
-SPARKS = False   # client (v3.4): «меньше звёздочек» — ✦ glints are off pack-wide; glare sweeps stay
+SPARKS = False   # client (v3.4): «меньше звёздочек» — ✦ glints are off pack-wide
+GLARE = False    # client (v3.20): «убери все эффекты когда слайдер проходит» — glare sweeps are off pack-wide
 
 
 def twinkle(comp, nm, x, y, r, t0, dur=16, parent=None, spin=45, pinch=0.36):
@@ -266,7 +267,9 @@ def _append(tr, t):
 def glare_sweep(comp, target, cx, cy, t0, dur=24, travel=280, angle=-35, parent=None, sparks=(), **kw):
     """the brand's latex glare: a double streak sweeps across `target` through the pack's one matte
     (inverted: it cuts light through the black). Parked off-art outside [t0, t0+dur].
-    sparks: [(x, y, r, t_pop, life)] ✦ glints cut through the same matte."""
+    sparks: [(x, y, r, t_pop, life)] ✦ glints cut through the same matte. No-op while GLARE is off."""
+    if not GLARE:
+        return None
     import math as _m
     a = _m.radians(angle + 90)
     dx, dy = _m.cos(a) * travel, _m.sin(a) * travel

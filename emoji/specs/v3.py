@@ -119,10 +119,17 @@ DOTS = {"X": ["X.X", "X.X", ".X.", "X.X", "X.X"], "T": ["XXX", ".X.", ".X.", ".X
        "louverse tank: XTC выложено люверсами на ткани; ткань дышит, люверсы моргают волной слева направо (кольцо сжимается в щель), на выдохе хром ловит ✦",
        op=150, series="drop")
 def tank(c):
+    """the louverse tank from the client's render (silhouette traced 1:1), the XTC eyelet print at the
+    print's real size and place (print width ~31% of the tank)."""
     OP = 150
-    body = tank_shape()
-    pitch, r = 26, 10
-    x0, y0 = 256 - 5 * pitch, 320 - 2 * pitch
+    import os
+    body = geo.svg(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "v1", "rec", "tank.svg"))
+    b_ = body.bounds
+    tw = b_[2] - b_[0]
+    pitch = tw * 0.40 / 10.5
+    r = pitch * 0.36
+    x0 = 256 - 5 * pitch
+    y0 = b_[1] + (b_[3] - b_[1]) * 0.40
     cols = {}
     col = 0
     for ch in "XTC":
@@ -132,20 +139,21 @@ def tank(c):
                     cols.setdefault(col, []).append(geo.disc(x0 + col * pitch, y0 + i * pitch, r))
             col += 1
         col += 1
-    # the tank hangs on a hook and swings like the longsleeve: heavy pendulum with damping, a tug at 90
-    hook = geo.brush(geo.arc(256 + 14, 44, 24, 180, 450, 20)[::-1] + [(256, 74)], 20, taper=(0.9, 1.0), smooth=False)
-    rr = Track(0, 0).to(24, 3, "io").to(54, -2.4, "io").to(82, 1.6, "io").hold(90).to(96, -4, "snap")
-    M.settle(rr, 104, 0, 2.6, n=3, per=16, decay=0.5, hit="io")
+    # the tank hangs and sways heavily from its straps; a tug at 90 with a damped settle
+    rr = Track(0, 0).to(24, 2.5, "io").to(54, -2, "io").to(82, 1.3, "io").hold(90).to(96, -3.5, "snap")
+    M.settle(rr, 104, 0, 2.2, n=3, per=16, decay=0.5, hit="io")
     rr.loop(OP)
-    root = c.null("root", p=(256, 22), a=(256, 22), r=rr)
-    c.layer("hook", [geo.shape(hook, nm="hook")], parent=root, p=(256, 22), a=(256, 22))
-    lay = c.layer("tank", [geo.shape(body, nm="tank")], parent=root, p=(256, 74), a=(256, 74))
+    root = c.null("root", p=(256, b_[1]), a=(256, b_[1]), r=rr)
+    lay = c.layer("tank", [geo.shape(body, nm="tank")], parent=root, p=(256, b_[1]), a=(256, b_[1]))
+    # the eyelets blink in a wave, twice per loop (ring -> slit -> ring)
     for k, g in cols.items():
         cx = x0 + k * pitch
-        t = 30 + k * 3
-        s = Track([100, 100], 0).hold(t).to(t + 5, [112, 10], "i").to(t + 11, [100, 100], "o").loop(OP)
-        geo.hole(lay, geo.U(*g), nm=f"col{k}", p=(cx, 320), a=(cx, 320), s=s)
-    M.glare_sweep(c, lay, 256, 300, 100, 30, travel=360, angle=-35, parent=root, length=600, w1=30, w2=14, gap=14)
+        s = Track([100, 100], 0)
+        for t0 in (24, 100):
+            t = t0 + k * 3
+            s.hold(t).to(t + 5, [112, 10], "i").to(t + 11, [100, 100], "o")
+        s.loop(OP)
+        geo.hole(lay, geo.U(*g), nm=f"col{k}", p=(cx, y0 + 2 * pitch), a=(cx, y0 + 2 * pitch), s=s)
 
 
 # ================================================================ 135 👖 LATEXX pants

@@ -398,54 +398,73 @@ def lego_head(c):
 # ================================================================ 43 🦂 scorpion (rebuilt)
 
 
-def scorpion_parts(cx=250, cy=330):
-    """side view: body with the logo X on its back, two claws to the right, tail curling up over the back."""
-    body = geo.U(geo.ellipse(cx, cy, 128, 54, 32), geo.ellipse(cx - 100, cy - 6, 56, 40, 24))
-    body = body.difference(brand_x(cx + 6, cy - 2, 120, 56, bold=8))
+def scorpion_parts(cx=256, cy=290):
+    """top view (like the spider): head + carapace with the logo X, 4 leg pairs, two claws forward,
+    the tail rising from the rear and curling forward over the back, sting over the head."""
+    carapace = geo.ellipse(cx, cy + 20, 92, 110, 32)
+    carapace = carapace.difference(brand_x(cx, cy + 24, 128, 60, bold=8))
+    head = geo.rrect(cx - 60, cy - 130, cx + 60, cy - 80, 22)
+    neck = geo.rrect(cx - 44, cy - 96, cx + 44, cy - 60, 14)
     legs = []
-    for k, x in enumerate((cx - 72, cx - 24, cx + 24, cx + 72)):
-        legs.append(geo.brush([(x, cy + 30), (x - 18, cy + 72), (x - 4, cy + 110)], 26, taper=(1.0, 0.6), smooth=True, n=6))
-    head = geo.ellipse(cx + 128, cy - 4, 46, 34, 24)
-    # claws: arm + pincer (two jaws), on the right
-    arm = geo.brush([(cx + 150, cy - 10), (cx + 200, cy - 60)], 34, taper=(1.0, 0.9), smooth=False)
-    jaw_top = geo.brush([(cx + 196, cy - 64), (cx + 236, cy - 96), (cx + 258, cy - 74)], 30, taper=(1.0, 0.5), smooth=True, n=6)
-    jaw_bot = geo.brush([(cx + 196, cy - 64), (cx + 246, cy - 48), (cx + 256, cy - 68)], 30, taper=(1.0, 0.5), smooth=True, n=6)
-    # tail: 5 segments arcing up and over the back from the rear, sting at the tip
-    pts = [(cx - 150, cy - 20), (cx - 196, cy - 80), (cx - 190, cy - 160), (cx - 130, cy - 220), (cx - 50, cy - 236), (cx + 20, cy - 214)]
-    tail = geo.brush(pts, 44, taper=(1.0, 0.7), smooth=True, n=8)
+    for k, y in enumerate((cy - 40, cy, cy + 40, cy + 80)):
+        for sgn in (-1, 1):
+            legs.append(geo.brush([(cx + sgn * 70, y), (cx + sgn * 150, y - 40 + k * 8), (cx + sgn * 200, y + 30 + k * 6)], 26, taper=(1.0, 0.55), smooth=True, n=6))
+    claws = []
+    for sgn in (-1, 1):
+        arm = geo.brush([(cx + sgn * 40, cy - 110), (cx + sgn * 120, cy - 176)], 34, taper=(1.0, 0.9), smooth=False)
+        claws.append((sgn, arm, (cx + sgn * 120, cy - 176)))
+    return geo.U(carapace, head, neck, *legs), claws
+
+
+def pincer(sgn, x, y, open_=0):
+    """a claw at (x, y): fixed lower jaw + movable upper jaw (open_ degrees is applied by the layer)."""
+    lower = geo.brush([(x, y), (x + sgn * 40, y - 40), (x + sgn * 20, y - 90)], 30, taper=(1.0, 0.5), smooth=True, n=6)
+    upper = geo.brush([(x, y), (x - sgn * 30, y - 46), (x + sgn * 4, y - 92)], 30, taper=(1.0, 0.5), smooth=True, n=6)
+    return lower, upper
+
+
+def tail(cx, cy):
+    """tail from the rear of the carapace curling up over the back (drawn as a foreshortened arc),
+    root at the rear, sting pointing forward over the head."""
+    root = (cx, cy + 128)
+    pts = [root, (cx + 8, cy + 78), (cx - 10, cy + 20), (cx + 14, cy - 40), (cx - 6, cy - 100), (cx + 6, cy - 150)]
+    body = geo.brush(pts, 46, taper=(1.0, 0.65), smooth=True, n=8)
     for k, p in enumerate(pts[1:5]):
-        tail = geo.U(tail, geo.disc(p[0], p[1], 30 - k * 2))
-    sting = geo.poly([(cx + 8, cy - 232), (cx + 40, cy - 202), (cx + 60, cy - 150), (cx + 18, cy - 196)]).buffer(6).buffer(-6)
-    return geo.U(body, *legs, head, arm), (jaw_top, jaw_bot, (cx + 196, cy - 64)), (geo.U(tail, sting), (cx - 150, cy - 20))
+        body = geo.U(body, geo.disc(p[0], p[1], 32 - k * 2, 16))
+    sting = geo.poly([(cx - 16, cy - 150), (cx + 28, cy - 150), (cx + 8, cy - 214)]).buffer(6).buffer(-6)
+    return geo.U(body, sting), root
 
 
 @emoji("43-scorpion-sigil", "🦂", "скорпион, x, xtc, жало, удар, готика", "scorpion, x, xtc, sting, strike, goth",
-       "скорпион с логотипным X на спине: хвост взводится назад (антиципация), бьёт жалом вперёд с ударом и дрожью, клешня щёлкает дважды, тело подаётся вперёд и садится",
+       "скорпион (вид сверху) с логотипным X на панцире: хвост над спиной взводится назад и бьёт жалом вперёд над головой с ударом и дрожью, клешни раскрываются и щёлкают, ноги семенят на месте",
        op=150, series="v1")
 def scorpion(c):
     OP = 150
-    cx, cy = 250, 330
-    body, (jt, jb, jp), (tail, tp) = scorpion_parts(cx, cy)
-    fit_ = rig(c, "fit", (256, 256), s=(78, 78), p=(266, 262))
-    # body lunge on the strike
-    bx = seq(float(cx), [(30, None, None), (40, cx - 10.0, "io"), (46, cx + 18.0, "slam"), (47, cx + 18.0, "lin"), (58, cx - 4.0, "o"), (70, float(cx), "io")], op=OP)
-    bs = seq([100, 100], [(45, None, None), (46, [106, 94], "lin"), (54, [98, 102], "io"), (62, [100, 100], "io")], op=OP)
-    root = rig(c, "body", (cx, cy + 110), parent=fit_, p=Split(bx, cy + 110), s=bs)
-    # tail: winds back 24f, strikes forward 6f (rotation about its root), quivers, returns slowly
-    tr = seq(0, [(14, None, None), (38, -34, "io"), (44, 42, "strike"), (46, 36, "io"), (48, 44, "io"), (50, 38, "io"), (52, 42, "io"), (54, 40, "io"),
-                 (74, None, None), (100, 0, "io")], op=OP)
-    part(c, "tail", tail, root, tp, r=tr)
+    cx, cy = 256, 300
+    body, claws = scorpion_parts(cx, cy)
+    tl, troot = tail(cx, cy)
+    fit_ = rig(c, "fit", (256, 256), s=(78, 78), p=(256, 262))
+    by = seq(float(cy), [(30, None, None), (40, cy + 8.0, "io"), (46, cy - 14.0, "slam"), (47, cy - 14.0, "lin"), (58, cy + 4.0, "o"), (70, float(cy), "io")], op=OP)
+    root = rig(c, "body", (cx, cy), parent=fit_, p=Split(cx, by))
     part(c, "body", body, root, (cx, cy))
-    # claw: the top jaw snaps shut twice after the strike
-    jr = seq(0, [(56, None, None), (60, 22, "decel"), (64, 0, "slam"), (68, None, None), (72, 22, "decel"), (76, 0, "slam")], op=OP)
-    part(c, "jawT", jt, root, jp, r=jr)
-    part(c, "jawB", jb, root, jp)
+    # claws: arms fixed; the upper jaw opens before the strike and snaps twice after
+    for sgn, arm, tip in claws:
+        part(c, f"arm{sgn}", arm, root, (cx, cy))
+        lower, upper = pincer(sgn, *tip)
+        part(c, f"jawL{sgn}", lower, root, tip)
+        jr = seq(0, [(14, None, None), (34, -sgn * 30, "io"), (44, 0, "slam"), (56, None, None), (60, -sgn * 22, "decel"), (64, 0, "slam"),
+                     (68, None, None), (72, -sgn * 22, "decel"), (76, 0, "slam")], op=OP)
+        part(c, f"jawU{sgn}", upper, root, tip, r=jr)
+    # tail: scale about its root = the foreshortened wind-back (shrinks) and the strike (stretches over the head), quiver
+    ts = seq([100, 100], [(14, None, None), (38, [104, 72], "io"), (44, [96, 118], "strike"), (46, [98, 112], "io"), (48, [97, 117], "io"),
+                          (50, [98, 113], "io"), (54, [100, 114], "io"), (78, None, None), (104, [100, 100], "io")], op=OP)
+    part(c, "tail", tl, root, troot, s=ts)
 
 
 # ================================================================ gothic crosses (rebuilt): tapered arms, spear tips, the logo X at the crossing
 
 
-def gothic_cross(cx=256, cy=256, L=200, w=56, arms=(0.62, 1.0, 0.62, 0.56), x_w=0.0):
+def gothic_cross(cx=256, cy=256, L=200, w=56, arms=(0.62, 1.0, 0.62, 0.56), x_w=0.0, core=0.9):
     """gothic cross: each arm narrows to a waist, flares and ends in a spear point; arms = (right, down,
     left, up) as fractions of L. x_w > 0 cuts the logo X (that wide) through the crossing."""
     parts = []
@@ -459,7 +478,7 @@ def gothic_cross(cx=256, cy=256, L=200, w=56, arms=(0.62, 1.0, 0.62, 0.56), x_w=
         side2 = [(cx + ux * L_ * s - px * w * k, cy + uy * L_ * s - py * w * k) for s, k in prof[::-1]]
         parts.append(geo.poly(side1 + side2))
     g = geo.U(*parts).buffer(3, join_style=2).buffer(-3, join_style=2)
-    g = geo.U(g, geo.disc(cx, cy, w * 0.9, 24))
+    g = geo.U(g, geo.disc(cx, cy, w * core, 24))
     if x_w:
         g = g.difference(brand_x(cx, cy, x_w, x_w * 0.46, bold=6))
     return g
@@ -471,11 +490,16 @@ def gothic_cross(cx=256, cy=256, L=200, w=56, arms=(0.62, 1.0, 0.62, 0.56), x_w=
 def pendant(c):
     OP = 150
     top = (256, 14)
-    hang = 56
-    ccx, ccy = 256, top[1] + hang + 190
-    cross = gothic_cross(ccx, ccy, 196, 50, x_w=112)
-    back = gothic_cross(ccx, ccy, 196, 50)
-    links = geo.U(*[geo.ring(256, top[1] + 16 + k * 28, 14, 6, 12) for k in range(2)])
+    hang = 96
+    ccx, ccy = 256, top[1] + hang + 176
+    cross = gothic_cross(ccx, ccy, 190, 50, x_w=124)
+    back = gothic_cross(ccx, ccy, 190, 50)
+    # the chain: alternating flat / edge-on links from the top edge down to the bail
+    links = []
+    for k in range(4):
+        y = top[1] + 10 + k * 24
+        links.append(geo.ring(256, y, 15, 7, 14) if k % 2 == 0 else geo.rrect(256 - 7, y - 16, 256 + 7, y + 16, 6))
+    links = geo.U(*links)
     pr = seq(0, [(6, None, None), (18, -12, "io"), (44, 11, "io"), (70, -7, "io"), (94, 4, "io"), (114, -2, "io"), (132, 0.8, "io"), (148, 0, "io")], op=OP)
     pend = rig(c, "pend", top, r=pr)
     part(c, "chain", links, pend, top)
@@ -491,7 +515,11 @@ def pendant(c):
 def gothic_big(c):
     OP = 150
     cx, cy = 256, 236
-    cross = gothic_cross(cx, cy, 236, 60, arms=(0.66, 1.0, 0.66, 0.6), x_w=134)
+    cross = gothic_cross(cx, cy, 236, 66, arms=(0.66, 1.0, 0.66, 0.6))
+    # the cross logo laid onto the cross itself: X on the top arm, X T C across, C on the lower arm
+    L = logo.cross(cx, cy, lh=30, width=300)
+    L = {k: (g, p) for k, (g, p) in L.items()}
+    cross = cross.difference(geo.U(*[g for g, _ in L.values()]))
     y = seq(float(cy), [(20, None, None), (34, cy - 40.0, "io"), (46, cy + 8.0, "slam"), (47, cy + 8.0, "lin"), (56, cy - 4.0, "o"), (66, float(cy), "io")], op=OP)
     s_ = seq([100, 100], [(20, None, None), (34, [96, 104], "io"), (46, [108, 92], "slam"), (47, [108, 92], "lin"), (56, [97, 103], "o"), (66, [100, 100], "io")], op=OP)
     px = seq(256.0, [(47, None, None)])
@@ -513,17 +541,21 @@ def _sh2(tr, d):
 
 
 def hockey_mask(cx=256, cy=262):
+    """Jason: oval shell, two eye holes, a triangular nose vent, the classic vent pattern (rows of holes
+    under the eyes and along the chin), the logo X on the forehead."""
     face = geo.ellipse(cx, cy, 176, 226, 48)
     face = geo.U(face, geo.rrect(cx - 150, cy - 40, cx + 150, cy + 150, 60)).intersection(geo.ellipse(cx, cy + 10, 180, 236, 48))
     face = face.buffer(-8, join_style=1).buffer(8, join_style=1)
-    eyes = geo.U(geo.ellipse(cx - 72, cy - 40, 46, 30, 24), geo.ellipse(cx + 72, cy - 40, 46, 30, 24))
+    eyes = geo.U(geo.ellipse(cx - 72, cy - 44, 46, 30, 24), geo.ellipse(cx + 72, cy - 44, 46, 30, 24))
+    nose = geo.U(geo.rrect(cx - 12, cy + 8, cx + 12, cy + 62, 10), geo.disc(cx - 22, cy + 62, 11), geo.disc(cx + 22, cy + 62, 11))
     vents = []
-    for (x, y) in ((cx - 100, cy + 30), (cx + 100, cy + 30), (cx - 110, cy + 92), (cx + 110, cy + 92), (cx - 60, cy + 120), (cx + 60, cy + 120),
-                   (cx, cy + 150), (cx - 34, cy + 178), (cx + 34, cy + 178), (cx - 70, cy + 60), (cx + 70, cy + 60), (cx, cy + 92)):
+    for (x, y) in ((cx - 118, cy + 10), (cx + 118, cy + 10), (cx - 112, cy + 66), (cx + 112, cy + 66), (cx - 94, cy + 118), (cx + 94, cy + 118),
+                   (cx - 56, cy + 150), (cx + 56, cy + 150), (cx - 18, cy + 174), (cx + 18, cy + 174),
+                   (cx - 66, cy + 100), (cx + 66, cy + 100), (cx - 40, cy + 126), (cx + 40, cy + 126), (cx, cy + 110)):
         vents.append(geo.disc(x, y, 13, 12))
-    holes = geo.U(eyes, *vents)
-    x = brand_x(cx, cy - 150, 112, 54, bold=8)
-    return face.difference(x), holes, eyes         # holes are cut by the animated hole group (once!)
+    holes = geo.U(eyes, nose, *vents)
+    x = brand_x(cx, cy - 152, 112, 54, bold=8)
+    return face.difference(x), holes, eyes
 
 
 @emoji("25-mask-glyphs", "🎭", "маска, хоррор, маньяк, пятница, джейсон, xtc", "mask, horror, slasher, creepy, jason, xtc",

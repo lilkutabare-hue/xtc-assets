@@ -499,7 +499,7 @@ def gothic_big(c):
     px.loop(OP)
     root = rig(c, "cross", (cx, cy + 236), p=Split(px, _sh2(y, 236)), s=s_)
     lay = part(c, "cross", cross, root, (cx, cy))
-    hit_lines(c, "hit", [((80, 470), (40, 484)), ((432, 470), (472, 484)), ((150, 486), (120, 500)), ((362, 486), (392, 500))], 46, w=20)
+    hit_lines(c, "hit", [((84, 462), (48, 474)), ((428, 462), (464, 474)), ((150, 476), (122, 490)), ((362, 476), (390, 490))], 46, w=20)
     M.glare_sweep(c, lay, cx, cy, 90, 28, travel=420, angle=-35, parent=root, length=700, w1=30, w2=12, gap=14)
 
 
@@ -523,7 +523,7 @@ def hockey_mask(cx=256, cy=262):
         vents.append(geo.disc(x, y, 13, 12))
     holes = geo.U(eyes, *vents)
     x = brand_x(cx, cy - 150, 112, 54, bold=8)
-    return face.difference(holes).difference(x), holes, eyes
+    return face.difference(x), holes, eyes         # holes are cut by the animated hole group (once!)
 
 
 @emoji("25-mask-glyphs", "🎭", "маска, хоррор, маньяк, пятница, джейсон, xtc", "mask, horror, slasher, creepy, jason, xtc",

@@ -173,54 +173,64 @@ def acid(c):
 # ================================================================ 03 🕷️
 
 
-def _leg(root, knee, tip, w=40):
-    return geo.brush([root, knee, tip], w, taper=(1.0, 0.72), smooth=True, n=6)
+def _leg(root, knee, tip, w=34):
+    return geo.brush([root, knee, tip], w, taper=(1.0, 0.55), smooth=True, n=8)
 
 
-@emoji("03-sigil-x", "🕷️", "паук, сигил, жуть, свисаю, готика", "spider, sigil, creepy, hanging, goth",
-       "паук-сигил подтягивается по нити, поджимает лапы — и срывается вниз, пружинит на нити, лапы дёргаются, раскачивается маятником",
+def spider_parts(cx=256, cy=300):
+    """a real spider: round abdomen with the logo X as its back pattern, smaller head, 8 jointed legs."""
+    abd = geo.ellipse(cx, cy + 46, 104, 116, 32)
+    abd = abd.difference(brand_x(cx, cy + 50, 150, 70, bold=10))
+    head = geo.disc(cx, cy - 92, 50, 24)
+    neck = geo.rrect(cx - 34, cy - 70, cx + 34, cy - 40, 12)
+    body = U(abd, head, neck)
+    # legs: (root on the head side, knee, tip), mirrored for the left side
+    L = [((cx + 36, cy - 118), (cx + 130, cy - 196), (cx + 210, cy - 118)),
+         ((cx + 44, cy - 96), (cx + 156, cy - 130), (cx + 236, cy - 20)),
+         ((cx + 44, cy - 74), (cx + 160, cy - 44), (cx + 226, cy + 84)),
+         ((cx + 36, cy - 54), (cx + 132, cy + 30), (cx + 188, cy + 168))]
+    legs = []
+    for root, knee, tip in L:
+        legs.append((root, _leg(root, knee, tip)))
+        m = lambda p: (2 * cx - p[0], p[1])
+        legs.append((m(root), _leg(m(root), m(knee), m(tip))))
+    return body, legs
+
+
+@emoji("03-sigil-x", "🕷️", "паук, x, xtc, жуть, свисаю, готика", "spider, x, xtc, creepy, hanging, goth",
+       "паук с логотипным X на спинке висит на нити: подтягивается тремя рывками, поджимает лапы — срывается вниз, пружинит на нити, лапы раскидываются с перелётом, качается маятником, лапы подёргиваются по очереди",
        op=150, series=SERIES)
 def sigil(c):
     OP = 150
-    top = (256, 26)
-    sc_ = (256, 292)                     # spider centre
-    spine = U(geo.line([(256, 150), (256, 404)], 50, "round"), geo.line([(212, 184), (300, 184)], 36, "round"))
-    # the abdomen IS the logo X (solid letter), the brand mark reads at 24px
-    abdomen = brand_x(256, 330, 150, 90, bold=12)
-    body = U(spine, abdomen, geo.disc(256, 238, 36))
-    legs = [((282, 246), (372, 170), (436, 214)), ((282, 288), (392, 264), (446, 322)), ((282, 330), (374, 374), (416, 440))]
-    # pendulum from the anchor at the top edge: dangles, damped swing after the drop
+    top = (256, 22)
+    cx, cy = 256, 300
+    body, legs = spider_parts(cx, cy)
     pr = seq(-3, [(10, 3, "io"), (20, 0, "io"), (86, None, None), (98, 6, "io"), (110, -4.5, "io"), (122, 3.2, "io"),
                   (134, -1.8, "io"), (144, -3, "io")], op=OP)
     pend = rig(c, "pendulum", top, r=pr)
-    # climb in three pulls, curl at the top, drop (i5), bungee bounce, settle
     dy = [(18, None, None), (24, -40, "o"), (27, None, None), (33, -72, "o"), (36, None, None), (42, -96, "o"),
           (54, None, None), (62, 22, "i5"), (69, -34, "o"), (76, 10, "io"), (82, -8, "io"), (88, 0, "io")]
-    y = seq(0.0, dy, f=lambda v: sc_[1] + v)
+    y = seq(0.0, dy, f=lambda v: cy + v)
     y.loop(OP)
     ss = seq([100, 100], [(18, None, None), (24, [95, 106], "o"), (27, [100, 100], "io"), (33, [95, 106], "o"),
                           (36, [100, 100], "io"), (42, [95, 106], "o"), (46, [100, 100], "io"),
                           (54, None, None), (60, [90, 112], "i"), (62, [112, 88], "o"), (69, [95, 106], "io"),
                           (76, [102, 98], "io"), (84, [100, 100], "io")], op=OP)
-    spider = rig(c, "spider", sc_, parent=pend, p=Split(sc_[0], y), s=ss)
-    # thread: trim end tracks the spider (e is linear in dy, so the same keys/eases stay in sync)
-    L = sc_[1] - 142 - top[1]
+    spider = rig(c, "spider", (cx, cy), parent=pend, p=Split(cx, y), s=ss)
+    # legs: tuck up on every pull and on the drop (rotate about the root), splay with overshoot on the bounce,
+    # then twitch one after another while it hangs
+    for k, (root, g) in enumerate(legs):
+        sgn = 1 if root[0] > cx else -1
+        up = -sgn * 22
+        r = seq(0, [(18, None, None), (24, up * 0.5, "o"), (30, 0, "io"), (33, up * 0.5, "o"), (39, 0, "io"), (42, up * 0.5, "o"), (48, 0, "io"),
+                    (54, None, None), (60, up, "i"), (64, -up * 0.6, "o"), (72, up * 0.25, "io"), (80, 0, "io"),
+                    (96 + k * 5, None, None), (100 + k * 5, -sgn * 5, "io"), (106 + k * 5, 0, "io")], op=OP)
+        part(c, f"leg{k}", g, spider, root, r=r)
+    part(c, "body", body, spider, (cx, cy))
+    L = cy - 92 - 50 - top[1]
     e = seq(100.0, dy, f=lambda v: 100.0 * (L + v) / L)
     e.loop(OP)
-    c.layer("thread", [stroke_line([top, (256, sc_[1] - 142)], 28, nm="thread", e=e)], parent=pend, p=top, a=top)
-    for side in (-1, 1):
-        for k, (a, b, t) in enumerate(legs):
-            m = lambda p: (256 + side * (p[0] - 256), p[1])
-            root = m(a)
-            # legs curl in at the top, splay on the drop, twitch in a stagger at the bottom, idle wiggle
-            curl = side * 24
-            lg = 2 * k + (0 if side < 0 else 1)
-            lr = seq(0, [(4 + lg * 2, side * 3, "io"), (12 + lg * 2, 0, "io"), (40, None, None), (46, curl, "io"),
-                         (54, None, None), (60, side * 16, "o"), (62 + lg, -side * 10, "io"), (66 + lg, side * 8, "io"),
-                         (70 + lg, -side * 4, "io"), (76 + lg, 0, "io"),
-                         (104 + lg * 3, side * 4, "io"), (112 + lg * 3, 0, "io")], op=OP)
-            part(c, f"leg{side}{k}", _leg(root, m(b), m(t)), spider, root, r=lr)
-    part(c, "body", body, spider, sc_)
+    c.layer("thread", [stroke_line([top, (256, cy - 142)], 24, nm="thread", e=e)], parent=pend, p=top, a=top)
 
 
 # ================================================================ 04 💝

@@ -400,26 +400,27 @@ def lego_head(c):
 
 
 def scorpion_parts(cx=256, cy=330):
-    """side view, the tattoo silhouette: long body with the logo X on the flank, head and two arms forward (left),
-    four thin legs under, the tail (separate) rises from the rear (right) and arches over the back."""
+    """side view, the tattoo silhouette: long body with the logo X on the flank, head with two short thick arms
+    forward (left) ending in big pincers, four thin legs under, the tail (separate) rises from the rear (right)."""
     body = geo.ellipse(cx, cy, 124, 54, 40)
-    body = body.difference(brand_x(cx + 6, cy + 2, 118, 54, bold=8))
-    head = geo.poly([(cx - 116, cy - 40), (cx - 168, cy - 30), (cx - 176, cy + 8), (cx - 120, cy + 36)]).buffer(10).buffer(-10)
+    head = geo.poly([(cx - 110, cy - 46), (cx - 172, cy - 34), (cx - 184, cy + 6), (cx - 166, cy + 36), (cx - 110, cy + 46)]).buffer(10).buffer(-10)
     legs = []
     for k, x in enumerate((cx - 66, cx - 18, cx + 30, cx + 78)):
         legs.append(geo.brush([(x, cy + 30), (x - 34 + k * 8, cy + 90), (x - 14 + k * 10, cy + 150)], 18, taper=(1.0, 0.5), smooth=True, n=6))
+    # the X is cut after the union so nothing (leg roots, head) fills it back in
+    body = geo.U(body, head, *legs).difference(brand_x(cx + 6, cy + 2, 118, 54, bold=8))
     claws = []
-    for k, (dy, tip) in enumerate(((-14, (cx - 232, cy - 62)), (14, (cx - 228, cy + 10)))):
-        arm = geo.brush([(cx - 150, cy + dy), (cx - 196, cy + dy - 8 + k * 16), tip], 26, taper=(1.0, 0.85), smooth=True, n=6)
+    for k, (y0, tip) in enumerate(((cy - 22, (cx - 214, cy - 56)), (cy + 22, (cx - 210, cy + 44)))):
+        arm = geo.brush([(cx - 150, y0), tip], 32, taper=(1.0, 0.9), smooth=False)
         claws.append((k, arm, tip))
-    return geo.U(body, head, *legs), claws
+    return body, claws
 
 
 def pincer(k, x, y, open_=0):
-    """a claw pointing forward (left) at (x, y): hand + fixed lower jaw, movable upper jaw."""
-    hand = geo.disc(x, y, 20, 16)
-    lower = geo.brush([(x, y), (x - 40, y + 14), (x - 84, y + 2)], 26, taper=(1.0, 0.4), smooth=True, n=6)
-    upper = geo.brush([(x, y), (x - 40, y - 16), (x - 82, y - 10)], 24, taper=(1.0, 0.4), smooth=True, n=6)
+    """a big claw pointing forward (left) at (x, y): hand + fixed lower jaw, movable upper jaw."""
+    hand = geo.disc(x, y, 26, 16)
+    lower = geo.brush([(x, y), (x - 44, y + 18), (x - 96, y + 4)], 30, taper=(1.0, 0.4), smooth=True, n=6)
+    upper = geo.brush([(x, y), (x - 44, y - 20), (x - 94, y - 12)], 28, taper=(1.0, 0.4), smooth=True, n=6)
     return geo.U(hand, lower), upper
 
 
@@ -444,7 +445,7 @@ def scorpion(c):
     cx, cy = 256, 330
     body, claws = scorpion_parts(cx, cy)
     tl, troot = tail(cx, cy)
-    fit_ = rig(c, "fit", (256, 256), s=(78, 78), p=(276, 256))
+    fit_ = rig(c, "fit", (256, 256), s=(78, 78), p=(280, 256))
     by = seq(float(cy), [(30, None, None), (40, cy + 6.0, "io"), (46, cy - 10.0, "slam"), (47, cy - 10.0, "lin"), (58, cy + 3.0, "o"), (70, float(cy), "io")], op=OP)
     root = rig(c, "body", (cx, cy), parent=fit_, p=Split(cx, by))
     part(c, "body", body, root, (cx, cy))
@@ -456,7 +457,7 @@ def scorpion(c):
                      (68, None, None), (72, 24, "decel"), (76, 0, "slam")], op=OP)
         part(c, f"jawU{k}", upper, root, tip, r=jr)
     # tail: winds back (leans to the rear), whips forward over the head, quivers, eases back
-    tr = seq(0, [(14, None, None), (38, 20, "io"), (44, -26, "strike"), (46, -20, "io"), (48, -25, "io"), (50, -21, "io"), (54, -23, "io"),
+    tr = seq(0, [(14, None, None), (38, 20, "io"), (44, -19, "strike"), (46, -14, "io"), (48, -18, "io"), (50, -15, "io"), (54, -17, "io"),
                  (78, None, None), (104, 0, "io")], op=OP)
     part(c, "tail", tl, root, troot, r=tr)
 

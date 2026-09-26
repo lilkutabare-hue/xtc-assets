@@ -574,7 +574,14 @@ def mask(c):
     # the v1 trace carries ink-jitter nubs on every edge: open/close the shell (r=5) and rebuild the holes clean —
     # round vents become true ellipses (fitted to their rotated bbox), the forehead X keeps its shape, opened r=4
     raw = shell.difference(g)  # holes from the raw outline (differencing the smoothed one leaves edge slivers)
-    shell = shell.buffer(-7).buffer(14).buffer(-7).simplify(0.8)
+    # smooth outline: drop the ink wobble (simplify 5px) and round the result with Chaikin corner cutting
+    pts = list(shell.simplify(5).exterior.coords)[:-1]
+    for _ in range(3):
+        nxt = []
+        for a, b in zip(pts, pts[1:] + pts[:1]):
+            nxt += [(0.75 * a[0] + 0.25 * b[0], 0.75 * a[1] + 0.25 * b[1]), (0.25 * a[0] + 0.75 * b[0], 0.25 * a[1] + 0.75 * b[1])]
+        pts = nxt
+    shell = geo.poly(pts)
     clean = []
     for h in geo._polys(raw):
         if h.area < 200:
@@ -586,17 +593,21 @@ def mask(c):
             ang = math.degrees(math.atan2(y1 - y0, x1 - x0))
             e = geo.ellipse(0, 0, w / 2, hh / 2, 32)
             e = geo.move(geo.affinity.rotate(e, ang, origin=(0, 0)), h.centroid.x, h.centroid.y)
+            inner = shell.buffer(-10)
+            for _ in range(20):  # a vent the smoothed outline now crosses slides towards the middle until it sits inside
+                if inner.contains(e):
+                    break
+                e = geo.move(e, 2 if e.centroid.x < 256 else -2, 0)
             clean.append(e)
         else:  # the forehead X: the brand logo X in the same box (the v1 sketch X had inked nubs)
             x0, y0, x1, y1 = h.bounds
             w = (x1 - x0) * 0.8
-            clean.append(brand_x((x0 + x1) / 2, (y0 + y1) / 2, w, w / logo.ASPECT, bold=6))
-    holes = geo.U(*clean).intersection(shell.buffer(-12))
+            ym = (y0 + y1) / 2
+            row = shell.intersection(geo.LineString([(0, ym), (512, ym)])).bounds  # centre it on the forehead
+            clean.append(brand_x((row[0] + row[2]) / 2, ym, w, w / logo.ASPECT, bold=6))
+    holes = geo.U(*clean).intersection(shell.buffer(-8))
     cx, cy = 256, 255
     # the forehead X of the original sits a touch left: move the top holes right by 12px
-    top = geo.U(*[h for h in geo._polys(holes) if h.centroid.y < 150])
-    rest = geo.U(*[h for h in geo._polys(holes) if h.centroid.y >= 150])
-    holes = geo.U(geo.move(top, 12, 0), rest)
     sx = Track([95, 100], 0).hold(20).to(60, [100, 100], "io").hold(140).to(176, [95, 100], "io").loop(OP)
     base = c.layer("mask", [geo.shape(shell, nm="shell")], p=(cx, cy), a=(cx, cy), s=sx)
     hx = Track([-10, 0], 0).hold(20).to(60, [0, 0], "io").hold(140).to(176, [-10, 0], "io").loop(OP)

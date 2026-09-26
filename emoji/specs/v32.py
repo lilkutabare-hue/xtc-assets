@@ -132,7 +132,7 @@ def raven_parts(cx=256, cy=300):
     return body, wing, sh
 
 
-@emoji("147-raven", "🐦‍⬛", "ворон, птица, ночь, готика, мрак, xtc", "raven, crow, bird, night, gothic, dark",
+@emoji("147-raven", "🐦", "ворон, птица, ночь, готика, мрак, xtc", "raven, crow, bird, night, gothic, dark",
        "ворон: четыре тяжёлых взмаха (вниз резко, вверх с торможением), тело качает в противофазе, дальнее крыло отстаёт на 3f, хвост дожимает; потом планирует, ✦ на клюве",
        op=150, series="v1")
 def raven(c):

@@ -10,7 +10,7 @@ import json
 import math
 
 FPS = 60
-CANVAS = int(os.environ.get("XTC_CANVAS", "100"))  # custom emoji canvas (100); XTC_CANVAS=512 builds sticker-size files
+CANVAS = int(os.environ.get("XTC_CANVAS", "512"))  # Bot API verdict (v3.30): TGS emoji are 512 like stickers; 100 -> "wrong file type"
 BLACK = [0, 0, 0, 1]
 
 # cubic-bezier presets (x1, y1, x2, y2) — the curve from a key to the next one
@@ -317,8 +317,8 @@ class Comp:
     def json(self):
         layers = [l.json() for l in reversed(self.layers)]
         # a matte (td) must be directly above its target in the array.
-        # Telegram custom emoji are a 100x100 canvas (stickers are 512): the art is authored at 512 and
-        # scaled down by one root null that every parentless layer hangs off; "tgs": 1 marks the format.
+        # "tgs": 1 marks the format. CANVAS is 512 (the Bot API rejects 100 for TGS emoji); the root null
+        # scales the 512 art if another canvas is ever needed.
         root = max(l.ind for l in self.layers) + 1
         k = CANVAS / 512 * 100
         for d in layers:

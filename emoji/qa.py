@@ -19,7 +19,7 @@ from PIL import Image, ImageChops, ImageFilter
 from rlottie_python import LottieAnimation
 from lottie.exporters.tgs_validator import TgsValidator, Severity
 
-EMOJI_CANVAS = 100   # Telegram custom emoji canvas (stickers are 512); render checks run at 512
+EMOJI_CANVAS = 512   # Bot API accepts only 512 TGS for custom emoji too (100 -> "wrong file type")
 MARGIN = 8           # px of free canvas around the art on every frame (at 512)
 LOOP_DIFF_MAX = 0.002  # share of canvas pixels that may differ between first and last frame
 THIN_WARN = 0.25     # share of art lost after a 28px morphological opening -> too thin for 24px
@@ -96,9 +96,6 @@ def check(path):
     v = TgsValidator(Severity.Note)
     v.check_file(path)
     for e in v.errors:
-        # the validator knows stickers (512); custom emoji are a 100x100 canvas
-        if "Invalid width 100" in str(e) or "Invalid height 100" in str(e):
-            continue
         (fails if e.severity in (Severity.Error, Severity.Warning) else warns).append(str(e))
     d = json.load(gzip.open(path))
     fails += lint(d)

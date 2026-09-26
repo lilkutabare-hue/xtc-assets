@@ -571,7 +571,27 @@ def mask(c):
     V1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "v1", "tg")
     g = geo.svg(os.path.join(V1, "25-mask-glyphs.svg"))
     shell = geo.U(*[geo.Polygon(p.exterior) for p in geo._polys(g)])
-    holes = shell.difference(g)
+    # the v1 trace carries ink-jitter nubs on every edge: open/close the shell (r=5) and rebuild the holes clean —
+    # round vents become true ellipses (fitted to their rotated bbox), the forehead X keeps its shape, opened r=4
+    raw = shell.difference(g)  # holes from the raw outline (differencing the smoothed one leaves edge slivers)
+    shell = shell.buffer(-7).buffer(14).buffer(-7).simplify(0.8)
+    clean = []
+    for h in geo._polys(raw):
+        if h.area < 200:
+            continue
+        rect = h.minimum_rotated_rectangle
+        if h.area / rect.area > 0.68:  # round vent or eye
+            (x0, y0), (x1, y1), (x2, y2) = list(rect.exterior.coords)[:3]
+            w, hh = math.hypot(x1 - x0, y1 - y0), math.hypot(x2 - x1, y2 - y1)
+            ang = math.degrees(math.atan2(y1 - y0, x1 - x0))
+            e = geo.ellipse(0, 0, w / 2, hh / 2, 32)
+            e = geo.move(geo.affinity.rotate(e, ang, origin=(0, 0)), h.centroid.x, h.centroid.y)
+            clean.append(e)
+        else:  # the forehead X: the brand logo X in the same box (the v1 sketch X had inked nubs)
+            x0, y0, x1, y1 = h.bounds
+            w = (x1 - x0) * 0.8
+            clean.append(brand_x((x0 + x1) / 2, (y0 + y1) / 2, w, w / logo.ASPECT, bold=6))
+    holes = geo.U(*clean).intersection(shell.buffer(-12))
     cx, cy = 256, 255
     # the forehead X of the original sits a touch left: move the top holes right by 12px
     top = geo.U(*[h for h in geo._polys(holes) if h.centroid.y < 150])

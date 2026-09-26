@@ -189,6 +189,12 @@ def star_flake(c):
     ring = rig(c, "flake", (cx, cy), r=fr, s=fs)
     polys = geo._polys(g)
     polys.sort(key=lambda p: math.hypot(p.centroid.x - cx, p.centroid.y - cy))
+    # the eight small hub stars (d≈66) are too close to spin on themselves without reading as rubble:
+    # the hub pulses as one piece, the wave of self-spins runs on the outer stars only
+    hub = geo.U(*[p for p in polys if math.hypot(p.centroid.x - cx, p.centroid.y - cy) < 100])
+    polys = [p for p in polys if math.hypot(p.centroid.x - cx, p.centroid.y - cy) >= 100]
+    hs = seq([100, 100], [(20, None, None), (38, [110, 110], "io"), (64, [100, 100], "io")], op=OP)
+    part(c, "hub", hub, ring, (cx, cy), s=hs)
     for k, p in enumerate(polys):
         c_ = p.centroid
         d = math.hypot(c_.x - cx, c_.y - cy)

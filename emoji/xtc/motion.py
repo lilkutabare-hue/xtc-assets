@@ -202,7 +202,7 @@ def windows(th, segs, visible, edge=EDGE):
     return tr
 
 
-def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, band_h=None, face_parent=None, rim_of=None):
+def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, band_h=None, face_parent=None, rim_of=None, rims=True):
     """Flat object turning around the vertical axis through (cx, cy).
     front/back: shapely designs (holes allowed) drawn around (cx, cy); back is shown un-mirrored.
     segs: [(t0, t1, deg0, deg1, ease)] piecewise angle (end on a multiple of 360 to rest face-on).
@@ -233,13 +233,15 @@ def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, b
     back_vis = lambda a: math.cos(math.radians(a)) <= -EDGE
     rimB_vis = lambda a: math.cos(math.radians(a)) >= RIM_EDGE
     rimF_vis = lambda a: math.cos(math.radians(a)) <= -RIM_EDGE
-    for side, sgn, vis in (("rimB", -1, rimB_vis), ("rimF", 1, rimF_vis)):
+    for side, sgn, vis in ((("rimB", -1, rimB_vis), ("rimF", 1, rimF_vis)) if rims else ()):  # rims=False: band only (big flat things: the ring reads as a hollow slot)
         comp.layer(f"{nm}-{side}", [geo.shape(rim, nm=side)], parent=root,
                    p=Split(trk(lambda t, s=sgn: cx + s * thick / 2 * sn(t)), cy), a=(cx, cy),
                    s=_scale(trk(sx)), o=windows(th, segs, vis, RIM_EDGE))
-    band_fn = lambda t: 100 * max(0.0, 1 - abs(c(t)) / 0.5)
+    # the band never scales to 0 (rlottie draws a hairline for scale-0 shapes): 10% floor + hidden while |cos| >= 0.5
+    band_fn = lambda t: 100 * max(0.10, 1 - abs(c(t)) / 0.5)
+    band_vis = lambda a: abs(math.cos(math.radians(a))) < 0.5
     comp.layer(f"{nm}-band", [geo.shape(band, nm="band")], parent=root, p=(cx, cy), a=(cx, cy),
-               s=_scale(trk(band_fn)))
+               s=_scale(trk(band_fn)), o=windows(th, segs, band_vis, 0.5))
     f = comp.layer(f"{nm}-front", [geo.shape(front, nm="front")], parent=root,
                    p=Split(trk(lambda t: cx + thick / 2 * sn(t)), cy), a=(cx, cy), s=_scale(trk(sx)),
                    o=windows(th, segs, front_vis))

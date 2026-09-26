@@ -400,20 +400,20 @@ def lego_head(c):
 
 
 def scorpion_parts(cx=256, cy=290):
-    """top view (like the spider): head + carapace with the logo X, 4 leg pairs, two claws forward,
-    the tail rising from the rear and curling forward over the back, sting over the head."""
-    carapace = geo.ellipse(cx, cy + 20, 92, 110, 32)
-    carapace = carapace.difference(brand_x(cx, cy + 24, 128, 60, bold=8))
+    """top view: head + carapace with the logo X, 3 leg pairs, two claws forward; the tail (separate)
+    runs outside the legs on the right so the X stays clear."""
+    carapace = geo.ellipse(cx, cy + 20, 96, 112, 32)
+    carapace = carapace.difference(brand_x(cx, cy + 24, 136, 64, bold=8))
     head = geo.rrect(cx - 60, cy - 130, cx + 60, cy - 80, 22)
     neck = geo.rrect(cx - 44, cy - 96, cx + 44, cy - 60, 14)
     legs = []
-    for k, y in enumerate((cy - 40, cy, cy + 40, cy + 80)):
+    for k, y in enumerate((cy - 30, cy + 20, cy + 70)):
         for sgn in (-1, 1):
-            legs.append(geo.brush([(cx + sgn * 70, y), (cx + sgn * 150, y - 40 + k * 8), (cx + sgn * 200, y + 30 + k * 6)], 26, taper=(1.0, 0.55), smooth=True, n=6))
+            legs.append(geo.brush([(cx + sgn * 74, y), (cx + sgn * 134, y - 34 + k * 6), (cx + sgn * 160, y + 26 + k * 6)], 26, taper=(1.0, 0.55), smooth=True, n=6))
     claws = []
     for sgn in (-1, 1):
-        arm = geo.brush([(cx + sgn * 40, cy - 110), (cx + sgn * 120, cy - 176)], 34, taper=(1.0, 0.9), smooth=False)
-        claws.append((sgn, arm, (cx + sgn * 120, cy - 176)))
+        arm = geo.brush([(cx + sgn * 34, cy - 112), (cx + sgn * 84, cy - 186)], 34, taper=(1.0, 0.9), smooth=False)
+        claws.append((sgn, arm, (cx + sgn * 84, cy - 186)))
     return geo.U(carapace, head, neck, *legs), claws
 
 
@@ -425,14 +425,13 @@ def pincer(sgn, x, y, open_=0):
 
 
 def tail(cx, cy):
-    """tail from the rear of the carapace curling up over the back (drawn as a foreshortened arc),
-    root at the rear, sting pointing forward over the head."""
-    root = (cx, cy + 128)
-    pts = [root, (cx + 8, cy + 78), (cx - 10, cy + 20), (cx + 14, cy - 40), (cx - 6, cy - 100), (cx + 6, cy - 150)]
-    body = geo.brush(pts, 46, taper=(1.0, 0.65), smooth=True, n=8)
+    """tail from the rear, outside the legs on the right, curling up and forward; sting beside the right claw."""
+    root = (cx + 60, cy + 124)
+    pts = [root, (cx + 150, cy + 120), (cx + 208, cy + 40), (cx + 206, cy - 60), (cx + 170, cy - 140), (cx + 130, cy - 186)]
+    body = geo.brush(pts, 44, taper=(1.0, 0.65), smooth=True, n=8)
     for k, p in enumerate(pts[1:5]):
-        body = geo.U(body, geo.disc(p[0], p[1], 32 - k * 2, 16))
-    sting = geo.poly([(cx - 16, cy - 150), (cx + 28, cy - 150), (cx + 8, cy - 214)]).buffer(6).buffer(-6)
+        body = geo.U(body, geo.disc(p[0], p[1], 30 - k * 2, 16))
+    sting = geo.poly([(cx + 146, cy - 172), (cx + 128, cy - 214), (cx + 86, cy - 222), (cx + 116, cy - 190)]).buffer(6).buffer(-6)
     return geo.U(body, sting), root
 
 
@@ -444,7 +443,7 @@ def scorpion(c):
     cx, cy = 256, 300
     body, claws = scorpion_parts(cx, cy)
     tl, troot = tail(cx, cy)
-    fit_ = rig(c, "fit", (256, 256), s=(78, 78), p=(256, 262))
+    fit_ = rig(c, "fit", (256, 256), s=(74, 74), p=(236, 262))
     by = seq(float(cy), [(30, None, None), (40, cy + 8.0, "io"), (46, cy - 14.0, "slam"), (47, cy - 14.0, "lin"), (58, cy + 4.0, "o"), (70, float(cy), "io")], op=OP)
     root = rig(c, "body", (cx, cy), parent=fit_, p=Split(cx, by))
     part(c, "body", body, root, (cx, cy))
@@ -456,10 +455,10 @@ def scorpion(c):
         jr = seq(0, [(14, None, None), (34, -sgn * 30, "io"), (44, 0, "slam"), (56, None, None), (60, -sgn * 22, "decel"), (64, 0, "slam"),
                      (68, None, None), (72, -sgn * 22, "decel"), (76, 0, "slam")], op=OP)
         part(c, f"jawU{sgn}", upper, root, tip, r=jr)
-    # tail: scale about its root = the foreshortened wind-back (shrinks) and the strike (stretches over the head), quiver
-    ts = seq([100, 100], [(14, None, None), (38, [104, 72], "io"), (44, [96, 118], "strike"), (46, [98, 112], "io"), (48, [97, 117], "io"),
-                          (50, [98, 113], "io"), (54, [100, 114], "io"), (78, None, None), (104, [100, 100], "io")], op=OP)
-    part(c, "tail", tl, root, troot, s=ts)
+    # tail: winds back (rotates away about its root), whips forward over the head's shoulder, quivers, returns
+    tr = seq(0, [(14, None, None), (38, 28, "io"), (44, -26, "strike"), (46, -20, "io"), (48, -25, "io"), (50, -21, "io"), (54, -23, "io"),
+                 (78, None, None), (104, 0, "io")], op=OP)
+    part(c, "tail", tl, root, troot, r=tr)
 
 
 # ================================================================ gothic crosses (rebuilt): tapered arms, spear tips, the logo X at the crossing
@@ -491,23 +490,21 @@ def gothic_cross(cx=256, cy=256, L=200, w=56, arms=(0.62, 1.0, 0.62, 0.56), x_w=
 def pendant(c):
     OP = 150
     top = (256, 14)
-    hang = 96
+    hang = 106
     ccx, ccy = 256, top[1] + hang + 176
-    cross = gothic_cross(ccx, ccy, 190, 50, x_w=124)
-    back = gothic_cross(ccx, ccy, 190, 50)
-    # the chain: alternating flat / edge-on links from the top edge down to the bail
-    links = []
-    for k in range(4):
-        y = top[1] + 10 + k * 24
-        links.append(geo.ring(256, y, 15, 7, 14) if k % 2 == 0 else geo.rrect(256 - 7, y - 16, 256 + 7, y + 16, 6))
-    links = geo.U(*links)
+    cross = gothic_cross(ccx, ccy, 186, 50, x_w=92, core=1.12)
+    # the chain: five fat flat rings overlapping from the top edge down to the bail
+    links = geo.U(*[geo.ring(256, top[1] + 12 + k * 22, 17, 8, 16) for k in range(5)])
     pr = seq(0, [(6, None, None), (18, -12, "io"), (44, 11, "io"), (70, -7, "io"), (94, 4, "io"), (114, -2, "io"), (132, 0.8, "io"), (148, 0, "io")], op=OP)
     pend = rig(c, "pend", top, r=pr)
     part(c, "chain", links, pend, top)
-    body = rig(c, "body", (256, top[1] + hang), parent=pend)
-    segs = [(12, 44, 0, 180, "io"), (44, 70, 180, 360, "io"), (70, 94, 360, 520, "io"), (94, 114, 520, 720, "io")]
-    root, th, fr, bk = M.spin3d(c, "cross", cross, back, ccx, ccy, segs, thick=24, lip=16, parent=body)
-    M.glare_sweep(c, fr, ccx, ccy, 116, 22, travel=300, parent=root, length=520, w1=24, w2=10, gap=12)
+    # the cross twists on its bail as it swings: one clean layer, scaleX = cos (min 6% = its thickness),
+    # the mirrored back reads the same (symmetric cross, mirrored X)
+    sx = seq([100, 100], [(12, None, None), (28, [6, 100], "io"), (29, [-6, 100], "lin"), (44, [-100, 100], "io"), (58, [-6, 100], "io"), (59, [6, 100], "lin"),
+                          (70, [100, 100], "io"), (84, [6, 100], "io"), (85, [-6, 100], "lin"), (94, [-100, 100], "io"), (106, [-6, 100], "io"), (107, [6, 100], "lin"),
+                          (118, [100, 100], "io")], op=OP)
+    body = rig(c, "body", (ccx, ccy), parent=pend, s=sx)
+    part(c, "cross", cross, body, (ccx, ccy))
 
 
 @emoji("28-tribal-cross", "✝️", "крест, вера, святое, готика, аминь, xtc", "cross, faith, holy, gothic, amen, xtc",

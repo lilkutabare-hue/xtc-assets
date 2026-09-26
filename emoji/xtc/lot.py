@@ -4,12 +4,13 @@ Every animated property is written by `Track`, which enforces the three rlottie 
 (see qa.py): static o/r are scalars, every key but the last has both `i` and `o`,
 and the last key is only `t` + `s`.
 """
+import os
 import gzip
 import json
 import math
 
 FPS = 60
-CANVAS = 100  # Telegram custom emoji canvas; art is authored at 512 and scaled by the root null
+CANVAS = int(os.environ.get("XTC_CANVAS", "100"))  # custom emoji canvas (100); XTC_CANVAS=512 builds sticker-size files
 BLACK = [0, 0, 0, 1]
 
 # cubic-bezier presets (x1, y1, x2, y2) — the curve from a key to the next one

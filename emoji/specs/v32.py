@@ -409,10 +409,10 @@ def scorpion_parts(cx=256, cy=330):
     # legs are separate layers (they walk); their hips sit under the X so nothing shows through the cut
     legs = []
     for k, x in enumerate((cx - 80, cx - 32, cx + 16, cx + 64)):
-        hip = (x, cy + 40)
-        knee = (x - 28 + k * 8, cy + 84)
+        hip = (x, cy + 50)
+        knee = (x - 28 + k * 8, cy + 90)
         foot = (x - 18 + k * 16, cy + 152)
-        leg = geo.U(geo.brush([hip, knee], 20, taper=(1.0, 0.85), smooth=False), geo.disc(knee[0], knee[1], 11, 12),
+        leg = geo.U(geo.brush([hip, knee], 18, taper=(0.9, 0.85), smooth=False), geo.disc(knee[0], knee[1], 10, 12),
                     geo.brush([knee, foot], 18, taper=(1.0, 0.45), smooth=False))
         legs.append((k, leg, hip))
     # the X is cut after the union so nothing (leg roots, head) fills it back in
@@ -425,11 +425,13 @@ def scorpion_parts(cx=256, cy=330):
 
 
 def pincer(k, x, y, open_=0):
-    """a big claw pointing forward (left) at (x, y): hand + fixed lower jaw, movable upper jaw."""
-    hand = geo.disc(x, y, 26, 16)
-    lower = geo.brush([(x, y), (x - 44, y + 18), (x - 96, y + 4)], 30, taper=(1.0, 0.4), smooth=True, n=6)
-    upper = geo.brush([(x, y), (x - 44, y - 20), (x - 94, y - 12)], 28, taper=(1.0, 0.4), smooth=True, n=6)
-    return geo.U(hand, lower), upper
+    """a claw pointing forward (left) at (x, y): one broad crab-claw body (hand + fixed lower jaw) and a fat movable
+    upper jaw; the jaws meet at rounded tips with a small gap."""
+    fixed = geo.poly([(x + 20, y - 22), (x + 22, y + 22), (x - 20, y + 42), (x - 60, y + 40), (x - 104, y + 12),
+                      (x - 60, y + 14), (x - 30, y + 8), (x - 14, y - 6)]).buffer(8).buffer(-8)
+    upper = geo.poly([(x + 14, y - 24), (x - 24, y - 42), (x - 62, y - 38), (x - 102, y - 12),
+                      (x - 60, y - 12), (x - 30, y - 8), (x - 12, y - 4)]).buffer(8).buffer(-8)
+    return fixed, upper
 
 
 def tail(cx, cy):

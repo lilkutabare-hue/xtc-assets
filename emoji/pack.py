@@ -170,7 +170,7 @@ def report():
     sc = {r["file"]: r for r in csv.DictReader(open(os.path.join(HERE, "scores.csv")))}
     names = order("final")
     lines = ["# XTC emoji v3 — отчёт", "",
-             f"В паке **{len(names)}** adaptive-эмодзи (TGS 512, 60 fps, 1–3 с). `qa.py`: 0 FAIL; у всех каждый критерий ≥4, плавность/луп 5, Σ≥31, свэг-тест STYLE.md.",
+             f"В паке **{len(names)}** adaptive-эмодзи (TGS 100×100 — холст custom emoji, арт авторится на 512 и масштабируется root-null; 60 fps, 1–3 с). `qa.py`: 0 FAIL; у всех каждый критерий ≥4, плавность/луп 5, Σ≥31, свэг-тест STYLE.md.",
              "Порядок = `manifest.csv` (первый — обложка). Оценки по 7 критериям с обоснованиями — `scores.csv`.", "",
              "| # | файл | 🔣 | история | Σ/35 | KB |", "|---|---|---|---|---|---|"]
     for i, n in enumerate(names, 1):

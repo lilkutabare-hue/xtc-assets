@@ -9,6 +9,7 @@ import json
 import math
 
 FPS = 60
+CANVAS = 100  # Telegram custom emoji canvas; art is authored at 512 and scaled by the root null
 BLACK = [0, 0, 0, 1]
 
 # cubic-bezier presets (x1, y1, x2, y2) — the curve from a key to the next one
@@ -314,8 +315,17 @@ class Comp:
 
     def json(self):
         layers = [l.json() for l in reversed(self.layers)]
-        # a matte (td) must be directly above its target in the array
-        return {"v": "5.5.7", "fr": FPS, "ip": 0, "op": self.op, "w": 512, "h": 512, "nm": self.name,
+        # a matte (td) must be directly above its target in the array.
+        # Telegram custom emoji are a 100x100 canvas (stickers are 512): the art is authored at 512 and
+        # scaled down by one root null that every parentless layer hangs off; "tgs": 1 marks the format.
+        root = max(l.ind for l in self.layers) + 1
+        k = CANVAS / 512 * 100
+        for d in layers:
+            d.setdefault("parent", root)
+        layers.append({"ddd": 0, "ind": root, "ty": 3, "nm": "root", "sr": 1, "ao": 0, "ip": 0, "op": self.op, "st": 0, "bm": 0,
+                       "ks": {"o": {"a": 0, "k": 100}, "r": {"a": 0, "k": 0}, "p": {"a": 0, "k": [0, 0, 0]},
+                              "a": {"a": 0, "k": [0, 0, 0]}, "s": {"a": 0, "k": [k, k, 100]}}})
+        return {"tgs": 1, "v": "5.5.7", "fr": FPS, "ip": 0, "op": self.op, "w": CANVAS, "h": CANVAS, "nm": self.name,
                 "ddd": 0, "assets": [], "layers": layers}
 
     def save(self, path):

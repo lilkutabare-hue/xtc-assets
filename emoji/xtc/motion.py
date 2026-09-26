@@ -237,11 +237,14 @@ def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, b
         comp.layer(f"{nm}-{side}", [geo.shape(rim, nm=side)], parent=root,
                    p=Split(trk(lambda t, s=sgn: cx + s * thick / 2 * sn(t)), cy), a=(cx, cy),
                    s=_scale(trk(sx)), o=windows(th, segs, vis, RIM_EDGE))
-    # the band never scales to 0 (rlottie draws a hairline for scale-0 shapes): 10% floor + hidden while |cos| >= 0.5
-    band_fn = lambda t: 100 * max(0.10, 1 - abs(c(t)) / 0.5)
-    band_vis = lambda a: abs(math.cos(math.radians(a))) < 0.5
+    # the band is the edge while the faces are hidden (|cos| < EDGE) and only then - it never overlays a face.
+    # Its width follows the face width at the hand-over (|cos|*W) down to the thickness, so nothing pops;
+    # never 0 (rlottie draws a hairline for scale-0 shapes).
+    W = x1 - x0
+    band_fn = lambda t: 100 * max(thick, abs(c(t)) * W) / thick
+    band_vis = lambda a: abs(math.cos(math.radians(a))) < EDGE
     comp.layer(f"{nm}-band", [geo.shape(band, nm="band")], parent=root, p=(cx, cy), a=(cx, cy),
-               s=_scale(trk(band_fn)), o=windows(th, segs, band_vis, 0.5))
+               s=_scale(trk(band_fn)), o=windows(th, segs, band_vis, EDGE))
     f = comp.layer(f"{nm}-front", [geo.shape(front, nm="front")], parent=root,
                    p=Split(trk(lambda t: cx + thick / 2 * sn(t)), cy), a=(cx, cy), s=_scale(trk(sx)),
                    o=windows(th, segs, front_vis))

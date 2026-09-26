@@ -406,16 +406,22 @@ def scorpion_parts(cx=256, cy=330):
     head = geo.poly([(cx - 110, cy - 46), (cx - 172, cy - 34), (cx - 184, cy + 6), (cx - 166, cy + 36), (cx - 110, cy + 46)]).buffer(10).buffer(-10)
     # neck: fills the notch between the flat head edge and the tapering ellipse tip so head and body read as one
     neck = geo.poly([(cx - 116, cy - 46), (cx - 40, cy - 52), (cx - 40, cy + 52), (cx - 116, cy + 46)])
+    # legs are separate layers (they walk); their hips sit under the X so nothing shows through the cut
     legs = []
-    for k, x in enumerate((cx - 66, cx - 18, cx + 30, cx + 78)):
-        legs.append(geo.brush([(x, cy + 30), (x - 34 + k * 8, cy + 90), (x - 14 + k * 10, cy + 150)], 18, taper=(1.0, 0.5), smooth=True, n=6))
+    for k, x in enumerate((cx - 80, cx - 32, cx + 16, cx + 64)):
+        hip = (x, cy + 40)
+        knee = (x - 28 + k * 8, cy + 84)
+        foot = (x - 18 + k * 16, cy + 152)
+        leg = geo.U(geo.brush([hip, knee], 20, taper=(1.0, 0.85), smooth=False), geo.disc(knee[0], knee[1], 11, 12),
+                    geo.brush([knee, foot], 18, taper=(1.0, 0.45), smooth=False))
+        legs.append((k, leg, hip))
     # the X is cut after the union so nothing (leg roots, head) fills it back in
-    body = geo.U(body, head, neck, *legs).difference(brand_x(cx + 6, cy + 2, 118, 54, bold=8))
+    body = geo.U(body, head, neck).difference(brand_x(cx + 6, cy + 2, 118, 54, bold=8))
     claws = []
     for k, (y0, tip) in enumerate(((cy - 22, (cx - 214, cy - 56)), (cy + 22, (cx - 210, cy + 44)))):
         arm = geo.brush([(cx - 150, y0), tip], 32, taper=(1.0, 0.9), smooth=False)
         claws.append((k, arm, tip))
-    return body, claws
+    return body, claws, legs
 
 
 def pincer(k, x, y, open_=0):
@@ -445,11 +451,23 @@ def tail(cx, cy):
 def scorpion(c):
     OP = 150
     cx, cy = 256, 330
-    body, claws = scorpion_parts(cx, cy)
+    body, claws, legs = scorpion_parts(cx, cy)
     tl, troot = tail(cx, cy)
     fit_ = rig(c, "fit", (256, 256), s=(78, 78), p=(280, 256))
     by = seq(float(cy), [(30, None, None), (40, cy + 6.0, "io"), (46, cy - 10.0, "slam"), (47, cy - 10.0, "lin"), (58, cy + 3.0, "o"), (70, float(cy), "io")], op=OP)
     root = rig(c, "body", (cx, cy), parent=fit_, p=Split(cx, by))
+    # legs scurry the whole loop: 30f stride, pairs 1+3 against 2+4; stance = foot sweeps back on the ground,
+    # swing = leg lifts and comes forward
+    for k, leg, hip in legs:
+        odd = k % 2
+        rk = [(15 * (n + 1), (8 if (n % 2 == 0) == (odd == 0) else -8), "io") for n in range(10)]
+        r_ = seq(8 if odd else -8, rk, op=OP)
+        yk = []
+        for n in range(5):
+            t0 = n * 30
+            yk += [(t0 + 8, -10.0, "io"), (t0 + 15, 0.0, "io"), (t0 + 30, 0.0, "lin")] if odd else [(t0 + 15, 0.0, "lin"), (t0 + 23, -10.0, "io"), (t0 + 30, 0.0, "io")]
+        y_ = seq(0.0, yk, op=OP)
+        part(c, f"leg{k}", leg, root, hip, r=r_, p=Split(float(hip[0]), _sh2(y_, hip[1])))
     part(c, "body", body, root, (cx, cy))
     for k, arm, tip in claws:
         part(c, f"arm{k}", arm, root, (cx, cy))

@@ -19,7 +19,8 @@ from PIL import Image, ImageChops, ImageFilter
 from rlottie_python import LottieAnimation
 from lottie.exporters.tgs_validator import TgsValidator, Severity
 
-MARGIN = 8           # px of free canvas around the art on every frame
+EMOJI_CANVAS = 100   # Telegram custom emoji canvas (stickers are 512); render checks run at 512
+MARGIN = 8           # px of free canvas around the art on every frame (at 512)
 LOOP_DIFF_MAX = 0.002  # share of canvas pixels that may differ between first and last frame
 THIN_WARN = 0.25     # share of art lost after a 28px morphological opening -> too thin for 24px
 ONE_D = ("o", "r")   # transform props that rlottie needs as plain scalars when static
@@ -95,9 +96,16 @@ def check(path):
     v = TgsValidator(Severity.Note)
     v.check_file(path)
     for e in v.errors:
+        # the validator knows stickers (512); custom emoji are a 100x100 canvas
+        if "Invalid width 100" in str(e) or "Invalid height 100" in str(e):
+            continue
         (fails if e.severity in (Severity.Error, Severity.Warning) else warns).append(str(e))
     d = json.load(gzip.open(path))
     fails += lint(d)
+    if (d.get("w"), d.get("h")) != (EMOJI_CANVAS, EMOJI_CANVAS):
+        fails.append(f"canvas {d.get('w')}x{d.get('h')} (custom emoji need {EMOJI_CANVAS}x{EMOJI_CANVAS})")
+    if d.get("tgs") != 1:
+        fails.append("missing \"tgs\": 1")
     if d.get("fr") != 60:
         fails.append(f"fr={d.get('fr')} (brief requires 60)")
     op = d.get("op", 0)
@@ -106,7 +114,7 @@ def check(path):
 
     anim = LottieAnimation.from_tgs(path)
     n = anim.lottie_animation_get_totalframe()
-    frames = [anim.render_pillow_frame(frame_num=i) for i in range(n)]
+    frames = [anim.render_pillow_frame(frame_num=i, width=512, height=512) for i in range(n)]  # checks run at 512
     empty = [i for i, f in enumerate(frames) if not f.split()[3].point(lambda p: 255 if p > 8 else 0).getbbox()]
     if empty:
         fails.append(f"{len(empty)}/{n} empty frames in rlottie (first: {empty[:5]})")

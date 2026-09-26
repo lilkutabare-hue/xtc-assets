@@ -351,5 +351,5 @@ def bag(c):
     root = c.null("root", p=top, a=top, r=r, s=s)
     segs = [(14, 62, 0, 410, (0.4, 0.0, 0.2, 1.0)), (62, 80, 410, 330, "io"), (80, 96, 330, 385, "io"),
             (96, 110, 385, 350, "io"), (110, 122, 350, 360, "io")]
-    M.spin3d(c, "bag", front, back, cx, cy, segs, thick=64, lip=26, parent=root)
+    M.spin3d(c, "bag", front, back, cx, cy, segs, thick=40, lip=26, parent=root, rim_of=body)
     M.twinkle(c, "tw", cx - 120, cy - 100, 40, 118, 26, parent=root)

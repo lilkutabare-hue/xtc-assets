@@ -335,7 +335,7 @@ def psp(c):
     bo.k.append([110, 0, None])
     bo.k[-1][2] = "hold"
     bo.k.append([131, 100, None])
-    bo.hold(150)
+    bo.hold(150)  # the ball is out of the screen from 110 (miss) until the restart
     c.layer("ball", [geo.shape(ball, nm="ball")], parent=root, p=Split(bx, by), a=(0, 0), o=bo)
     # paddles: follow the ball with a lag, the left one snaps on every hit
     for nm, px, side in (("padL", lx, "L"), ("padR", rx, "R")):
@@ -348,7 +348,13 @@ def psp(c):
         if side == "R":
             py.hold(120).to(134, ys[1], "io")
         py.loop(150)
-        c.layer(nm, [geo.shape(geo.rrect(px - 10, -32, px + 10, 32, 8), nm=nm)], parent=root, p=Split(px, py), a=(px, 0))
+        po = Track(100, 0).hold(110)  # hidden under the XTC game-over card
+        po.k[-1][2] = "hold"
+        po.k.append([111, 0, None])
+        po.k[-1][2] = "hold"
+        po.k.append([129, 100, None])
+        po.hold(150)
+        c.layer(nm, [geo.shape(geo.rrect(px - 10, -32, px + 10, 32, 8), nm=nm)], parent=root, p=Split(px, py), a=(px, 0), o=po)
     # miss: the screen fills with the logo for 14f (game over), then the rally restarts
     logo = brand_word("XTC", cx, cy - 6, 46, 200, bold=9)
     lo = Track(0, 0).hold(111)

@@ -285,8 +285,8 @@ def chrome_x(c):
     # plate's thickness; the X is symmetric so no back design is needed), slight perspective grow at the
     # edge, overshoot and settle. No extra layers, nothing to leave artefacts.
     # one full heavy turn (the X has a 3D top face, so it must come all the way round): 92 -> edge -> -92 -> edge -> 92
-    sy = seq([92, 92], [(20, None, None), (34, [90, 96], "io"), (58, [98, 5], (0.5, 0.0, 0.3, 1.0)), (59, [98, -5], "lin"),
-                        (84, [102, -96], "io"), (108, [98, -5], "io"), (109, [98, 5], "lin"), (134, [90, 96], (0.7, 0.0, 0.5, 1.0)),
+    sy = seq([92, 92], [(20, None, None), (34, [90, 96], "io"), (58, [98, 20], (0.5, 0.0, 0.3, 1.0)), (59, [98, -20], "lin"),
+                        (84, [102, -96], "io"), (108, [98, -20], "io"), (109, [98, 20], "lin"), (134, [90, 96], (0.7, 0.0, 0.5, 1.0)),
                         (146, [92, 91], "io"), (156, [92, 92], "io")], op=OP)
     y = seq(float(cy), [(20, None, None), (84, cy - 12.0, "io"), (156, float(cy), "io")], op=OP)
     body = rig(c, "body", (cx, cy), p=Split(cx, y), s=sy)

@@ -183,9 +183,14 @@ def crossings(th, segs, step=90, offset=0):
     return sorted(set(out))
 
 
-def windows(th, segs, visible):
-    """opacity track (hold keys) that is 100 while visible(angle) holds."""
-    ts = crossings(th, segs, 180, 90)
+EDGE = 0.20      # |cos| below this = edge-on: faces are hidden, only the band shows (no hairlines for Telegram's frame cache)
+RIM_EDGE = 0.30  # rims (the offset thickness copies) hide a little earlier: near the edge they read as doubled lines
+
+
+def windows(th, segs, visible, edge=EDGE):
+    """opacity track (hold keys) that is 100 while visible(angle) holds; edge = |cos| threshold of visible()."""
+    deg = math.degrees(math.acos(edge))
+    ts = sorted(crossings(th, segs, 180, deg) + crossings(th, segs, 180, 180 - deg))
     state = visible(th(0))
     tr = Track(100 if state else 0, 0)
     for t in ts:
@@ -197,7 +202,7 @@ def windows(th, segs, visible):
     return tr
 
 
-def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, band_h=None, face_parent=None):
+def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, band_h=None, face_parent=None, rim_of=None):
     """Flat object turning around the vertical axis through (cx, cy).
     front/back: shapely designs (holes allowed) drawn around (cx, cy); back is shown un-mirrored.
     segs: [(t0, t1, deg0, deg1, ease)] piecewise angle (end on a multiple of 360 to rest face-on).
@@ -218,18 +223,21 @@ def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, b
         return fit(fn, ks)
 
     sil = geo.U(*[geo.Polygon(p.exterior) for p in geo._polys(geo.U(front, back))])
-    rim = sil.difference(sil.buffer(-lip))
+    rim_src = sil if rim_of is None else geo.U(*[geo.Polygon(p.exterior) for p in geo._polys(rim_of)])
+    rim = rim_src.difference(rim_src.buffer(-lip))
     x0, y0, x1, y1 = sil.bounds
     bh = band_h or (y1 - y0)
     band = geo.rect(cx - thick / 2, cy - bh / 2 + lip * 0.4, cx + thick / 2, cy + bh / 2 - lip * 0.4)
     sx = lambda t: 100 * c(t)
-    front_vis = lambda a: math.cos(math.radians(a)) >= 0
-    back_vis = lambda a: math.cos(math.radians(a)) < 0
-    for side, sgn, vis in (("rimB", -1, front_vis), ("rimF", 1, back_vis)):
+    front_vis = lambda a: math.cos(math.radians(a)) >= EDGE
+    back_vis = lambda a: math.cos(math.radians(a)) <= -EDGE
+    rimB_vis = lambda a: math.cos(math.radians(a)) >= RIM_EDGE
+    rimF_vis = lambda a: math.cos(math.radians(a)) <= -RIM_EDGE
+    for side, sgn, vis in (("rimB", -1, rimB_vis), ("rimF", 1, rimF_vis)):
         comp.layer(f"{nm}-{side}", [geo.shape(rim, nm=side)], parent=root,
                    p=Split(trk(lambda t, s=sgn: cx + s * thick / 2 * sn(t)), cy), a=(cx, cy),
-                   s=_scale(trk(sx)), o=windows(th, segs, vis))
-    band_fn = lambda t: 100 * max(0.0, 1 - abs(c(t)) / 0.4)
+                   s=_scale(trk(sx)), o=windows(th, segs, vis, RIM_EDGE))
+    band_fn = lambda t: 100 * max(0.0, 1 - abs(c(t)) / 0.5)
     comp.layer(f"{nm}-band", [geo.shape(band, nm="band")], parent=root, p=(cx, cy), a=(cx, cy),
                s=_scale(trk(band_fn)))
     f = comp.layer(f"{nm}-front", [geo.shape(front, nm="front")], parent=root,

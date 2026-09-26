@@ -268,7 +268,7 @@ def xtc_turn(c):
                 hi = m
         keys.append(round((lo + hi) / 2, 2))
     keys = sorted(set(keys))
-    sx = fit(lambda t: max(4.0, 100 * abs(math.cos(math.radians(th(t))))), keys)     # never 0: rlottie would drop the frame
+    sx = fit(lambda t: max(10.0, 100 * abs(math.cos(math.radians(th(t))))), keys)     # never 0: rlottie would drop the frame
     st = Track([sx.k[0][1], 100], sx.k[0][0])
     for i in range(1, len(sx.k)):
         st.to(sx.k[i][0], [sx.k[i][1], 100], sx.k[i - 1][2])

@@ -404,11 +404,13 @@ def scorpion_parts(cx=256, cy=330):
     forward (left) ending in big pincers, four thin legs under, the tail (separate) rises from the rear (right)."""
     body = geo.ellipse(cx, cy, 124, 54, 40)
     head = geo.poly([(cx - 110, cy - 46), (cx - 172, cy - 34), (cx - 184, cy + 6), (cx - 166, cy + 36), (cx - 110, cy + 46)]).buffer(10).buffer(-10)
+    # neck: fills the notch between the flat head edge and the tapering ellipse tip so head and body read as one
+    neck = geo.poly([(cx - 116, cy - 46), (cx - 40, cy - 52), (cx - 40, cy + 52), (cx - 116, cy + 46)])
     legs = []
     for k, x in enumerate((cx - 66, cx - 18, cx + 30, cx + 78)):
         legs.append(geo.brush([(x, cy + 30), (x - 34 + k * 8, cy + 90), (x - 14 + k * 10, cy + 150)], 18, taper=(1.0, 0.5), smooth=True, n=6))
     # the X is cut after the union so nothing (leg roots, head) fills it back in
-    body = geo.U(body, head, *legs).difference(brand_x(cx + 6, cy + 2, 118, 54, bold=8))
+    body = geo.U(body, head, neck, *legs).difference(brand_x(cx + 6, cy + 2, 118, 54, bold=8))
     claws = []
     for k, (y0, tip) in enumerate(((cy - 22, (cx - 214, cy - 56)), (cy + 22, (cx - 210, cy + 44)))):
         arm = geo.brush([(cx - 150, y0), tip], 32, taper=(1.0, 0.9), smooth=False)

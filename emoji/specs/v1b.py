@@ -73,7 +73,8 @@ def tribal_eye(c):
     cx, cy = 256, 256
     upper = geo.brush(geo.quad((cx - 190, cy), (cx, cy - 170), (cx + 190, cy), 24), 40, (0.35, 0.35), False)
     lower = geo.brush(geo.quad((cx - 190, cy), (cx, cy + 170), (cx + 190, cy), 24), 40, (0.35, 0.35), False)
-    pupil = geo.disc(cx, cy, 62).difference(geo.text("X", __import__("specs.drop", fromlist=["x"]).brand_font(), cx, cy, 42, bold=6, width=70))
+    from specs.drop import brand_x
+    pupil = geo.disc(cx, cy, 62).difference(brand_x(cx, cy, 72, 34, bold=6))  # logo X, not a font
     open_ = Track([100, 100], 0).hold(40).to(44, [104, 8], "i").to(52, [100, 100], "o").hold(96).to(116, [100, 10], "is")
     open_.hold(124).to(132, [100, 112], "snap").to(140, [100, 96], "io").to(148, [100, 100], "io").loop(150)
     lay(c, "upper", upper, (cx, cy), s=open_)

@@ -100,8 +100,9 @@ def breathe(tr, t0, t1, base, amp=1.0, per=30):
 
 
 def brand_x(x, y, w, h, bold=9):
-    """the logo X: Michroma, stretched like the longsleeve print."""
-    return geo.text("X", geo.font("Michroma-Regular.ttf"), x, y, h, bold=bold, width=w)
+    """the logo X (traced brand letterform, one aspect and weight pack-wide) - see specs.drop.brand_x."""
+    from specs.drop import brand_x as _bx
+    return _bx(x, y, w, h, bold=bold)
 
 
 def eyelet(x, y, ro, ri):

@@ -226,8 +226,9 @@ def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, b
     rim_src = sil if rim_of is None else geo.U(*[geo.Polygon(p.exterior) for p in geo._polys(rim_of)])
     rim = rim_src.difference(rim_src.buffer(-lip))
     x0, y0, x1, y1 = sil.bounds
-    bh = band_h or (y1 - y0)
-    band = geo.rect(cx - thick / 2, cy - bh / 2 + lip * 0.4, cx + thick / 2, cy + bh / 2 - lip * 0.4)
+    # the edge is the object's own silhouette squeezed to its thickness (a plain bar read as "a stick in the
+    # middle" on the bag); band_h is kept for signature compatibility
+    band = sil
     sx = lambda t: 100 * c(t)
     front_vis = lambda a: math.cos(math.radians(a)) >= EDGE
     back_vis = lambda a: math.cos(math.radians(a)) <= -EDGE
@@ -241,7 +242,7 @@ def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, b
     # Its width follows the face width at the hand-over (|cos|*W) down to the thickness, so nothing pops;
     # never 0 (rlottie draws a hairline for scale-0 shapes).
     W = x1 - x0
-    band_fn = lambda t: 100 * max(thick, abs(c(t)) * W) / thick
+    band_fn = lambda t: 100 * max(thick, abs(c(t)) * W) / W
     band_vis = lambda a: abs(math.cos(math.radians(a))) < EDGE
     comp.layer(f"{nm}-band", [geo.shape(band, nm="band")], parent=root, p=(cx, cy), a=(cx, cy),
                s=_scale(trk(band_fn)), o=windows(th, segs, band_vis, EDGE))

@@ -164,8 +164,8 @@ def star_e(c):
     fb = front.bounds
     cx, cy = (fb[0] + fb[2]) / 2, (fb[1] + fb[3]) / 2
     # slow and heavy: pull back 14°, one full turn in 96f, overshoot, settle, long rest
-    r = seq(0, [(12, None, None), (26, -14, "io"), (122, 368, (0.45, 0.0, 0.2, 1.0)), (136, 357, "io"), (150, 361, "io"), (164, 360, "io")], op=OP, loop_ease="lin")
-    r.k[-1][2] = "hold"
+    r = seq(0, [(12, None, None), (26, -14, "io"), (122, 368, (0.45, 0.0, 0.2, 1.0)), (136, 357, "io"), (150, 361, "io"), (164, 360, "io")], op=OP)
+    r.k[-2][2] = "hold"  # 360 == 0: step at the loop, not a ramp back (the ease lives on the segment's first key)
     s_ = seq([88, 88], [(12, None, None), (26, [84, 84], "io"), (70, [92, 92], "io"), (122, [88, 88], "io")], op=OP)
     body = rig(c, "body", (cx, cy), r=r, s=s_)
     part(c, "star", front, body, (cx, cy))
@@ -183,8 +183,8 @@ def star_flake(c):
     cx, cy = 256, 256
     # the whole flake makes one slow heavy turn (360 = seamless), breathing; while it turns, every star
     # spins on itself in a wave from the centre outwards, growing a touch at the peak
-    fr = seq(0, [(8, None, None), (160, 360, (0.4, 0.0, 0.2, 1.0))], op=OP, loop_ease="lin")
-    fr.k[-1][2] = "hold"
+    fr = seq(0, [(8, None, None), (160, 360, (0.4, 0.0, 0.2, 1.0))], op=OP)
+    fr.k[-2][2] = "hold"  # 360 == 0: step at the loop, not a ramp back
     fs = seq([92, 92], [(8, None, None), (84, [96, 96], "io"), (160, [92, 92], "io")], op=OP)
     ring = rig(c, "flake", (cx, cy), r=fr, s=fs)
     polys = geo._polys(g)

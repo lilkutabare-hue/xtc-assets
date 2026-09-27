@@ -326,7 +326,9 @@ class Comp:
         layers.append({"ddd": 0, "ind": root, "ty": 3, "nm": "root", "sr": 1, "ao": 0, "ip": 0, "op": self.op, "st": 0, "bm": 0,
                        "ks": {"o": {"a": 0, "k": 100}, "r": {"a": 0, "k": 0}, "p": {"a": 0, "k": [0, 0, 0]},
                               "a": {"a": 0, "k": [0, 0, 0]}, "s": {"a": 0, "k": [k, k, 100]}}})
-        return {"tgs": 1, "v": "5.5.7", "fr": FPS, "ip": 0, "op": self.op, "w": CANVAS, "h": CANVAS, "nm": self.name,
+        # rlottie renders frames 0..op inclusive (totalFrame = op+1); our tracks close at op with frame 0's value,
+        # so op itself would play as a duplicate of frame 0 (a one-frame hitch on every loop): stop one frame early
+        return {"tgs": 1, "v": "5.5.7", "fr": FPS, "ip": 0, "op": self.op - 1, "w": CANVAS, "h": CANVAS, "nm": self.name,
                 "ddd": 0, "assets": [], "layers": layers}
 
     def save(self, path):

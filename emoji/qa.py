@@ -105,7 +105,7 @@ def check(path):
         fails.append("missing \"tgs\": 1")
     if d.get("fr") != 60:
         fails.append(f"fr={d.get('fr')} (brief requires 60)")
-    op = d.get("op", 0)
+    op = d.get("op", 0) + 1  # files stop one frame before the closing key (see lot.Comp.json)
     if not 60 <= op <= 180:
         fails.append(f"op={op} (1.0-3.0 s)")
 
@@ -127,10 +127,13 @@ def check(path):
         if span < 0.80:
             warns.append(f"art spans only {span:.0%} of canvas (target 88-92%)")
         a0 = frames[0].split()[3]
-        # frame op-1 must lead smoothly into frame 0: compare the last frame with frame 0 and frame 1
-        last = frames[-1].split()[3]
-        diff = sum(ImageChops.difference(a0, last).point(lambda p: 1 if p > 40 else 0).getdata()) / 512 / 512
-        step = sum(ImageChops.difference(a0, frames[1].split()[3]).point(lambda p: 1 if p > 40 else 0).getdata()) / 512 / 512 if n > 1 else 0
+        # the last rendered frame must lead into frame 0 like any other step: compare the wrap step with the
+        # typical step of the animation (median over all frames) and with the first step
+        alphas = [f.split()[3] for f in frames]
+        d = lambda a, b: sum(ImageChops.difference(a, b).point(lambda p: 1 if p > 40 else 0).getdata()) / 512 / 512
+        diff = d(a0, alphas[-1])
+        steps = sorted(d(alphas[i], alphas[i + 1]) for i in range(n - 1))
+        step = max(steps[len(steps) // 2], d(a0, alphas[1]) if n > 1 else 0)
         if diff > max(LOOP_DIFF_MAX, step * 2.5):
             fails.append(f"loop seam: last->first frame jump {diff:.3%} vs normal step {step:.3%}")
         small = a0.resize((128, 128), Image.LANCZOS).point(lambda p: 255 if p > 128 else 0)

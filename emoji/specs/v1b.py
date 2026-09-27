@@ -80,9 +80,10 @@ def tribal_eye(c):
     lay(c, "lower", lower, (cx, cy), s=open_)
     ps = Track([100, 100], 0).hold(40).to(44, [100, 10], "i").to(52, [100, 100], "o").hold(96).to(112, [0, 0], "is")
     ps.hold(126).to(136, [112, 112], "snap").to(144, [100, 100], "io").loop(150)
-    pr = Track(0, 0).hold(60).to(78, 90, (0.4, 0.0, 0.1, 1.0)).to(84, 84, "io").to(90, 90, "io").hold(150)
+    # the pupil turns a half turn (the X is 2-fold symmetric, so 180 == 0 and the loop closes with a hold step)
+    pr = Track(0, 0).hold(60).to(78, 180, (0.4, 0.0, 0.1, 1.0)).to(84, 172, "io").to(90, 180, "io").hold(149)
     pr.k[-1][2] = "hold"
-    pr.k.append([149.99, 0, None])
+    pr.k.append([150, 0, None])
     lay(c, "pupil", pupil, (cx, cy), s=ps, r=pr)
     for k in range(8):
         a = math.radians(-90 + k * 45)

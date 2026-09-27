@@ -361,6 +361,8 @@ def psp(c):
     lo.k[-1][2] = "hold"
     lo.k.append([112, 100, None])
     lo.k[-1][2] = "hold"
+    lo.k.append([122, 100, None])
+    lo.k[-1][2] = "io"
     lo.k.append([128, 0, None])
     lo.hold(150)
     ls = Track([100, 100], 0).hold(112).to(116, [108, 108], "snap").to(124, [100, 100], "io").loop(150)

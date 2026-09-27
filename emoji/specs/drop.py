@@ -295,11 +295,11 @@ def soldout(c):
     stamp_s = Track([118, 118], 0).hold(44).to(52, [100, 100], "slam").to(53, [96, 104], "lin").to(60, [102, 98], "io").to(66, [100, 100], "io")
     stamp_s.hold(152).to(166, [114, 114], "i").to(180, [118, 118], "lin")
     stamp_r = Track(-24, 0).hold(44).to(52, -12, "slam").hold(152).to(166, -20, "i").to(180, -24, "lin")
-    so = Track(0, 0).hold(44).to(46, 100, "lin").hold(156).to(164, 0, "lin").loop(180, "lin")
+    so = Track(0, 0).hold(44).to(46, 100, "lin").hold(152).to(166, 0, "io").loop(180, "lin")
     stamp = c.null("stamp", parent=tl, p=(sx, sy), a=(sx, sy), s=stamp_s, r=stamp_r)
     mt = c.matte(tl, "stampcut", [geo.shape(cut, nm="cut")], parent=stamp, p=(sx, sy), a=(sx, sy))
     # the matte cuts only once the stamp has landed
-    mt.o = Track(0, 0).hold(44).to(46, 100, "lin").hold(160).to(162, 0, "lin").loop(180, "lin")
+    mt.o = Track(0, 0).hold(44).to(46, 100, "lin").hold(152).to(166, 0, "io").loop(180, "lin")
     c.layer("plate", [geo.shape(plate.difference(cut), nm="plate")], parent=stamp, p=(sx, sy), a=(sx, sy), o=so)
     # smoke puffs from under the plate corners on impact
     for k, (x0, y0, d) in enumerate(((sx - 150, sy + 90, -1), (sx + 150, sy + 60, 1), (sx - 140, sy - 80, -1))):

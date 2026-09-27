@@ -649,7 +649,7 @@ def thorn_star(c):
 
 
 @emoji("20-split-pill", "🤝", "договорились, сделка, половинки, вместе, мэтч", "deal, handshake, halves, together, match",
-       "две половинки таблетки парят порознь, магнит тянет — дрожат и ползут навстречу, щёлк! схлопываются, из шва брызгают ✦, держатся, потом нехотя разлипаются",
+       "две половинки таблетки парят порознь, магнит тянет — дрожат и ползут навстречу, щёлк! схлопываются, держатся, потом нехотя разлипаются",
        op=150, series=SERIES)
 def split_pill(c):
     OP = 150
@@ -678,12 +678,7 @@ def split_pill(c):
         M.shake(rr, T + 24, T + 44, 2.2, 0.0, step=2, decay=1.0)
         rr.loop(OP)
         part(c, f"half{j}", g, half, (cx, cy), r=rr)
-    # the click: sparks out of the seam, the joined pill thumps
-    for k, (x1, y1) in enumerate(((cx - 40, 70), (cx + 60, 80), (cx - 20, 440), (cx + 50, 452))):
-        y0 = 150 if y1 < 250 else 360
-        M.particle(c, f"spk{k}", geo.spark(cx, y0, 34, 0.34), T + 45 + k, 20, (cx, y0), (x1, y1), None, anchor=(cx, y0),
-                   rot=(0, 90), fall="o5", xease="o5", pop=0.12, fade=0.5)
-    M.twinkle(c, "tw", cx + 150, cy - 110, 34, T + 64, 24)
+    # the click is carried by the snap itself (no ✦: client rule, sparks are off pack-wide)
 
 
 # ================================================================ 21 🧸

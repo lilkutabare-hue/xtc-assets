@@ -202,7 +202,7 @@ def windows(th, segs, visible, edge=EDGE):
     return tr
 
 
-def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, band_h=None, face_parent=None, rim_of=None, rims=True):
+def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, band_h=None, face_parent=None, rim_of=None, rims=False):
     """Flat object turning around the vertical axis through (cx, cy).
     front/back: shapely designs (holes allowed) drawn around (cx, cy); back is shown un-mirrored.
     segs: [(t0, t1, deg0, deg1, ease)] piecewise angle (end on a multiple of 360 to rest face-on).
@@ -234,7 +234,9 @@ def spin3d(comp, nm, front, back, cx, cy, segs, thick=40, lip=30, parent=None, b
     back_vis = lambda a: math.cos(math.radians(a)) <= -EDGE
     rimB_vis = lambda a: math.cos(math.radians(a)) >= RIM_EDGE
     rimF_vis = lambda a: math.cos(math.radians(a)) <= -RIM_EDGE
-    for side, sgn, vis in ((("rimB", -1, rimB_vis), ("rimF", 1, rimF_vis)) if rims else ()):  # rims=False: band only (big flat things: the ring reads as a hollow slot)
+    # rims (offset ring copies for thickness) are off by default: between the ring and the face a hollow gap opens
+    # as the angle grows, and on Telegram's cached playback it reads as a broken shape. Thickness = the edge band.
+    for side, sgn, vis in ((("rimB", -1, rimB_vis), ("rimF", 1, rimF_vis)) if rims else ()):
         comp.layer(f"{nm}-{side}", [geo.shape(rim, nm=side)], parent=root,
                    p=Split(trk(lambda t, s=sgn: cx + s * thick / 2 * sn(t)), cy), a=(cx, cy),
                    s=_scale(trk(sx)), o=windows(th, segs, vis, RIM_EDGE))

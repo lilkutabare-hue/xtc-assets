@@ -1,0 +1,59 @@
+(с) хтс, 2026. Все права защищены.
+(c) XTC (xtcpay.me), 2026. All rights reserved.
+
+────────────────────────────────────────────────────────────────────
+
+RU
+
+Все материалы этого репозитория — фотографии, видео, анимации, рендеры,
+3D-графика, дизайн, вёрстка и код — принадлежат XTC (xtcpay.me) и лежат
+здесь только для работы сайта xtcpay.me и приложения XTC в Телеграме.
+
+Открытый доступ к файлам — не лицензия. Он не даёт права их использовать.
+
+Без письменного разрешения правообладателя запрещено:
+  · копировать и скачивать материалы для повторного использования;
+  · изменять их и делать на их основе производные работы;
+  · публиковать и распространять их где-либо ещё;
+  · использовать их в коммерческих и некоммерческих проектах;
+  · использовать их для обучения нейросетей и сбора датасетов.
+
+Исключения — сторонние компоненты. У них свои правообладатели и лицензии:
+  · lib/three-0.128.0/        three.js, (c) 2010–2021 Three.js Authors, MIT
+  · lib/matter-0.19.0/        Matter.js 0.19.0, (c) @liabru, MIT
+  · lib/poly-decomp-0.3.0/    poly-decomp.js, MIT
+  · bag-xtc.glb, bag-xtc-dark.glb
+                              на основе модели «Transparent realistic zipper bag»,
+                              автор assetfactory (sketchfab.com/assetfactory),
+                              лицензия Sketchfab Standard; сведения об авторе
+                              сохранены внутри файлов
+Подробнее — lib/LICENSES.md.
+
+Разрешения и вопросы: Telegram @xtcpayme · https://xtcpay.me
+
+────────────────────────────────────────────────────────────────────
+
+EN
+
+Everything in this repository — photographs, video, animation, renders,
+3D graphics, design, markup and code — is the property of XTC (xtcpay.me)
+and is hosted here solely to serve the xtcpay.me website and the XTC
+Telegram app.
+
+Public availability of these files is not a license and grants no rights
+to use them.
+
+Without prior written permission from the rights holder you may not:
+  · copy or download the materials for reuse;
+  · modify them or create derivative works;
+  · publish or redistribute them anywhere else;
+  · use them in any commercial or non-commercial project;
+  · use them to train machine-learning models or to build datasets.
+
+Third-party components are excluded and remain under their own licenses:
+three.js (MIT), Matter.js (MIT), poly-decomp.js (MIT) in lib/, and the
+3D model "Transparent realistic zipper bag" by assetfactory (Sketchfab
+Standard License) used in bag-xtc.glb and bag-xtc-dark.glb.
+See lib/LICENSES.md.
+
+Permissions and questions: Telegram @xtcpayme · https://xtcpay.me

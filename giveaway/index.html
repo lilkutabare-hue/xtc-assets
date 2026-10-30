@@ -127,19 +127,24 @@ async function play() {
   const need = R.take + R.swaps.length, seq = await order(rows, R.randomness, need), out = new Map(R.swaps.map(s => [s.out, s]));
   /* места: по порядку; снятый отдаёт место следующему номеру из того же порядка */
   const taken = seq.slice(0, R.take).map(s => s), reserve = seq.slice(R.take); let rs = 0;
-  { const fin = [], o2 = new Map(R.swaps.map(s => [s.out, s])); let r2 = 0; for (let i = 0; i < R.take; i++) { let c = taken[i]; while (c && o2.has(c.n) && r2 < reserve.length) c = reserve[r2++]; fin.push(c ? c.n : 0); } FINAL = fin; mine(); }
+  /* цепочка замен: in > 0 — кто занял место (следующий по порядку), in = 0 — место снято, его вручает организатор; без in — следующий из запаса */
+  const follow = (c, take) => { const gone = []; let cur = c; while (cur && out.has(cur.n)) { const s = out.get(cur.n); gone.push(cur);
+      cur = s.in === 0 ? null : s.in > 0 ? (seq.find(x => x.n === s.in) || { n: s.in, t: (rows.find(r => r.n === s.in) || {}).t || 0, ticket: -1, total: 0 }) : (take() || null); }
+    return { cur, gone }; };
+  { let r2 = 0; FINAL = Array.from({ length: R.take }, (_, i) => (follow(taken[i], () => reserve[r2++]).cur || {}).n || 0); mine(); }
   for (let i = 0; i < R.take; i++) { if (me !== run) return;
-    let cur = taken[i], gone = [];
-    while (out.has(cur.n) && rs < reserve.length) { gone.push(cur); cur = reserve[rs++]; }
+    const f = follow(taken[i], () => reserve[rs++]); let cur = f.cur, gone = f.gone;
     const row = document.createElement('div'); row.className = 'row';
     row.innerHTML = `<div class="rk">${String(i + 1).padStart(2, '0')}</div><div class="pz">${R.prizes[i]}</div><div class="no">0000</div><div class="how"></div>`;
     box.append(row); requestAnimationFrame(() => row.classList.add('on'));
     const no = row.querySelector('.no'), how = row.querySelector('.how');
+    const swaps = gone.map(g => { const s = out.get(g.n); return `<br>СНЯТ: <s>№ ${n4(g.n)}</s>${s.why ? ' · ' + s.why : ''}`; }).join('');
+    if (!cur) { no.textContent = '—'; how.innerHTML = 'МЕСТО ВРУЧАЕТ ОРГАНИЗАТОР' + swaps; await sleep(120); continue; }
     /* прокрутка номеров — только вид: шаг по списку, результат уже посчитан выше из числа drand */
     if (!still) { const t0 = performance.now(); let k = i * 53; while (performance.now() - t0 < 520) { no.textContent = n4(rows[(k += 37) % rows.length].n); await sleep(48); if (me !== run) return; } }
     no.textContent = n4(cur.n);
     const nick = R.nicks[cur.n] ? `<span class="nk">${R.nicks[cur.n]}</span> · ` : '';
-    how.innerHTML = nick + `БИЛЕТ ${cur.ticket + 1} ИЗ ${cur.total} · У НЕГО ${cur.t}` + gone.map(g => { const s = out.get(g.n); return `<br>ЗАМЕНА: <s>№ ${n4(g.n)}</s>${s.why ? ' · ' + s.why : ''}`; }).join('');
+    how.innerHTML = nick + (cur.ticket < 0 ? 'ВЫБОР ОРГАНИЗАТОРА' : `БИЛЕТ ${cur.ticket + 1} ИЗ ${cur.total} · У НЕГО ${cur.t}`) + swaps;
     await sleep(120);
   }
   $('again').disabled = false;
